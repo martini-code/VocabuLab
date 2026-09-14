@@ -162,63 +162,20 @@ export async function initVault(): Promise<void> {
   }
 }
 
-const CATEGORY_META: Record<
-  string,
-  { name: string; description: string; icon_name: string; is_pro: boolean }
-> = {
-  greetings: {
-    name: 'Greetings & Courtesies',
-    description: 'Essential salutations, formal pleasantries, and polite farewells',
-    icon_name: 'handshake',
-    is_pro: false,
-  },
-  family: {
-    name: 'Kinship & Family Realm',
-    description: 'Household relatives, ancestors, lineage, and bonds of kin',
-    icon_name: 'castle',
-    is_pro: false,
-  },
-  numbers: {
-    name: 'Numbers & Cardinal Counting',
-    description: 'Foundational numeric figures, quantities, and cardinal tallies',
-    icon_name: 'coins',
-    is_pro: false,
-  },
-  animals: {
-    name: 'Fauna & Menagerie',
-    description: 'Domestic companions, farm livestock, and insects of the kingdom',
-    icon_name: 'paw',
-    is_pro: false,
-  },
-  vehicles: {
-    name: 'Vehicles & Wayfaring',
-    description: 'Land transports, maritime vessels, and airborne flight crafts',
-    icon_name: 'compass',
-    is_pro: false,
-  },
-  math: {
-    name: 'Mathematics & Logic',
-    description: 'Elementary arithmetic calculations, operations, and axioms',
-    icon_name: 'scale',
-    is_pro: false,
-  },
-  electronics: {
-    name: 'Appliances & Technology',
-    description: 'Household appliances, circuitry, and engineering instruments',
-    icon_name: 'sparkles',
-    is_pro: true,
-  },
-  biology: {
-    name: 'Natural Sciences & Cellular Lore',
-    description: 'Cell cycle genetics, microscopic life, and biological taxonomy',
-    icon_name: 'book',
-    is_pro: true,
-  },
+const CATEGORY_ICONS: Record<string, string> = {
+  greetings: 'handshake',
+  family: 'users',
+  numbers: 'coins',
+  animals: 'paw',
+  vehicles: 'compass',
+  math: 'scale',
+  electronics: 'sparkles',
+  biology: 'book',
 };
 
-function formatSubcategoryName(sub: string): string {
-  if (!sub) return 'General';
-  return sub
+export function capitalizeTitle(text: string): string {
+  if (!text) return '';
+  return text
     .split(' ')
     .map((word) => {
       if (word.startsWith('(')) {
@@ -313,12 +270,6 @@ export async function getThemesWithProgressiveDecks(
     const garrisoned = deckGarrisonCount.get(d.deck_id) || 0;
     const mastered = deckMasteredCount.get(d.deck_id) || 0;
     const cefr = difficultyToCefr(d.difficulty);
-    const catMeta = CATEGORY_META[d.category] || {
-      name: d.category,
-      description: '',
-      icon_name: 'book',
-      is_pro: false,
-    };
 
     const isUnlocked =
       d.deck_id === 1 || // First deck always unlocked
@@ -330,17 +281,17 @@ export async function getThemesWithProgressiveDecks(
       id: String(d.deck_id),
       real_deck_id: d.deck_id,
       theme_id: d.category,
-      theme_name: catMeta.name,
-      name: formatSubcategoryName(d.subcategory),
-      description: d.description || `${formatSubcategoryName(d.subcategory)} vocabulary (${cefr})`,
+      theme_name: capitalizeTitle(d.category),
+      name: capitalizeTitle(d.subcategory),
+      description: '',
       difficulty_level: d.difficulty,
       difficulty_label: cefr,
       cefr_level: cefr,
-      icon_name: catMeta.icon_name,
+      icon_name: CATEGORY_ICONS[d.category] || 'book',
       card_count: totalCards,
       garrisoned_count: garrisoned,
       mastered_count: mastered,
-      is_pro: catMeta.is_pro,
+      is_pro: false,
       is_locked: !isUnlocked,
     };
 
@@ -367,19 +318,12 @@ export async function getThemesWithProgressiveDecks(
     const decks = categoriesMap.get(catKey);
     if (!decks || decks.length === 0) continue;
 
-    const meta = CATEGORY_META[catKey] || {
-      name: catKey,
-      description: '',
-      icon_name: 'book',
-      is_pro: false,
-    };
-
     themeGroups.push({
       id: `theme_${catKey}`,
-      name: meta.name,
-      description: meta.description,
-      icon_name: meta.icon_name,
-      is_pro: meta.is_pro,
+      name: capitalizeTitle(catKey),
+      description: '',
+      icon_name: CATEGORY_ICONS[catKey] || 'book',
+      is_pro: false,
       decks,
     });
   }
@@ -389,9 +333,9 @@ export async function getThemesWithProgressiveDecks(
     if (!categoryOrder.includes(catKey)) {
       themeGroups.push({
         id: `theme_${catKey}`,
-        name: formatSubcategoryName(catKey),
+        name: capitalizeTitle(catKey),
         description: '',
-        icon_name: 'book',
+        icon_name: CATEGORY_ICONS[catKey] || 'book',
         is_pro: false,
         decks,
       });
@@ -476,26 +420,24 @@ export async function getAllDecksOrderedByDifficulty(
   for (const s of sliceRows) {
     const sliceKey = `${s.deck_id}_${s.difficulty}`;
     const cefr = difficultyToCefr(s.difficulty);
-    const catMeta = CATEGORY_META[s.category] || { icon_name: 'book' };
+    const iconName = CATEGORY_ICONS[s.category] || 'book';
     const garrisoned = sliceGarrisonCount.get(sliceKey) || 0;
     const mastered = sliceMasteredCount.get(sliceKey) || 0;
 
-    const subName = formatSubcategoryName(s.subcategory);
-    const name = `${subName} (${cefr})`;
-    const description = `${cefr} vocabulary subset • ${s.card_count} words`;
+    const name = capitalizeTitle(s.subcategory);
 
     result.push({
       id: `diff_${s.deck_id}_${s.difficulty}`,
       real_deck_id: s.deck_id,
       difficulty_slice: s.difficulty,
       theme_id: s.category,
-      theme_name: formatSubcategoryName(s.category),
+      theme_name: capitalizeTitle(s.category),
       name,
-      description,
+      description: '',
       difficulty_level: s.difficulty,
       difficulty_label: cefr,
       cefr_level: cefr,
-      icon_name: catMeta.icon_name,
+      icon_name: iconName,
       card_count: s.card_count,
       garrisoned_count: garrisoned,
       mastered_count: mastered,
@@ -1008,8 +950,8 @@ export async function getWordsByDifficulty(
       back_lexeme_id: r.card_id,
       back_term: r.primary_term,
       back_lang: 'en',
-      deck_name: formatSubcategoryName(r.subcategory),
-      theme_name: formatSubcategoryName(r.category),
+      deck_name: capitalizeTitle(r.subcategory),
+      theme_name: capitalizeTitle(r.category),
       frequency_rank: null,
       is_queued: !!uc,
       user_card_id: uc ? uc.id : undefined,
@@ -1268,8 +1210,8 @@ export async function getMasteryWords(
       back_lexeme_id: c.card_id,
       back_term: c.primary_term,
       back_lang: 'en',
-      deck_name: formatSubcategoryName(c.subcategory),
-      theme_name: formatSubcategoryName(c.category),
+      deck_name: capitalizeTitle(c.subcategory),
+      theme_name: capitalizeTitle(c.category),
       is_queued: !!uc,
       user_card_id: uc ? uc.id : undefined,
       stage: cardStage,
@@ -1425,18 +1367,13 @@ export async function getDomainsHierarchy(): Promise<Domain[]> {
   const domains: Domain[] = [];
 
   for (const cat of categories) {
-    const meta = CATEGORY_META[cat] || {
-      name: cat,
-      description: '',
-      icon_name: 'book',
-    };
     domains.push({
       id: `domain_${cat}`,
       parent_id: null,
-      name: meta.name,
-      description: meta.description,
+      name: capitalizeTitle(cat),
+      description: '',
       difficulty_level: 1,
-      icon_name: meta.icon_name,
+      icon_name: CATEGORY_ICONS[cat] || 'book',
       is_introductory: false,
     });
   }
@@ -1445,10 +1382,10 @@ export async function getDomainsHierarchy(): Promise<Domain[]> {
     domains.push({
       id: `sub_${r.deck_id}`,
       parent_id: `domain_${r.category}`,
-      name: formatSubcategoryName(r.subcategory),
-      description: r.description || `${formatSubcategoryName(r.subcategory)} vocabulary`,
+      name: capitalizeTitle(r.subcategory),
+      description: '',
       difficulty_level: r.difficulty,
-      icon_name: CATEGORY_META[r.category]?.icon_name || 'book',
+      icon_name: CATEGORY_ICONS[r.category] || 'book',
       is_introductory: r.difficulty === 1,
     });
   }

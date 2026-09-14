@@ -3,11 +3,11 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { initVault, getVaultStats } from './src/db/vault';
 import { syncDatabaseFromR2 } from './src/db/downloader';
 import { VaultStats } from './src/types';
@@ -109,18 +109,21 @@ export default function App() {
 
   if (!isVaultReady) {
     return (
-      <View style={styles.splashContainer}>
-        <SquireMascot mood="idle" size={130} />
-        <Text style={styles.splashTitle}>VOCAB KEEP</Text>
-        <Text style={styles.splashTagline}>The Medieval Fortress of Spaced Memory</Text>
-        <ActivityIndicator size="large" color="#F59E0B" style={{ marginTop: 24 }} />
-        <Text style={styles.splashStatus}>{statusMessage}</Text>
-      </View>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.splashContainer}>
+          <SquireMascot mood="idle" size={130} />
+          <Text style={styles.splashTitle}>VOCAB KEEP</Text>
+          <Text style={styles.splashTagline}>The Medieval Fortress of Spaced Memory</Text>
+          <ActivityIndicator size="large" color="#F59E0B" style={{ marginTop: 24 }} />
+          <Text style={styles.splashStatus}>{statusMessage}</Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FEFCE8" />
 
       {/* Top Medieval Stats Header (Vector Icons - Strictly No Emojis) */}
@@ -392,7 +395,8 @@ export default function App() {
         onOpenAdFreeModal={() => setAdFreeModalOpen(true)}
       />
     </SafeAreaView>
-  );
+  </SafeAreaProvider>
+);
 }
 
 const styles = StyleSheet.create({

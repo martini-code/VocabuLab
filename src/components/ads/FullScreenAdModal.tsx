@@ -5,9 +5,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Compass } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { SquireMascot } from '../mascot/Mascots';
