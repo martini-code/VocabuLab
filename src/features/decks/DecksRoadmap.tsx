@@ -445,9 +445,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.themeTitle}>{theme.name}</Text>
-                  {Boolean(theme.description) && (
-                    <Text style={styles.themeDesc}>{theme.description}</Text>
-                  )}
                 </View>
               </View>
 
@@ -481,11 +478,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                               </Text>
                             </View>
                           </View>
-                          {Boolean(deck.description) && (
-                            <Text style={styles.deckDesc} numberOfLines={2}>
-                              {deck.description}
-                            </Text>
-                          )}
                         </View>
                         <ChevronRight size={18} color="#94A3B8" />
                       </View>
