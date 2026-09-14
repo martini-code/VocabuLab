@@ -170,12 +170,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const [addingAllDeck, setAddingAllDeck] = useState(false);
 
   // Tab 2: Difficulty (CEFR / Tiers) State
-  const [selectedCefr, setSelectedCefr] = useState<string>('ALL');
-  const [difficultyStats, setDifficultyStats] = useState<DifficultyStat[]>([]);
-  const [difficultyWords, setDifficultyWords] = useState<DifficultyWordItem[]>([]);
-  const [difficultySearch, setDifficultySearch] = useState('');
   const [loadingDifficulty, setLoadingDifficulty] = useState(false);
-  const [adoptingTier, setAdoptingTier] = useState(false);
   const [mapDecks, setMapDecks] = useState<DeckWithProgress[]>([]);
 
   // Tab 3: Mastery (SRS Status) State
@@ -196,7 +191,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const loadAllData = async () => {
     await Promise.all([
       loadDecksData(),
-      loadDifficultyData(selectedCefr),
+      loadDifficultyData(),
       loadMasteryData(masteryStage),
     ]);
   };
@@ -210,16 +205,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     }
   };
 
-  const loadDifficultyData = async (cefr: string) => {
+  const loadDifficultyData = async () => {
     setLoadingDifficulty(true);
     try {
-      const [stats, words, decks] = await Promise.all([
-        getDifficultyStats(targetLang),
-        getWordsByDifficulty(cefr, targetLang),
-        getAllDecksOrderedByDifficulty(targetLang),
-      ]);
-      setDifficultyStats(stats);
-      setDifficultyWords(words);
+      const decks = await getAllDecksOrderedByDifficulty(targetLang);
       setMapDecks(decks);
     } catch (e) {
       console.warn('[Explore] Error loading difficulty:', e);
@@ -269,7 +258,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     try {
       await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang);
       // Refresh background stats without blocking
-      getDifficultyStats(targetLang).then(setDifficultyStats);
       getMasterySummary(targetLang).then(setMasterySummary);
       getThemesWithProgressiveDecks(targetLang).then(setThemes);
       getAllDecksOrderedByDifficulty(targetLang).then(setMapDecks);
@@ -287,28 +275,12 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
       const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice);
       setDeckCards(updatedCards);
       await loadDecksData();
-      await loadDifficultyData(selectedCefr);
+      await loadDifficultyData();
       await loadMasteryData(masteryStage);
     } catch (e) {
       console.warn('[Explore] Error adding all deck cards:', e);
     } finally {
       setAddingAllDeck(false);
-    }
-  };
-
-  // Add all words of currently selected CEFR level
-  const handleAdoptCefrTier = async (cefr: string) => {
-    if (cefr === 'ALL') return;
-    setAdoptingTier(true);
-    try {
-      await addWordsByDifficultyToQueue(cefr, targetLang);
-      await loadDifficultyData(cefr);
-      await loadDecksData();
-      await loadMasteryData(masteryStage);
-    } catch (e) {
-      console.warn('[Explore] Error adopting tier:', e);
-    } finally {
-      setAdoptingTier(false);
     }
   };
 
@@ -319,25 +291,13 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
       await addAvailableWordsToQueue(limit, targetLang);
       await loadMasteryData('available');
       await loadDecksData();
-      await loadDifficultyData(selectedCefr);
+      await loadDifficultyData();
     } catch (e) {
       console.warn('[Explore] Error adopting available:', e);
     } finally {
       setAdoptingAvailable(false);
     }
   };
-
-  // Filtered difficulty words by search query
-  const filteredDifficultyWords = useMemo(() => {
-    if (!difficultySearch.trim()) return difficultyWords;
-    const q = difficultySearch.toLowerCase().trim();
-    return difficultyWords.filter(
-      (w) =>
-        w.front_term.toLowerCase().includes(q) ||
-        w.back_term.toLowerCase().includes(q) ||
-        w.concept_desc.toLowerCase().includes(q)
-    );
-  }, [difficultyWords, difficultySearch]);
 
   return (
     <View style={styles.container}>
@@ -364,7 +324,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           style={[styles.tabButton, activeTab === 'difficulty' && styles.tabButtonActive]}
           onPress={() => {
             setActiveTab('difficulty');
-            loadDifficultyData(selectedCefr);
+            loadDifficultyData();
           }}
         >
           <TrendingUp
@@ -409,14 +369,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               <Text style={styles.roleTagText}>{t('explore.tab_decks_role')}</Text>
             </View>
             <Text style={styles.questionTitle}>{t('explore.tab_decks_question')}</Text>
-          </>
-        )}
-        {activeTab === 'difficulty' && (
-          <>
-            <View style={styles.roleTag}>
-              <Text style={styles.roleTagText}>{t('explore.tab_difficulty_role')}</Text>
-            </View>
-            <Text style={styles.questionTitle}>{t('explore.tab_difficulty_question')}</Text>
           </>
         )}
         {activeTab === 'mastery' && (
@@ -506,7 +458,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         </ScrollView>
       )}
 
-      {/* TAB 2: DIFFICULTY (CEFR / TIERS) - PROGRESSION ROADMAP */}
+      {/* TAB 2: DIFFICULTY (CEFR / TIERS) */}
       {activeTab === 'difficulty' && (
         <DifficultyProgressionMap
           decks={mapDecks}
