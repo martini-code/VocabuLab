@@ -18,7 +18,6 @@ import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { Volume2, Layers, X, Zap } from 'lucide-react-native';
 import { srsManager } from '../../srs';
-import { AlgorithmSelectorModal } from '../../components/modals/AlgorithmSelectorModal';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -42,15 +41,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
   const [sessionXP, setSessionXP] = useState(0);
-  const [algoModalOpen, setAlgoModalOpen] = useState(false);
-  const [algoVersion, setAlgoVersion] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = srsManager.subscribe(() => {
-      setAlgoVersion((v) => v + 1);
-    });
-    return unsubscribe;
-  }, []);
 
   const activeAlgorithm = srsManager.getActiveAlgorithm();
 
@@ -230,14 +220,10 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         <Text style={styles.progressText}>
           {currentIndex + 1} / {cards.length}
         </Text>
-        <TouchableOpacity
-          style={styles.algorithmChip}
-          onPress={() => setAlgoModalOpen(true)}
-          activeOpacity={0.7}
-        >
+        <View style={styles.algorithmChip}>
           <Zap size={12} color="#D97706" />
           <Text style={styles.algorithmChipText}>{activeAlgorithm.meta.shortName}</Text>
-        </TouchableOpacity>
+        </View>
       </View>
 
       {/* Spaced Repetition Card */}
@@ -335,13 +321,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           style={{ width: '100%', marginTop: 15 }}
         />
       )}
-
-      {/* Spaced Repetition Algorithm Selector Modal */}
-      <AlgorithmSelectorModal
-        visible={algoModalOpen}
-        onClose={() => setAlgoModalOpen(false)}
-        onAlgorithmChanged={() => setAlgoVersion((v) => v + 1)}
-      />
     </ScrollView>
   );
 };

@@ -1,3 +1,53 @@
+export const USER_SCHEMA_SQL = `
+-- Enable WAL mode & Foreign keys
+PRAGMA journal_mode = WAL;
+PRAGMA foreign_keys = ON;
+
+-- User Cards (The Garrison / Local FSRS State)
+CREATE TABLE IF NOT EXISTS User_Cards (
+    id TEXT PRIMARY KEY,
+    card_id INTEGER NOT NULL,
+    target_lang TEXT NOT NULL,
+    due_date DATETIME NOT NULL,
+    state INTEGER NOT NULL,
+    stability REAL NOT NULL,
+    difficulty REAL NOT NULL,
+    elapsed_days INTEGER NOT NULL,
+    scheduled_days INTEGER NOT NULL,
+    reps INTEGER NOT NULL,
+    lapses INTEGER NOT NULL,
+    updated_at DATETIME NOT NULL
+);
+
+-- Review Logs (Activity & Contribution History)
+CREATE TABLE IF NOT EXISTS Review_Logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL,
+    reviewed_at DATETIME NOT NULL
+);
+
+-- Deck Access & Entitlements
+CREATE TABLE IF NOT EXISTS Deck_Access (
+    deck_id TEXT PRIMARY KEY,
+    is_unlocked INTEGER DEFAULT 0,
+    unlocked_at DATETIME
+);
+
+-- Settings & Local Entitlements (Offline-First Store State)
+CREATE TABLE IF NOT EXISTS Settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME NOT NULL
+);
+
+-- Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_user_cards_due ON User_Cards(due_date);
+CREATE INDEX IF NOT EXISTS idx_user_cards_card_id ON User_Cards(card_id);
+CREATE INDEX IF NOT EXISTS idx_user_cards_lang ON User_Cards(target_lang);
+CREATE INDEX IF NOT EXISTS idx_review_logs_reviewed_at ON Review_Logs(reviewed_at);
+`;
+
 export const SCHEMA_SQL = `
 -- Enable WAL mode & Foreign keys
 PRAGMA journal_mode = WAL;

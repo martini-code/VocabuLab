@@ -1,38 +1,26 @@
 import { AlgorithmId, SRSAlgorithm, AlgorithmMeta } from './types';
 import { FSRSAlgorithm } from './algorithms/fsrs';
-import { SM2Algorithm } from './algorithms/sm2';
-import { LeitnerAlgorithm } from './algorithms/leitner';
 
 /**
  * Registry of available spaced repetition algorithms.
- * Ordered by retention efficiency (FSRS -> SM-2 -> Leitner).
+ * Vocab Keep exclusively uses FSRS v5 (State-of-the-art DSR model).
  */
 const ALGORITHM_INSTANCES: Record<AlgorithmId, SRSAlgorithm> = {
   fsrs: new FSRSAlgorithm(),
-  sm2: new SM2Algorithm(),
-  leitner: new LeitnerAlgorithm(),
 };
 
 export const DEFAULT_ALGORITHM_ID: AlgorithmId = 'fsrs';
 
 /**
- * Returns an algorithm instance by its unique identifier.
- * Falls back to FSRS if an invalid ID is provided.
+ * Returns the FSRS algorithm instance.
  */
-export function getAlgorithmById(id: AlgorithmId | string): SRSAlgorithm {
-  if (id in ALGORITHM_INSTANCES) {
-    return ALGORITHM_INSTANCES[id as AlgorithmId];
-  }
-  return ALGORITHM_INSTANCES[DEFAULT_ALGORITHM_ID];
+export function getAlgorithmById(id?: AlgorithmId | string): SRSAlgorithm {
+  return ALGORITHM_INSTANCES.fsrs;
 }
 
 /**
- * Returns metadata for all registered algorithms, ordered with the most efficient first.
+ * Returns metadata for the active FSRS algorithm.
  */
 export function getAllAlgorithmsMeta(): AlgorithmMeta[] {
-  return [
-    ALGORITHM_INSTANCES.fsrs.meta,
-    ALGORITHM_INSTANCES.sm2.meta,
-    ALGORITHM_INSTANCES.leitner.meta,
-  ];
+  return [ALGORITHM_INSTANCES.fsrs.meta];
 }

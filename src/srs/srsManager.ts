@@ -11,22 +11,11 @@ class SRSManager {
   private listeners: Set<Listener> = new Set();
 
   /**
-   * Initializes the manager by loading the user's persisted algorithm preference from SQLite.
+   * Initializes the manager (Vocab Keep exclusively runs FSRS v5).
    */
   async init(): Promise<void> {
-    if (this.isInitialized) return;
-    try {
-      const savedId = await getSetting('srs_algorithm');
-      if (savedId === 'fsrs' || savedId === 'sm2' || savedId === 'leitner') {
-        this.activeId = savedId;
-      } else {
-        this.activeId = DEFAULT_ALGORITHM_ID;
-      }
-      this.isInitialized = true;
-    } catch (e) {
-      console.warn('[SRSManager] Error initializing algorithm setting:', e);
-      this.activeId = DEFAULT_ALGORITHM_ID;
-    }
+    this.activeId = 'fsrs';
+    this.isInitialized = true;
   }
 
   /**

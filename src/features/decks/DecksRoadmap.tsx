@@ -60,6 +60,7 @@ import {
 } from '../../types';
 import {
   getThemesWithProgressiveDecks,
+  getAllDecksOrderedByDifficulty,
   getCardsByDeck,
   garrisonEntireDeck,
   addWordToQueue,
@@ -70,6 +71,7 @@ import {
   getMasteryWords,
   addAvailableWordsToQueue,
 } from '../../db/vault';
+import { DifficultyProgressionMap } from './DifficultyProgressionMap';
 import { speakWord } from '../../utils/tts';
 import { useTranslation } from 'react-i18next';
 
@@ -174,6 +176,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const [difficultySearch, setDifficultySearch] = useState('');
   const [loadingDifficulty, setLoadingDifficulty] = useState(false);
   const [adoptingTier, setAdoptingTier] = useState(false);
+  const [mapDecks, setMapDecks] = useState<DeckWithProgress[]>([]);
 
   // Tab 3: Mastery (SRS Status) State
   const [masteryStage, setMasteryStage] = useState<MasteryStage>('slipping');
@@ -200,7 +203,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   const loadDecksData = async () => {
     try {
-      const data = await getThemesWithProgressiveDecks();
+      const data = await getThemesWithProgressiveDecks(targetLang);
       setThemes(data);
     } catch (e) {
       console.warn('[Explore] Error loading decks:', e);
@@ -210,12 +213,14 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const loadDifficultyData = async (cefr: string) => {
     setLoadingDifficulty(true);
     try {
-      const [stats, words] = await Promise.all([
+      const [stats, words, decks] = await Promise.all([
         getDifficultyStats(targetLang),
         getWordsByDifficulty(cefr, targetLang),
+        getAllDecksOrderedByDifficulty(targetLang),
       ]);
       setDifficultyStats(stats);
       setDifficultyWords(words);
+      setMapDecks(decks);
     } catch (e) {
       console.warn('[Explore] Error loading difficulty:', e);
     } finally {
@@ -244,7 +249,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     setSelectedDeck(deck);
     setLoadingDeckCards(true);
     try {
-      const cards = await getCardsByDeck(deck.id, targetLang);
+      const cards = await getCardsByDeck(deck.id, targetLang, deck.difficulty_slice);
       setDeckCards(cards);
     } catch (e) {
       console.warn('[Explore] Error loading deck cards:', e);
@@ -262,11 +267,12 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     // Instant UI update
     setLocallyQueuedWordIds((prev) => new Set(prev).add(frontLexemeId));
     try {
-      await addWordToQueue(frontLexemeId, backLexemeId, conceptId);
+      await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang);
       // Refresh background stats without blocking
       getDifficultyStats(targetLang).then(setDifficultyStats);
       getMasterySummary(targetLang).then(setMasterySummary);
-      getThemesWithProgressiveDecks().then(setThemes);
+      getThemesWithProgressiveDecks(targetLang).then(setThemes);
+      getAllDecksOrderedByDifficulty(targetLang).then(setMapDecks);
     } catch (e) {
       console.warn('[Explore] Error adding word:', e);
     }
@@ -277,8 +283,8 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     if (!selectedDeck) return;
     setAddingAllDeck(true);
     try {
-      await garrisonEntireDeck(selectedDeck.id, targetLang);
-      const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang);
+      await garrisonEntireDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice);
+      const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice);
       setDeckCards(updatedCards);
       await loadDecksData();
       await loadDifficultyData(selectedCefr);
@@ -508,227 +514,13 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         </ScrollView>
       )}
 
-      {/* TAB 2: DIFFICULTY (CEFR / TIERS) */}
+      {/* TAB 2: DIFFICULTY (CEFR / TIERS) - PROGRESSION ROADMAP */}
       {activeTab === 'difficulty' && (
-        <View style={styles.tabContent}>
-          {/* CEFR Tier Horizontal Filter */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tierSelectorScroll}
-          >
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.tierFilterChip,
-                selectedCefr === 'ALL' && styles.tierFilterChipActive,
-              ]}
-              onPress={() => {
-                setSelectedCefr('ALL');
-                loadDifficultyData('ALL');
-              }}
-            >
-              <Text
-                style={[
-                  styles.tierFilterChipText,
-                  selectedCefr === 'ALL' && styles.tierFilterChipTextActive,
-                ]}
-              >
-                {t('explore.tier_all')}
-              </Text>
-            </TouchableOpacity>
-
-            {difficultyStats.map((stat) => {
-              const isSelected = selectedCefr === stat.cefr;
-              return (
-                <TouchableOpacity
-                  key={stat.cefr}
-                  activeOpacity={0.8}
-                  style={[styles.tierFilterChip, isSelected && styles.tierFilterChipActive]}
-                  onPress={() => {
-                    setSelectedCefr(stat.cefr);
-                    loadDifficultyData(stat.cefr);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.tierFilterChipText,
-                      isSelected && styles.tierFilterChipTextActive,
-                    ]}
-                  >
-                    {stat.cefr} {stat.label}
-                  </Text>
-                  <View style={styles.tierCountBadge}>
-                    <Text style={styles.tierCountBadgeText}>{stat.total_count}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          {/* Tier Summary & Quick Adopt Card */}
-          {selectedCefr !== 'ALL' && (
-            <View style={styles.tierSummaryCard}>
-              {(() => {
-                const cur = difficultyStats.find((s) => s.cefr === selectedCefr);
-                if (!cur) return null;
-                return (
-                  <View>
-                    <View style={styles.summaryStatsRow}>
-                      <View style={styles.summaryStatItem}>
-                        <Text style={styles.summaryStatVal}>{cur.total_count}</Text>
-                        <Text style={styles.summaryStatLabel}>Total</Text>
-                      </View>
-                      <View style={styles.summaryStatItem}>
-                        <Text style={[styles.summaryStatVal, { color: '#2563EB' }]}>
-                          {cur.queued_count}
-                        </Text>
-                        <Text style={styles.summaryStatLabel}>In Queue</Text>
-                      </View>
-                      <View style={styles.summaryStatItem}>
-                        <Text style={[styles.summaryStatVal, { color: '#059669' }]}>
-                          {cur.mastered_count}
-                        </Text>
-                        <Text style={styles.summaryStatLabel}>Mastered</Text>
-                      </View>
-                      <View style={styles.summaryStatItem}>
-                        <Text style={[styles.summaryStatVal, { color: '#D97706' }]}>
-                          {cur.available_count}
-                        </Text>
-                        <Text style={styles.summaryStatLabel}>Available</Text>
-                      </View>
-                    </View>
-
-                    {cur.available_count > 0 && (
-                      <TouchableOpacity
-                        activeOpacity={0.85}
-                        style={styles.adoptTierButton}
-                        onPress={() => handleAdoptCefrTier(selectedCefr)}
-                        disabled={adoptingTier}
-                      >
-                        {adoptingTier ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <>
-                            <PlusCircle size={16} color="#FFFFFF" />
-                            <Text style={styles.adoptTierButtonText}>
-                              {t('explore.adopt_tier_words', { tier: selectedCefr })} (
-                              {cur.available_count})
-                            </Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })()}
-            </View>
-          )}
-
-          {/* Search Input */}
-          <View style={styles.searchBarContainer}>
-            <Search size={16} color="#94A3B8" style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchBarInput}
-              placeholder={t('explore.search_placeholder')}
-              placeholderTextColor="#94A3B8"
-              value={difficultySearch}
-              onChangeText={setDifficultySearch}
-              clearButtonMode="while-editing"
-            />
-          </View>
-
-          {/* Word List for Difficulty */}
-          {loadingDifficulty ? (
-            <View style={styles.centerLoading}>
-              <ActivityIndicator size="large" color="#D97706" />
-            </View>
-          ) : (
-            <FlatList
-              data={filteredDifficultyWords}
-              keyExtractor={(item) => `diff_${item.front_lexeme_id}`}
-              contentContainerStyle={{ paddingBottom: 100 }}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => {
-                const isQueued =
-                  item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
-                const cefrColors = getCefrBadgeColors(item.front_cefr);
-                const isMastered = (item.stability || 0) >= 10.0;
-
-                return (
-                  <View style={styles.wordItemCard}>
-                    <View style={styles.wordItemHeader}>
-                      <View style={styles.wordTermBox}>
-                        <Text style={styles.wordFrontTerm}>{item.front_term}</Text>
-                        <TouchableOpacity
-                          style={styles.speakerBtn}
-                          onPress={() => speakWord(item.front_term, item.front_lang)}
-                        >
-                          <Volume2 size={16} color="#D97706" />
-                        </TouchableOpacity>
-                      </View>
-                      <View
-                        style={[
-                          styles.cefrBadge,
-                          { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
-                        ]}
-                      >
-                        <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
-                          {item.front_cefr}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.wordBackTerm}>{item.back_term}</Text>
-                    {Boolean(item.concept_desc) && (
-                      <Text style={styles.wordDescText}>{item.concept_desc}</Text>
-                    )}
-
-                    <View style={styles.wordItemFooter}>
-                      <Text style={styles.wordOriginText}>
-                        {item.theme_name} • {item.deck_name}
-                      </Text>
-
-                      {isMastered ? (
-                        <View style={styles.masteredBadge}>
-                          <Check size={14} color="#059669" />
-                          <Text style={styles.masteredBadgeText}>Mastered</Text>
-                        </View>
-                      ) : isQueued ? (
-                        <View style={styles.inQueueBadge}>
-                          <Check size={14} color="#2563EB" />
-                          <Text style={styles.inQueueBadgeText}>{t('explore.in_queue')}</Text>
-                        </View>
-                      ) : (
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          style={styles.addQueueBtn}
-                          onPress={() =>
-                            handleAddWord(
-                              item.front_lexeme_id,
-                              item.back_lexeme_id,
-                              item.concept_id
-                            )
-                          }
-                        >
-                          <Plus size={14} color="#FFFFFF" />
-                          <Text style={styles.addQueueBtnText}>
-                            {t('explore.add_to_queue')}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
-                );
-              }}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>{t('explore.no_words_found')}</Text>
-                </View>
-              }
-            />
-          )}
-        </View>
+        <DifficultyProgressionMap
+          decks={mapDecks}
+          loading={loadingDifficulty}
+          onSelectDeck={(deck) => handleOpenDeck(deck)}
+        />
       )}
 
       {/* TAB 3: MASTERY (SRS STATUS) */}

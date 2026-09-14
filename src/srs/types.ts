@@ -3,7 +3,7 @@ import { UserCard } from '../types';
 /**
  * Unique identifiers for the supported spaced repetition algorithms.
  */
-export type AlgorithmId = 'fsrs' | 'sm2' | 'leitner';
+export type AlgorithmId = 'fsrs';
 
 /**
  * Standard 4-button review grades across all SRS algorithms:

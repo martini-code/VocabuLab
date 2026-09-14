@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
-import { SCHEMA_SQL } from './schema';
+import { importDatabaseFromAssetAsync } from 'expo-sqlite';
+import { USER_SCHEMA_SQL } from './schema';
 import {
   Domain,
   CardWithDetails,
@@ -19,824 +20,487 @@ import {
   CEFRLevel,
 } from '../types';
 
-let dbInstance: SQLite.SQLiteDatabase | null = null;
-const DB_NAME = 'vocab-keep.sqlite';
+let staticDbInstance: SQLite.SQLiteDatabase | null = null;
+let userDbInstance: SQLite.SQLiteDatabase | null = null;
+
+const STATIC_DB_NAME = 'lexicon_v1.0.0.db';
+const USER_DB_NAME = 'user_vault.sqlite';
 
 /**
- * Returns the open SQLite database instance, creating it if needed.
+ * Maps ISO language codes and common aliases to the exact lang_name strings
+ * used in the static lexicon database (card_translations table).
  */
-export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (!dbInstance) {
-    dbInstance = await SQLite.openDatabaseAsync(DB_NAME);
-    await dbInstance.execAsync(`
+const ISO_TO_LANG: Record<string, string> = {
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  it: 'Italian',
+  pt: 'Portuguese (Brazil)',
+  'pt-br': 'Portuguese (Brazil)',
+  'pt-pt': 'Portuguese (Portugal)',
+  ja: 'Japanese',
+  ru: 'Russian',
+  zh: 'Chinese (Simplified)',
+  'zh-cn': 'Chinese (Simplified)',
+  'zh-tw': 'Chinese (Traditional)',
+  en: 'English',
+  ar: 'Arabic',
+  hi: 'Hindi',
+  ko: 'Korean',
+  nl: 'Dutch',
+  pl: 'Polish',
+  tr: 'Turkish',
+  uk: 'Ukrainian',
+  vi: 'Vietnamese',
+};
+
+export function resolveLanguageName(codeOrName: string): string {
+  if (!codeOrName) return 'Spanish';
+  const trimmed = codeOrName.trim();
+  const lower = trimmed.toLowerCase();
+  if (ISO_TO_LANG[lower]) return ISO_TO_LANG[lower];
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+export function difficultyToCefr(difficulty: number): CEFRLevel {
+  switch (difficulty) {
+    case 1:
+      return 'A1';
+    case 2:
+      return 'A2';
+    case 3:
+      return 'B1';
+    case 4:
+      return 'B2';
+    case 5:
+      return 'C1';
+    case 6:
+      return 'C2';
+    default:
+      return 'A1';
+  }
+}
+
+export function cefrToDifficulty(cefr: string): number {
+  switch (cefr.toUpperCase()) {
+    case 'A1':
+      return 1;
+    case 'A2':
+      return 2;
+    case 'B1':
+      return 3;
+    case 'B2':
+      return 4;
+    case 'C1':
+      return 5;
+    case 'C2':
+      return 6;
+    default:
+      return 1;
+  }
+}
+
+/**
+ * Returns the read-only static lexicon database.
+ * Enforces PRAGMA query_only = ON to ensure the static database is NEVER modified.
+ */
+export async function getStaticDb(): Promise<SQLite.SQLiteDatabase> {
+  if (!staticDbInstance) {
+    try {
+      await importDatabaseFromAssetAsync(STATIC_DB_NAME, {
+        assetId: require('../../assets/lexicon_v1.0.0.db'),
+        forceOverwrite: false,
+      });
+    } catch (err) {
+      console.warn('[Vault] Notice during static asset DB import:', err);
+    }
+    staticDbInstance = await SQLite.openDatabaseAsync(STATIC_DB_NAME);
+    // Enforce read-only constraint strictly
+    await staticDbInstance.execAsync('PRAGMA query_only = ON;');
+  }
+  return staticDbInstance;
+}
+
+/**
+ * Returns the writable user vault database for FSRS cards, review logs, and user settings.
+ */
+export async function getUserDb(): Promise<SQLite.SQLiteDatabase> {
+  if (!userDbInstance) {
+    userDbInstance = await SQLite.openDatabaseAsync(USER_DB_NAME);
+    await userDbInstance.execAsync(`
       PRAGMA journal_mode = WAL;
       PRAGMA foreign_keys = ON;
     `);
   }
-  return dbInstance;
+  return userDbInstance;
 }
 
 /**
- * Initializes the database schema and seeds initial data if tables are empty.
+ * Backwards compatibility alias: returns the user database.
+ */
+export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  return getUserDb();
+}
+
+/**
+ * Initializes the user database schema and seeds initial review logs if empty.
  */
 export async function initVault(): Promise<void> {
-  const db = await getDatabase();
-  await db.execAsync(SCHEMA_SQL);
+  const userDb = await getUserDb();
+  await userDb.execAsync(USER_SCHEMA_SQL);
 
-  // Column migration check for Domains
-  try {
-    const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(Domains);');
-    const colNames = new Set(tableInfo.map((c) => c.name));
-    if (!colNames.has('description')) {
-      await db.execAsync('ALTER TABLE Domains ADD COLUMN description TEXT;');
-    }
-    if (!colNames.has('difficulty_level')) {
-      await db.execAsync('ALTER TABLE Domains ADD COLUMN difficulty_level INTEGER DEFAULT 1;');
-    }
-    if (!colNames.has('icon_name')) {
-      await db.execAsync('ALTER TABLE Domains ADD COLUMN icon_name TEXT;');
-    }
-  } catch (err) {
-    console.warn('[Vault] Column migration notice:', err);
-  }
-
-  // Check if we need to seed initial kingdom data
-  const check = await db.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM Domains;');
-  if (!check || check.count === 0) {
-    console.log('[Vault] Seeding fortress archives and kingdom lore...');
-    await seedFortressData(db);
-  } else {
-    const conceptCheck = await db.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM Concepts;');
-    if (!conceptCheck || conceptCheck.count < 20) {
-      console.log('[Vault] Synchronizing enriched vocabulary concepts across all tiers...');
-      await seedFortressData(db);
-    }
-  }
+  // Initialize static DB connection
+  await getStaticDb();
 
   // Check if Review_Logs has initial activity logs
-  const logCheck = await db.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM Review_Logs;');
+  const logCheck = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM Review_Logs;'
+  );
   if (!logCheck || logCheck.count === 0) {
-    console.log('[Vault] Inscribing past campaign logs into the Battle Chronicles...');
-    await seedSampleReviewLogs(db);
+    console.log('[Vault] Inscribing initial activity chronicles...');
+    await seedSampleReviewLogs(userDb);
   }
 }
 
-/**
- * Seeds initial domain taxonomy, CILI concepts, multilingual lexemes, and user cards.
- */
-async function seedFortressData(db: SQLite.SQLiteDatabase): Promise<void> {
-  // 1. Domains & Progressive Decks
-  const domains = [
-    // Top-level Themes
-    { id: 'domain_castle', parent_id: null, name: 'The Castle Keep & Court', description: 'Palace etiquette, pantry provisions, and festival banquets', difficulty_level: 1, icon_name: 'castle' },
-    { id: 'domain_wilderness', parent_id: null, name: 'The Enchanted Forest & Nature', description: 'Wayfaring trails, tempest storms, and wild beasts', difficulty_level: 2, icon_name: 'tree' },
-    { id: 'domain_market', parent_id: null, name: 'The Merchant Guild & Trade', description: 'Royal currency, marketplace barter, and commerce contracts', difficulty_level: 2, icon_name: 'coins' },
-    { id: 'domain_armory', parent_id: null, name: 'The Royal Armory & Strategy', description: 'Bladed armaments, shield defenses, and battlefield valor', difficulty_level: 3, icon_name: 'swords' },
-    { id: 'domain_academy', parent_id: null, name: 'The Grand Scriptorium & Lore', description: 'Celestial stars, epistemology, hypotheses, and logic axioms', difficulty_level: 3, icon_name: 'book' },
-    { id: 'domain_forbidden', parent_id: null, name: 'The Forbidden Royal Archives (Pro)', description: 'High court statecraft, incorporeal metaphysics, and ancient mazes', difficulty_level: 5, icon_name: 'crown' },
-
-    // Theme 1: Castle Keep & Court
-    { id: 'sub_castle_daily', parent_id: 'domain_castle', name: 'Everyday Courtesies & Greetings', description: 'Essential greetings and bonds of friendship', difficulty_level: 1, icon_name: 'handshake' },
-    { id: 'sub_castle_dining', parent_id: 'domain_castle', name: 'Pantry & Dining Provisions', description: 'Daily meals, sweet sugar crystals, and provisions', difficulty_level: 2, icon_name: 'utensils' },
-    { id: 'sub_castle_feasts', parent_id: 'domain_castle', name: 'Royal Banquets & Celebrations', description: 'Grand feast dining and vintage wine toasts', difficulty_level: 3, icon_name: 'goblet' },
-
-    // Theme 2: Enchanted Forest & Nature
-    { id: 'sub_wild_creatures', parent_id: 'domain_wilderness', name: 'Beasts & Royal Menagerie', description: 'Carnivorous lions and fierce creatures of the woods', difficulty_level: 2, icon_name: 'paw' },
-    { id: 'sub_wild_weather', parent_id: 'domain_wilderness', name: 'Wayfaring & Tempest Storms', description: 'Surviving violent gale squalls and tempest rains', difficulty_level: 3, icon_name: 'cloud-lightning' },
-    { id: 'sub_wild_travel', parent_id: 'domain_wilderness', name: 'Untamed Wilderness & Badlands', description: 'Misty rugged terrain and mysterious badlands', difficulty_level: 4, icon_name: 'compass' },
-
-    // Theme 3: Merchant Guild & Trade
-    { id: 'sub_market_goods', parent_id: 'domain_market', name: 'Coinage & Royal Mint', description: 'Stamped currency coins and standard traded wares', difficulty_level: 2, icon_name: 'coins' },
-    { id: 'sub_market_trade', parent_id: 'domain_market', name: 'Guild Bargains & Trade Pacts', description: 'Merchant exchange agreements and trade transactions', difficulty_level: 3, icon_name: 'scale' },
-
-    // Theme 4: Royal Armory & Strategy
-    { id: 'sub_armory_weapons', parent_id: 'domain_armory', name: 'Steel Blades & Armaments', description: 'Forged swords and bladed melee weaponry', difficulty_level: 2, icon_name: 'sword' },
-    { id: 'sub_armory_defenses', parent_id: 'domain_armory', name: 'Shields & Defensive Plate', description: 'Personal defense shields and protective heraldic armor', difficulty_level: 2, icon_name: 'shield' },
-    { id: 'sub_armory_combat', parent_id: 'domain_armory', name: 'Martial Valor & Battlefield Courage', description: 'Chivalric courage, tactics, and battlefield valor', difficulty_level: 4, icon_name: 'award' },
-
-    // Theme 5: Grand Scriptorium & Lore
-    { id: 'sub_script_astronomy', parent_id: 'domain_academy', name: 'Celestial Stars & Heavens', description: 'Luminous stellar bodies and the celestial sphere', difficulty_level: 1, icon_name: 'sparkles' },
-    { id: 'sub_script_philosophy', parent_id: 'domain_academy', name: 'Truth & Foundational Epistemology', description: 'The pursuit of genuine reality, veracity, and wisdom', difficulty_level: 3, icon_name: 'scroll' },
-    { id: 'sub_script_science', parent_id: 'domain_academy', name: 'Natural Hypotheses & Deduction', description: 'Formulating provisional suppositions and theories', difficulty_level: 4, icon_name: 'microscope' },
-    { id: 'sub_script_logic', parent_id: 'domain_academy', name: 'First Principles & Axioms', description: 'Propositions accepted as self-evidently true', difficulty_level: 5, icon_name: 'brain' },
-
-    // Theme 6: Forbidden Royal Archives
-    { id: 'sub_forbid_diplomacy', parent_id: 'domain_forbidden', name: 'Statecraft & High Intrigue', description: 'Secret political maneuvers and oratorical eloquence', difficulty_level: 5, icon_name: 'landmark' },
-    { id: 'sub_forbid_arcana', parent_id: 'domain_forbidden', name: 'Incorporeal Metaphysics & Arcana', description: 'Non-physical ideas, spirits, and abstract doctrines', difficulty_level: 6, icon_name: 'flame' },
-    { id: 'sub_forbid_labyrinth', parent_id: 'domain_forbidden', name: 'Labyrinthine Riddles of Antiquity', description: 'Intricate, deceptive conceptual mazes of the ancients', difficulty_level: 6, icon_name: 'network' },
-  ];
-
-  for (const d of domains) {
-    await db.runAsync(
-      'INSERT OR REPLACE INTO Domains (id, parent_id, name, description, difficulty_level, icon_name) VALUES (?, ?, ?, ?, ?, ?);',
-      [d.id, d.parent_id, d.name, d.description, d.difficulty_level, d.icon_name]
-    );
-  }
-
-  // 2. Comprehensive Multilingual Corpus (OMW CILI style across all tiers and decks)
-  const corpus = [
-    // sub_castle_daily (A1)
-    {
-      cId: 'cili_001',
-      domainId: 'sub_castle_daily',
-      desc: 'A greeting of goodwill exchanged upon meeting',
-      lexemes: [
-        { lang: 'en', term: 'greeting', pos: 'noun', cefr: 'A1', rank: 10 },
-        { lang: 'es', term: 'saludo', pos: 'noun', cefr: 'A1', rank: 12 },
-        { lang: 'fr', term: 'salutation', pos: 'noun', cefr: 'A1', rank: 15 },
-        { lang: 'de', term: 'Begrüßung', pos: 'noun', cefr: 'A1', rank: 14 },
-      ],
-    },
-    {
-      cId: 'cili_002',
-      domainId: 'sub_castle_daily',
-      desc: 'The time of day between morning and night when the sun shines',
-      lexemes: [
-        { lang: 'en', term: 'day', pos: 'noun', cefr: 'A1', rank: 1 },
-        { lang: 'es', term: 'día', pos: 'noun', cefr: 'A1', rank: 2 },
-        { lang: 'fr', term: 'jour', pos: 'noun', cefr: 'A1', rank: 3 },
-        { lang: 'de', term: 'Tag', pos: 'noun', cefr: 'A1', rank: 2 },
-      ],
-    },
-    {
-      cId: 'cili_003',
-      domainId: 'sub_castle_daily',
-      desc: 'A person with whom one has a bond of mutual affection and loyalty',
-      lexemes: [
-        { lang: 'en', term: 'friend', pos: 'noun', cefr: 'A1', rank: 8 },
-        { lang: 'es', term: 'amigo', pos: 'noun', cefr: 'A1', rank: 9 },
-        { lang: 'fr', term: 'ami', pos: 'noun', cefr: 'A1', rank: 8 },
-        { lang: 'de', term: 'Freund', pos: 'noun', cefr: 'A1', rank: 7 },
-      ],
-    },
-    {
-      cId: 'cili_013',
-      domainId: 'sub_castle_daily',
-      desc: 'Expression of politeness used when asking for something',
-      lexemes: [
-        { lang: 'en', term: 'please', pos: 'adv', cefr: 'A1', rank: 5 },
-        { lang: 'es', term: 'por favor', pos: 'adv', cefr: 'A1', rank: 6 },
-        { lang: 'fr', term: 's’il vous plaît', pos: 'adv', cefr: 'A1', rank: 5 },
-        { lang: 'de', term: 'bitte', pos: 'adv', cefr: 'A1', rank: 4 },
-      ],
-    },
-
-    // sub_castle_dining (A1 / A2)
-    {
-      cId: 'cili_014',
-      domainId: 'sub_castle_dining',
-      desc: 'Clear liquid essential for plant and animal life',
-      lexemes: [
-        { lang: 'en', term: 'water', pos: 'noun', cefr: 'A1', rank: 4 },
-        { lang: 'es', term: 'agua', pos: 'noun', cefr: 'A1', rank: 5 },
-        { lang: 'fr', term: 'eau', pos: 'noun', cefr: 'A1', rank: 4 },
-        { lang: 'de', term: 'Wasser', pos: 'noun', cefr: 'A1', rank: 5 },
-      ],
-    },
-    {
-      cId: 'cili_015',
-      domainId: 'sub_castle_dining',
-      desc: 'Food made of flour, water, and yeast baked in an oven',
-      lexemes: [
-        { lang: 'en', term: 'bread', pos: 'noun', cefr: 'A1', rank: 16 },
-        { lang: 'es', term: 'pan', pos: 'noun', cefr: 'A1', rank: 15 },
-        { lang: 'fr', term: 'pain', pos: 'noun', cefr: 'A1', rank: 14 },
-        { lang: 'de', term: 'Brot', pos: 'noun', cefr: 'A1', rank: 15 },
-      ],
-    },
-    {
-      cId: 'cili_016',
-      domainId: 'sub_castle_dining',
-      desc: 'Edible seeds and produce of plants eaten as food',
-      lexemes: [
-        { lang: 'en', term: 'vegetable', pos: 'noun', cefr: 'A2', rank: 52 },
-        { lang: 'es', term: 'verdura', pos: 'noun', cefr: 'A2', rank: 48 },
-        { lang: 'fr', term: 'légume', pos: 'noun', cefr: 'A2', rank: 50 },
-        { lang: 'de', term: 'Gemüse', pos: 'noun', cefr: 'A2', rank: 52 },
-      ],
-    },
-
-    // sub_castle_feasts (A1 / A2 / B1)
-    {
-      cId: 'cili_004',
-      domainId: 'sub_castle_feasts',
-      desc: 'A sweet crystalline substance obtained from sugarcane or beet',
-      lexemes: [
-        { lang: 'en', term: 'sugar', pos: 'noun', cefr: 'A1', rank: 45 },
-        { lang: 'es', term: 'azúcar', pos: 'noun', cefr: 'A1', rank: 40 },
-        { lang: 'fr', term: 'sucre', pos: 'noun', cefr: 'A1', rank: 38 },
-        { lang: 'de', term: 'Zucker', pos: 'noun', cefr: 'A1', rank: 42 },
-      ],
-    },
-    {
-      cId: 'cili_005',
-      domainId: 'sub_castle_feasts',
-      desc: 'A grand celebration meal accompanied by music and speeches',
-      lexemes: [
-        { lang: 'en', term: 'banquet', pos: 'noun', cefr: 'B1', rank: 180 },
-        { lang: 'es', term: 'banquete', pos: 'noun', cefr: 'B1', rank: 175 },
-        { lang: 'fr', term: 'banquet', pos: 'noun', cefr: 'B1', rank: 170 },
-        { lang: 'de', term: 'Bankett', pos: 'noun', cefr: 'B1', rank: 190 },
-      ],
-    },
-    {
-      cId: 'cili_006',
-      domainId: 'sub_castle_feasts',
-      desc: 'Fermented beverage made from pressed grape juice',
-      lexemes: [
-        { lang: 'en', term: 'wine', pos: 'noun', cefr: 'A2', rank: 60 },
-        { lang: 'es', term: 'vino', pos: 'noun', cefr: 'A2', rank: 55 },
-        { lang: 'fr', term: 'vin', pos: 'noun', cefr: 'A2', rank: 50 },
-        { lang: 'de', term: 'Wein', pos: 'noun', cefr: 'A2', rank: 58 },
-      ],
-    },
-
-    // Theme 2: Enchanted Forest & Nature
-    {
-      cId: 'cili_017',
-      domainId: 'sub_wild_creatures',
-      desc: 'A large tawny-colored cat that lives in prides',
-      lexemes: [
-        { lang: 'en', term: 'lion', pos: 'noun', cefr: 'A2', rank: 75 },
-        { lang: 'es', term: 'león', pos: 'noun', cefr: 'A2', rank: 72 },
-        { lang: 'fr', term: 'lion', pos: 'noun', cefr: 'A2', rank: 70 },
-        { lang: 'de', term: 'Löwe', pos: 'noun', cefr: 'A2', rank: 74 },
-      ],
-    },
-    {
-      cId: 'cili_018',
-      domainId: 'sub_wild_creatures',
-      desc: 'A wild carnivorous mammal of the dog family living in packs',
-      lexemes: [
-        { lang: 'en', term: 'wolf', pos: 'noun', cefr: 'B1', rank: 140 },
-        { lang: 'es', term: 'lobo', pos: 'noun', cefr: 'B1', rank: 135 },
-        { lang: 'fr', term: 'loup', pos: 'noun', cefr: 'B1', rank: 132 },
-        { lang: 'de', term: 'Wolf', pos: 'noun', cefr: 'B1', rank: 138 },
-      ],
-    },
-    {
-      cId: 'cili_019',
-      domainId: 'sub_wild_weather',
-      desc: 'Moisture condensed from the atmosphere that falls in drops',
-      lexemes: [
-        { lang: 'en', term: 'rain', pos: 'noun', cefr: 'A1', rank: 25 },
-        { lang: 'es', term: 'lluvia', pos: 'noun', cefr: 'A1', rank: 24 },
-        { lang: 'fr', term: 'pluie', pos: 'noun', cefr: 'A1', rank: 22 },
-        { lang: 'de', term: 'Regen', pos: 'noun', cefr: 'A1', rank: 26 },
-      ],
-    },
-    {
-      cId: 'cili_020',
-      domainId: 'sub_wild_weather',
-      desc: 'A violent disturbance of the atmosphere with strong winds',
-      lexemes: [
-        { lang: 'en', term: 'storm', pos: 'noun', cefr: 'B1', rank: 155 },
-        { lang: 'es', term: 'tormenta', pos: 'noun', cefr: 'B1', rank: 150 },
-        { lang: 'fr', term: 'tempête', pos: 'noun', cefr: 'B1', rank: 148 },
-        { lang: 'de', term: 'Sturm', pos: 'noun', cefr: 'B1', rank: 152 },
-      ],
-    },
-    {
-      cId: 'cili_021',
-      domainId: 'sub_wild_weather',
-      desc: 'A violent windy storm accompanied by thunder and lightning',
-      lexemes: [
-        { lang: 'en', term: 'tempest', pos: 'noun', cefr: 'B2', rank: 310 },
-        { lang: 'es', term: 'tempestad', pos: 'noun', cefr: 'B2', rank: 305 },
-        { lang: 'fr', term: 'ouragan', pos: 'noun', cefr: 'B2', rank: 300 },
-        { lang: 'de', term: 'Unwetter', pos: 'noun', cefr: 'B2', rank: 315 },
-      ],
-    },
-    {
-      cId: 'cili_022',
-      domainId: 'sub_wild_travel',
-      desc: 'A track laid down for walking or made by continual treading',
-      lexemes: [
-        { lang: 'en', term: 'path', pos: 'noun', cefr: 'A2', rank: 90 },
-        { lang: 'es', term: 'sendero', pos: 'noun', cefr: 'A2', rank: 88 },
-        { lang: 'fr', term: 'sentier', pos: 'noun', cefr: 'A2', rank: 85 },
-        { lang: 'de', term: 'Pfad', pos: 'noun', cefr: 'A2', rank: 92 },
-      ],
-    },
-    {
-      cId: 'cili_023',
-      domainId: 'sub_wild_travel',
-      desc: 'An uncultivated, uninhabited, and inhospitable region',
-      lexemes: [
-        { lang: 'en', term: 'wilderness', pos: 'noun', cefr: 'B2', rank: 330 },
-        { lang: 'es', term: 'páramo', pos: 'noun', cefr: 'B2', rank: 325 },
-        { lang: 'fr', term: 'désert', pos: 'noun', cefr: 'B2', rank: 320 },
-        { lang: 'de', term: 'Wildnis', pos: 'noun', cefr: 'B2', rank: 335 },
-      ],
-    },
-
-    // Theme 3: Merchant Guild & Trade
-    {
-      cId: 'cili_024',
-      domainId: 'sub_market_goods',
-      desc: 'A flat, typically round piece of metal with an official stamp',
-      lexemes: [
-        { lang: 'en', term: 'coin', pos: 'noun', cefr: 'A2', rank: 95 },
-        { lang: 'es', term: 'moneda', pos: 'noun', cefr: 'A2', rank: 92 },
-        { lang: 'fr', term: 'pièce', pos: 'noun', cefr: 'A2', rank: 90 },
-        { lang: 'de', term: 'Münze', pos: 'noun', cefr: 'A2', rank: 96 },
-      ],
-    },
-    {
-      cId: 'cili_025',
-      domainId: 'sub_market_goods',
-      desc: 'A yellow precious metal valued especially for coin and trade',
-      lexemes: [
-        { lang: 'en', term: 'gold', pos: 'noun', cefr: 'A2', rank: 65 },
-        { lang: 'es', term: 'oro', pos: 'noun', cefr: 'A2', rank: 62 },
-        { lang: 'fr', term: 'or', pos: 'noun', cefr: 'A2', rank: 60 },
-        { lang: 'de', term: 'Gold', pos: 'noun', cefr: 'A2', rank: 66 },
-      ],
-    },
-    {
-      cId: 'cili_026',
-      domainId: 'sub_market_trade',
-      desc: 'A person who buys and sells commodities for profit',
-      lexemes: [
-        { lang: 'en', term: 'merchant', pos: 'noun', cefr: 'B1', rank: 195 },
-        { lang: 'es', term: 'comerciante', pos: 'noun', cefr: 'B1', rank: 190 },
-        { lang: 'fr', term: 'marchand', pos: 'noun', cefr: 'B1', rank: 185 },
-        { lang: 'de', term: 'Kaufmann', pos: 'noun', cefr: 'B1', rank: 198 },
-      ],
-    },
-    {
-      cId: 'cili_027',
-      domainId: 'sub_market_trade',
-      desc: 'A written or spoken agreement enforceable by law',
-      lexemes: [
-        { lang: 'en', term: 'contract', pos: 'noun', cefr: 'B2', rank: 260 },
-        { lang: 'es', term: 'contrato', pos: 'noun', cefr: 'B2', rank: 255 },
-        { lang: 'fr', term: 'contrat', pos: 'noun', cefr: 'B2', rank: 250 },
-        { lang: 'de', term: 'Vertrag', pos: 'noun', cefr: 'B2', rank: 265 },
-      ],
-    },
-
-    // Theme 4: Royal Armory & Strategy
-    {
-      cId: 'cili_007',
-      domainId: 'sub_armory_weapons',
-      desc: 'A bladed weapon consisting of a steel blade fitted with a hilt',
-      lexemes: [
-        { lang: 'en', term: 'sword', pos: 'noun', cefr: 'A2', rank: 110 },
-        { lang: 'es', term: 'espada', pos: 'noun', cefr: 'A2', rank: 105 },
-        { lang: 'fr', term: 'épée', pos: 'noun', cefr: 'A2', rank: 108 },
-        { lang: 'de', term: 'Schwert', pos: 'noun', cefr: 'A2', rank: 112 },
-      ],
-    },
-    {
-      cId: 'cili_028',
-      domainId: 'sub_armory_weapons',
-      desc: 'A weapon consisting of a curved piece of wood used to shoot arrows',
-      lexemes: [
-        { lang: 'en', term: 'bow', pos: 'noun', cefr: 'A2', rank: 115 },
-        { lang: 'es', term: 'arco', pos: 'noun', cefr: 'A2', rank: 112 },
-        { lang: 'fr', term: 'arc', pos: 'noun', cefr: 'A2', rank: 110 },
-        { lang: 'de', term: 'Bogen', pos: 'noun', cefr: 'A2', rank: 118 },
-      ],
-    },
-    {
-      cId: 'cili_008',
-      domainId: 'sub_armory_defenses',
-      desc: 'A piece of personal defensive armor carried on the arm',
-      lexemes: [
-        { lang: 'en', term: 'shield', pos: 'noun', cefr: 'A2', rank: 120 },
-        { lang: 'es', term: 'escudo', pos: 'noun', cefr: 'A2', rank: 118 },
-        { lang: 'fr', term: 'bouclier', pos: 'noun', cefr: 'A2', rank: 122 },
-        { lang: 'de', term: 'Schild', pos: 'noun', cefr: 'A2', rank: 124 },
-      ],
-    },
-    {
-      cId: 'cili_029',
-      domainId: 'sub_armory_defenses',
-      desc: 'Protective metal covering worn by warriors in battle',
-      lexemes: [
-        { lang: 'en', term: 'armor', pos: 'noun', cefr: 'B1', rank: 210 },
-        { lang: 'es', term: 'armadura', pos: 'noun', cefr: 'B1', rank: 205 },
-        { lang: 'fr', term: 'armure', pos: 'noun', cefr: 'B1', rank: 200 },
-        { lang: 'de', term: 'Rüstung', pos: 'noun', cefr: 'B1', rank: 215 },
-      ],
-    },
-    {
-      cId: 'cili_009',
-      domainId: 'sub_armory_combat',
-      desc: 'Great courage in the face of imminent danger and battle',
-      lexemes: [
-        { lang: 'en', term: 'valor', pos: 'noun', cefr: 'B2', rank: 280 },
-        { lang: 'es', term: 'valentía', pos: 'noun', cefr: 'B2', rank: 270 },
-        { lang: 'fr', term: 'vaillance', pos: 'noun', cefr: 'B2', rank: 275 },
-        { lang: 'de', term: 'Tapferkeit', pos: 'noun', cefr: 'B2', rank: 285 },
-      ],
-    },
-    {
-      cId: 'cili_030',
-      domainId: 'sub_armory_combat',
-      desc: 'An act of defeating an enemy or opponent in a contest',
-      lexemes: [
-        { lang: 'en', term: 'victory', pos: 'noun', cefr: 'B1', rank: 165 },
-        { lang: 'es', term: 'victoria', pos: 'noun', cefr: 'B1', rank: 160 },
-        { lang: 'fr', term: 'victoire', pos: 'noun', cefr: 'B1', rank: 158 },
-        { lang: 'de', term: 'Sieg', pos: 'noun', cefr: 'B1', rank: 168 },
-      ],
-    },
-
-    // Theme 5: Grand Scriptorium & Lore
-    {
-      cId: 'cili_031',
-      domainId: 'sub_script_astronomy',
-      desc: 'A fixed luminous point in the night sky',
-      lexemes: [
-        { lang: 'en', term: 'star', pos: 'noun', cefr: 'A1', rank: 30 },
-        { lang: 'es', term: 'estrella', pos: 'noun', cefr: 'A1', rank: 28 },
-        { lang: 'fr', term: 'étoile', pos: 'noun', cefr: 'A1', rank: 25 },
-        { lang: 'de', term: 'Stern', pos: 'noun', cefr: 'A1', rank: 32 },
-      ],
-    },
-    {
-      cId: 'cili_032',
-      domainId: 'sub_script_astronomy',
-      desc: 'An obscuring of the light from one celestial body by another',
-      lexemes: [
-        { lang: 'en', term: 'eclipse', pos: 'noun', cefr: 'B2', rank: 350 },
-        { lang: 'es', term: 'eclipse', pos: 'noun', cefr: 'B2', rank: 345 },
-        { lang: 'fr', term: 'éclipse', pos: 'noun', cefr: 'B2', rank: 340 },
-        { lang: 'de', term: 'Finsternis', pos: 'noun', cefr: 'B2', rank: 355 },
-      ],
-    },
-    {
-      cId: 'cili_010',
-      domainId: 'sub_script_philosophy',
-      desc: 'The quality of being true, genuine, or actual',
-      lexemes: [
-        { lang: 'en', term: 'truth', pos: 'noun', cefr: 'B1', rank: 85 },
-        { lang: 'es', term: 'verdad', pos: 'noun', cefr: 'B1', rank: 80 },
-        { lang: 'fr', term: 'vérité', pos: 'noun', cefr: 'B1', rank: 82 },
-        { lang: 'de', term: 'Wahrheit', pos: 'noun', cefr: 'B1', rank: 84 },
-      ],
-    },
-    {
-      cId: 'cili_033',
-      domainId: 'sub_script_philosophy',
-      desc: 'Moral principles that govern a person’s behavior',
-      lexemes: [
-        { lang: 'en', term: 'ethics', pos: 'noun', cefr: 'C1', rank: 460 },
-        { lang: 'es', term: 'ética', pos: 'noun', cefr: 'C1', rank: 455 },
-        { lang: 'fr', term: 'éthique', pos: 'noun', cefr: 'C1', rank: 450 },
-        { lang: 'de', term: 'Ethik', pos: 'noun', cefr: 'C1', rank: 465 },
-      ],
-    },
-    {
-      cId: 'cili_034',
-      domainId: 'sub_script_science',
-      desc: 'A proposed explanation made as a starting point for investigation',
-      lexemes: [
-        { lang: 'en', term: 'hypothesis', pos: 'noun', cefr: 'C1', rank: 470 },
-        { lang: 'es', term: 'hipótesis', pos: 'noun', cefr: 'C1', rank: 465 },
-        { lang: 'fr', term: 'hypothèse', pos: 'noun', cefr: 'C1', rank: 460 },
-        { lang: 'de', term: 'Hypothese', pos: 'noun', cefr: 'C1', rank: 475 },
-      ],
-    },
-    {
-      cId: 'cili_035',
-      domainId: 'sub_script_logic',
-      desc: 'A statement or proposition on which an abstractly defined structure is based',
-      lexemes: [
-        { lang: 'en', term: 'axiom', pos: 'noun', cefr: 'C2', rank: 680 },
-        { lang: 'es', term: 'axioma', pos: 'noun', cefr: 'C2', rank: 675 },
-        { lang: 'fr', term: 'axiome', pos: 'noun', cefr: 'C2', rank: 670 },
-        { lang: 'de', term: 'Axiom', pos: 'noun', cefr: 'C2', rank: 685 },
-      ],
-    },
-    {
-      cId: 'cili_036',
-      domainId: 'sub_script_logic',
-      desc: 'A seemingly self-contradictory proposition that may prove to be true',
-      lexemes: [
-        { lang: 'en', term: 'paradox', pos: 'noun', cefr: 'C1', rank: 480 },
-        { lang: 'es', term: 'paradoja', pos: 'noun', cefr: 'C1', rank: 475 },
-        { lang: 'fr', term: 'paradoxe', pos: 'noun', cefr: 'C1', rank: 470 },
-        { lang: 'de', term: 'Paradoxon', pos: 'noun', cefr: 'C1', rank: 485 },
-      ],
-    },
-
-    // Theme 6: Forbidden Royal Archives
-    {
-      cId: 'cili_011',
-      domainId: 'sub_forbid_diplomacy',
-      desc: 'Secret art of political maneuvering and cunning negotiation',
-      lexemes: [
-        { lang: 'en', term: 'statecraft', pos: 'noun', cefr: 'C1', rank: 490 },
-        { lang: 'es', term: 'arte de gobierno', pos: 'noun', cefr: 'C1', rank: 485 },
-        { lang: 'fr', term: 'art de gouverner', pos: 'noun', cefr: 'C1', rank: 488 },
-        { lang: 'de', term: 'Staatskunst', pos: 'noun', cefr: 'C1', rank: 495 },
-      ],
-    },
-    {
-      cId: 'cili_012',
-      domainId: 'sub_forbid_arcana',
-      desc: 'An intricate or deceptive labyrinth of interconnected ideas',
-      lexemes: [
-        { lang: 'en', term: 'labyrinthine', pos: 'adj', cefr: 'C2', rank: 720 },
-        { lang: 'es', term: 'laberíntico', pos: 'adj', cefr: 'C2', rank: 710 },
-        { lang: 'fr', term: 'labyrinthique', pos: 'adj', cefr: 'C2', rank: 715 },
-        { lang: 'de', term: 'verschlungen', pos: 'adj', cefr: 'C2', rank: 725 },
-      ],
-    },
-    {
-      cId: 'cili_037',
-      domainId: 'sub_forbid_arcana',
-      desc: 'Extremely delicate and light in a way that seems otherworldly',
-      lexemes: [
-        { lang: 'en', term: 'ethereal', pos: 'adj', cefr: 'C2', rank: 740 },
-        { lang: 'es', term: 'etéreo', pos: 'adj', cefr: 'C2', rank: 735 },
-        { lang: 'fr', term: 'éthéré', pos: 'adj', cefr: 'C2', rank: 730 },
-        { lang: 'de', term: 'ätherisch', pos: 'adj', cefr: 'C2', rank: 745 },
-      ],
-    },
-    {
-      cId: 'cili_038',
-      domainId: 'sub_forbid_labyrinth',
-      desc: 'A person or thing that is mysterious, puzzling, or difficult to understand',
-      lexemes: [
-        { lang: 'en', term: 'enigma', pos: 'noun', cefr: 'C1', rank: 505 },
-        { lang: 'es', term: 'enigma', pos: 'noun', cefr: 'C1', rank: 500 },
-        { lang: 'fr', term: 'énigme', pos: 'noun', cefr: 'C1', rank: 495 },
-        { lang: 'de', term: 'Rätsel', pos: 'noun', cefr: 'C1', rank: 510 },
-      ],
-    },
-    {
-      cId: 'cili_039',
-      domainId: 'sub_forbid_labyrinth',
-      desc: 'The most perfect or typical example of a quality or class',
-      lexemes: [
-        { lang: 'en', term: 'quintessence', pos: 'noun', cefr: 'C2', rank: 760 },
-        { lang: 'es', term: 'quintaesencia', pos: 'noun', cefr: 'C2', rank: 750 },
-        { lang: 'fr', term: 'quintessence', pos: 'noun', cefr: 'C2', rank: 745 },
-        { lang: 'de', term: 'Quintessenz', pos: 'noun', cefr: 'C2', rank: 765 },
-      ],
-    },
-  ];
-
-  const now = new Date();
-  const nowIso = now.toISOString();
-
-  // Pre-seed realistic SRS stage profiles for initial training cards:
-  // - Mastered (stability >= 10): cili_001, cili_002
-  // - Learning (stability < 10, reps > 0): cili_003, cili_004
-  // - Slipping (lapses > 0, due today/past): cili_005, cili_006
-  // - New in Queue (state = 0, reps = 0): cili_007, cili_008
-  // Remaining concepts are unqueued and available to adopt!
-  const initialCardProfiles: Record<string, {
-    state: number;
-    stability: number;
-    difficulty: number;
-    elapsed_days: number;
-    scheduled_days: number;
-    reps: number;
-    lapses: number;
-    due_offset_hours: number;
-  }> = {
-    cili_001: { state: 2, stability: 16.5, difficulty: 2.2, elapsed_days: 10, scheduled_days: 18, reps: 5, lapses: 0, due_offset_hours: 18 * 24 },
-    cili_002: { state: 2, stability: 12.0, difficulty: 2.5, elapsed_days: 8, scheduled_days: 14, reps: 4, lapses: 0, due_offset_hours: 14 * 24 },
-    cili_003: { state: 2, stability: 4.5, difficulty: 3.5, elapsed_days: 2, scheduled_days: 5, reps: 2, lapses: 0, due_offset_hours: 4 * 24 },
-    cili_004: { state: 1, stability: 2.8, difficulty: 3.8, elapsed_days: 1, scheduled_days: 3, reps: 2, lapses: 0, due_offset_hours: 3 * 24 },
-    cili_005: { state: 3, stability: 1.1, difficulty: 6.2, elapsed_days: 2, scheduled_days: 1, reps: 4, lapses: 2, due_offset_hours: -4 },
-    cili_006: { state: 2, stability: 1.4, difficulty: 5.5, elapsed_days: 3, scheduled_days: 1, reps: 3, lapses: 1, due_offset_hours: -2 },
-    cili_007: { state: 0, stability: 0.0, difficulty: 0.0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, due_offset_hours: 0 },
-    cili_008: { state: 0, stability: 0.0, difficulty: 0.0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, due_offset_hours: 0 },
-  };
-
-  for (const item of corpus) {
-    await db.runAsync('INSERT OR IGNORE INTO Concepts (id, domain_id, description) VALUES (?, ?, ?);', [
-      item.cId,
-      item.domainId,
-      item.desc,
-    ]);
-
-    let esId: number | null = null;
-    let enId: number | null = null;
-
-    for (const lex of item.lexemes) {
-      // Check if lexeme exists
-      const existing = await db.getFirstAsync<{ id: number }>(
-        'SELECT id FROM Lexemes WHERE language = ? AND term = ? LIMIT 1;',
-        [lex.lang, lex.term]
-      );
-      let lexId: number;
-      if (existing) {
-        lexId = existing.id;
-      } else {
-        const res = await db.runAsync(
-          'INSERT INTO Lexemes (language, term, pos, cefr_level, frequency_rank) VALUES (?, ?, ?, ?, ?);',
-          [lex.lang, lex.term, lex.pos, lex.cefr, lex.rank]
-        );
-        lexId = res.lastInsertRowId;
-      }
-
-      await db.runAsync('INSERT OR IGNORE INTO Concept_Lexeme (concept_id, lexeme_id) VALUES (?, ?);', [
-        item.cId,
-        lexId,
-      ]);
-
-      if (lex.lang === 'es') esId = lexId;
-      if (lex.lang === 'en') enId = lexId;
-    }
-
-    // Initialize user cards for study queue if in initial profile
-    const profile = initialCardProfiles[item.cId];
-    if (profile && esId && enId) {
-      const dueDate = new Date(now.getTime() + profile.due_offset_hours * 3600 * 1000).toISOString();
-      await db.runAsync(
-        `INSERT OR IGNORE INTO User_Cards (
-          id, front_lexeme_id, back_lexeme_id, due_date, state,
-          stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-        [
-          `card_${item.cId}`,
-          esId,
-          enId,
-          dueDate,
-          profile.state,
-          profile.stability,
-          profile.difficulty,
-          profile.elapsed_days,
-          profile.scheduled_days,
-          profile.reps,
-          profile.lapses,
-          nowIso,
-        ]
-      );
-    }
-  }
-}
-
-/**
- * Retrieves cards due for review or new cards in the queue, joined with full lexeme details.
- * Can be optionally filtered by a specific deck/subdomain ID.
- */
-export async function getDueCards(filterDeckId?: string): Promise<CardWithDetails[]> {
-  const db = await getDatabase();
-  const now = new Date().toISOString();
-
-  let query = `
-    SELECT 
-      c.id, c.front_lexeme_id, c.back_lexeme_id, c.due_date, c.state,
-      c.stability, c.difficulty, c.elapsed_days, c.scheduled_days, c.reps, c.lapses, c.updated_at,
-      f.term as front_term, f.language as front_lang, f.pos as front_pos, f.cefr_level as front_cefr,
-      b.term as back_term, b.language as back_lang, b.pos as back_pos, b.cefr_level as back_cefr,
-      con.description as concept_desc
-    FROM User_Cards c
-    JOIN Lexemes f ON c.front_lexeme_id = f.id
-    JOIN Lexemes b ON c.back_lexeme_id = b.id
-    JOIN Concept_Lexeme cl ON cl.lexeme_id = f.id
-    JOIN Concepts con ON con.id = cl.concept_id
-    WHERE (c.due_date <= ? OR c.state = 0)
-  `;
-  const params: any[] = [now];
-
-  if (filterDeckId) {
-    query += ' AND con.domain_id = ?';
-    params.push(filterDeckId);
-  }
-
-  query += `
-    ORDER BY c.due_date ASC
-    LIMIT 50;
-  `;
-
-  return await db.getAllAsync<CardWithDetails>(query, params);
-}
-
-/**
- * Retrieves all garrisoned cards belonging to a deck for study practice,
- * prioritizing due cards first.
- */
-export async function getDeckCardsForReview(deckId: string): Promise<CardWithDetails[]> {
-  const db = await getDatabase();
-  const query = `
-    SELECT 
-      c.id, c.front_lexeme_id, c.back_lexeme_id, c.due_date, c.state,
-      c.stability, c.difficulty, c.elapsed_days, c.scheduled_days, c.reps, c.lapses, c.updated_at,
-      f.term as front_term, f.language as front_lang, f.pos as front_pos, f.cefr_level as front_cefr,
-      b.term as back_term, b.language as back_lang, b.pos as back_pos, b.cefr_level as back_cefr,
-      con.description as concept_desc
-    FROM User_Cards c
-    JOIN Lexemes f ON c.front_lexeme_id = f.id
-    JOIN Lexemes b ON c.back_lexeme_id = b.id
-    JOIN Concept_Lexeme cl ON cl.lexeme_id = f.id
-    JOIN Concepts con ON con.id = cl.concept_id
-    WHERE con.domain_id = ?
-    ORDER BY c.due_date ASC
-    LIMIT 50;
-  `;
-  return await db.getAllAsync<CardWithDetails>(query, [deckId]);
-}
-
-const LEVEL_CONFIG: Record<number, { label: string; cefr: string }> = {
-  1: { label: 'Novice', cefr: 'A1' },
-  2: { label: 'Apprentice', cefr: 'A2' },
-  3: { label: 'Adept', cefr: 'B1' },
-  4: { label: 'Expert', cefr: 'B2' },
-  5: { label: 'Master', cefr: 'C1' },
-  6: { label: 'Grandmaster', cefr: 'C2' },
+const CATEGORY_META: Record<
+  string,
+  { name: string; description: string; icon_name: string; is_pro: boolean }
+> = {
+  greetings: {
+    name: 'Greetings & Courtesies',
+    description: 'Essential salutations, formal pleasantries, and polite farewells',
+    icon_name: 'handshake',
+    is_pro: false,
+  },
+  family: {
+    name: 'Kinship & Family Realm',
+    description: 'Household relatives, ancestors, lineage, and bonds of kin',
+    icon_name: 'castle',
+    is_pro: false,
+  },
+  numbers: {
+    name: 'Numbers & Cardinal Counting',
+    description: 'Foundational numeric figures, quantities, and cardinal tallies',
+    icon_name: 'coins',
+    is_pro: false,
+  },
+  animals: {
+    name: 'Fauna & Menagerie',
+    description: 'Domestic companions, farm livestock, and insects of the kingdom',
+    icon_name: 'paw',
+    is_pro: false,
+  },
+  vehicles: {
+    name: 'Vehicles & Wayfaring',
+    description: 'Land transports, maritime vessels, and airborne flight crafts',
+    icon_name: 'compass',
+    is_pro: false,
+  },
+  math: {
+    name: 'Mathematics & Logic',
+    description: 'Elementary arithmetic calculations, operations, and axioms',
+    icon_name: 'scale',
+    is_pro: false,
+  },
+  electronics: {
+    name: 'Appliances & Technology',
+    description: 'Household appliances, circuitry, and engineering instruments',
+    icon_name: 'sparkles',
+    is_pro: true,
+  },
+  biology: {
+    name: 'Natural Sciences & Cellular Lore',
+    description: 'Cell cycle genetics, microscopic life, and biological taxonomy',
+    icon_name: 'book',
+    is_pro: true,
+  },
 };
 
+function formatSubcategoryName(sub: string): string {
+  if (!sub) return 'General';
+  return sub
+    .split(' ')
+    .map((word) => {
+      if (word.startsWith('(')) {
+        return '(' + word.charAt(1).toUpperCase() + word.slice(2);
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
 /**
- * Retrieves themes and their decks ordered by progressive difficulty (easy to hard).
+ * Tab 1: Themes & Thematic Decks.
+ * Returns the real thematic decks from lexicon_v1.0.0.db grouped by category.
  */
-export async function getThemesWithProgressiveDecks(): Promise<ThemeGroup[]> {
-  const db = await getDatabase();
+export async function getThemesWithProgressiveDecks(
+  targetLang = 'es'
+): Promise<ThemeGroup[]> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
 
-  // 1. Fetch top-level themes
-  const themes = await db.getAllAsync<{
-    id: string;
-    name: string;
-    description: string | null;
-    difficulty_level: number;
-    icon_name: string | null;
-  }>(`
-    SELECT id, name, description, difficulty_level, icon_name
-    FROM Domains
-    WHERE parent_id IS NULL
-    ORDER BY difficulty_level ASC, id ASC;
-  `);
+  // 1. Fetch all decks
+  const decksRows = await staticDb.getAllAsync<{
+    deck_id: number;
+    category: string;
+    subcategory: string;
+    difficulty: number;
+    description: string;
+  }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
 
-  // 2. Fetch progressive decks with card & mastery counts
-  const decks = await db.getAllAsync<{
-    id: string;
-    parent_id: string;
-    name: string;
-    description: string | null;
-    difficulty_level: number;
-    icon_name: string | null;
+  // 2. Fetch card counts per deck
+  const countRows = await staticDb.getAllAsync<{
+    deck_id: number;
     card_count: number;
-    garrisoned_count: number;
-    mastered_count: number;
-  }>(`
-    SELECT 
-      d.id,
-      d.parent_id,
-      d.name,
-      d.description,
-      d.difficulty_level,
-      d.icon_name,
-      COUNT(DISTINCT c.id) as card_count,
-      COUNT(DISTINCT uc.id) as garrisoned_count,
-      COUNT(DISTINCT CASE WHEN uc.stability >= 10.0 THEN uc.id END) as mastered_count
-    FROM Domains d
-    LEFT JOIN Concepts c ON c.domain_id = d.id
-    LEFT JOIN Concept_Lexeme cl ON cl.concept_id = c.id
-    LEFT JOIN User_Cards uc ON uc.front_lexeme_id = cl.lexeme_id
-    WHERE d.parent_id IS NOT NULL
-    GROUP BY d.id
-    ORDER BY d.difficulty_level ASC, d.name ASC;
-  `);
+  }>('SELECT deck_id, count(card_id) as card_count FROM cards GROUP BY deck_id;');
+  const cardCountMap = new Map<number, number>();
+  countRows.forEach((r) => cardCountMap.set(r.deck_id, r.card_count));
 
-  const deckMap = new Map<string, DeckWithProgress[]>();
-  for (const d of decks) {
-    const diffLevel = d.difficulty_level || 1;
-    const cfg = LEVEL_CONFIG[diffLevel] || { label: 'Novice', cefr: 'A1' };
-    const isPro = d.id.includes('forbidden') || d.parent_id.includes('forbidden');
+  // 3. Fetch user garrison & mastery progress from user_vault.sqlite
+  const userProgressRows = await userDb.getAllAsync<{
+    card_id: number;
+    state: number;
+    stability: number;
+    reps: number;
+  }>('SELECT card_id, state, stability, reps FROM User_Cards WHERE target_lang = ?;', [langName]);
 
-    const deckObj: DeckWithProgress = {
-      id: d.id,
-      theme_id: d.parent_id,
-      name: d.name,
-      description: d.description || '',
-      difficulty_level: diffLevel,
-      difficulty_label: cfg.label,
-      cefr_level: cfg.cefr,
-      icon_name: d.icon_name || 'book',
-      card_count: d.card_count,
-      garrisoned_count: d.garrisoned_count,
-      mastered_count: d.mastered_count,
-      is_pro: isPro,
-    };
+  const userProgressMap = new Map<
+    number,
+    { state: number; stability: number; reps: number }
+  >();
+  userProgressRows.forEach((r) => {
+    userProgressMap.set(r.card_id, {
+      state: r.state,
+      stability: r.stability,
+      reps: r.reps,
+    });
+  });
 
-    if (!deckMap.has(d.parent_id)) {
-      deckMap.set(d.parent_id, []);
+  // Map each card_id to its deck_id
+  const cardDeckRows = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+  }>('SELECT card_id, deck_id FROM cards;');
+  const cardToDeckMap = new Map<number, number>();
+  cardDeckRows.forEach((r) => cardToDeckMap.set(r.card_id, r.deck_id));
+
+  // Tally user progress per deck
+  const deckGarrisonCount = new Map<number, number>();
+  const deckMasteredCount = new Map<number, number>();
+
+  for (const [cardId, uCard] of userProgressMap.entries()) {
+    const deckId = cardToDeckMap.get(cardId);
+    if (deckId !== undefined) {
+      deckGarrisonCount.set(deckId, (deckGarrisonCount.get(deckId) || 0) + 1);
+      if (uCard.stability >= 21 || uCard.reps >= 3) {
+        deckMasteredCount.set(deckId, (deckMasteredCount.get(deckId) || 0) + 1);
+      }
     }
-    deckMap.get(d.parent_id)!.push(deckObj);
   }
 
-  const result: ThemeGroup[] = [];
-  for (const t of themes) {
-    const isPro = t.id.includes('forbidden');
-    const themeDecks = deckMap.get(t.id) || [];
-    // Sort decks ascending by difficulty level
-    themeDecks.sort((a, b) => a.difficulty_level - b.difficulty_level);
+  // Fetch unlock states
+  const unlockedRows = await userDb.getAllAsync<{ deck_id: string }>(
+    'SELECT deck_id FROM Deck_Access WHERE is_unlocked = 1;'
+  );
+  const unlockedSet = new Set(unlockedRows.map((r) => r.deck_id));
+
+  // Group decks by category
+  const categoriesMap = new Map<string, DeckWithProgress[]>();
+
+  for (const d of decksRows) {
+    const totalCards = cardCountMap.get(d.deck_id) || 0;
+    const garrisoned = deckGarrisonCount.get(d.deck_id) || 0;
+    const mastered = deckMasteredCount.get(d.deck_id) || 0;
+    const cefr = difficultyToCefr(d.difficulty);
+    const catMeta = CATEGORY_META[d.category] || {
+      name: d.category,
+      description: '',
+      icon_name: 'book',
+      is_pro: false,
+    };
+
+    const isUnlocked =
+      d.deck_id === 1 || // First deck always unlocked
+      d.deck_id === 2 ||
+      unlockedSet.has(String(d.deck_id)) ||
+      unlockedSet.has(d.category);
+
+    const deckObj: DeckWithProgress = {
+      id: String(d.deck_id),
+      real_deck_id: d.deck_id,
+      theme_id: d.category,
+      theme_name: catMeta.name,
+      name: formatSubcategoryName(d.subcategory),
+      description: d.description || `${formatSubcategoryName(d.subcategory)} vocabulary (${cefr})`,
+      difficulty_level: d.difficulty,
+      difficulty_label: cefr,
+      cefr_level: cefr,
+      icon_name: catMeta.icon_name,
+      card_count: totalCards,
+      garrisoned_count: garrisoned,
+      mastered_count: mastered,
+      is_pro: catMeta.is_pro,
+      is_locked: !isUnlocked,
+    };
+
+    if (!categoriesMap.has(d.category)) {
+      categoriesMap.set(d.category, []);
+    }
+    categoriesMap.get(d.category)!.push(deckObj);
+  }
+
+  // Build ThemeGroups array in consistent category ordering
+  const categoryOrder = [
+    'greetings',
+    'family',
+    'numbers',
+    'animals',
+    'vehicles',
+    'math',
+    'electronics',
+    'biology',
+  ];
+
+  const themeGroups: ThemeGroup[] = [];
+  for (const catKey of categoryOrder) {
+    const decks = categoriesMap.get(catKey);
+    if (!decks || decks.length === 0) continue;
+
+    const meta = CATEGORY_META[catKey] || {
+      name: catKey,
+      description: '',
+      icon_name: 'book',
+      is_pro: false,
+    };
+
+    themeGroups.push({
+      id: `theme_${catKey}`,
+      name: meta.name,
+      description: meta.description,
+      icon_name: meta.icon_name,
+      is_pro: meta.is_pro,
+      decks,
+    });
+  }
+
+  // Include any extra categories not in categoryOrder
+  for (const [catKey, decks] of categoriesMap.entries()) {
+    if (!categoryOrder.includes(catKey)) {
+      themeGroups.push({
+        id: `theme_${catKey}`,
+        name: formatSubcategoryName(catKey),
+        description: '',
+        icon_name: 'book',
+        is_pro: false,
+        decks,
+      });
+    }
+  }
+
+  return themeGroups;
+}
+
+/**
+ * Tab 2: Difficulty Progression Map.
+ * Organizes the static data into smaller UI-only decks sliced by (deck_id, difficulty).
+ * For instance: "Domestic Animals (A1)", "Family Members (A1)", "Domestic Animals (B1)", etc.
+ * Shows only the cards of that difficulty tier.
+ */
+export async function getAllDecksOrderedByDifficulty(
+  targetLang = 'es'
+): Promise<DeckWithProgress[]> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+
+  // Group cards by (deck_id, difficulty)
+  const sliceRows = await staticDb.getAllAsync<{
+    deck_id: number;
+    category: string;
+    subcategory: string;
+    difficulty: number;
+    card_count: number;
+  }>(`
+    SELECT 
+      d.deck_id,
+      d.category,
+      d.subcategory,
+      c.difficulty,
+      COUNT(c.card_id) as card_count
+    FROM decks d
+    JOIN cards c ON c.deck_id = d.deck_id
+    GROUP BY d.deck_id, c.difficulty
+    ORDER BY c.difficulty ASC, d.deck_id ASC;
+  `);
+
+  // Fetch all user cards for this language
+  const userCards = await userDb.getAllAsync<{
+    card_id: number;
+    stability: number;
+    reps: number;
+  }>('SELECT card_id, stability, reps FROM User_Cards WHERE target_lang = ?;', [langName]);
+
+  const userCardMap = new Map<number, { stability: number; reps: number }>();
+  userCards.forEach((uc) => userCardMap.set(uc.card_id, { stability: uc.stability, reps: uc.reps }));
+
+  // Map each card to its (deck_id, difficulty)
+  const cardSliceRows = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    difficulty: number;
+  }>('SELECT card_id, deck_id, difficulty FROM cards;');
+
+  const cardToSliceMap = new Map<number, string>();
+  cardSliceRows.forEach((r) => {
+    cardToSliceMap.set(r.card_id, `${r.deck_id}_${r.difficulty}`);
+  });
+
+  // Tally user progress per slice
+  const sliceGarrisonCount = new Map<string, number>();
+  const sliceMasteredCount = new Map<string, number>();
+
+  for (const [cardId, uc] of userCardMap.entries()) {
+    const key = cardToSliceMap.get(cardId);
+    if (key) {
+      sliceGarrisonCount.set(key, (sliceGarrisonCount.get(key) || 0) + 1);
+      if (uc.stability >= 21 || uc.reps >= 3) {
+        sliceMasteredCount.set(key, (sliceMasteredCount.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  // Build UI-only sliced decks
+  const result: DeckWithProgress[] = [];
+
+  for (const s of sliceRows) {
+    const sliceKey = `${s.deck_id}_${s.difficulty}`;
+    const cefr = difficultyToCefr(s.difficulty);
+    const catMeta = CATEGORY_META[s.category] || { icon_name: 'book' };
+    const garrisoned = sliceGarrisonCount.get(sliceKey) || 0;
+    const mastered = sliceMasteredCount.get(sliceKey) || 0;
+
+    const subName = formatSubcategoryName(s.subcategory);
+    const name = `${subName} (${cefr})`;
+    const description = `${cefr} vocabulary subset • ${s.card_count} words`;
 
     result.push({
-      id: t.id,
-      name: t.name,
-      description: t.description || '',
-      icon_name: t.icon_name || 'castle',
-      is_pro: isPro,
-      decks: themeDecks,
+      id: `diff_${s.deck_id}_${s.difficulty}`,
+      real_deck_id: s.deck_id,
+      difficulty_slice: s.difficulty,
+      theme_id: s.category,
+      theme_name: formatSubcategoryName(s.category),
+      name,
+      description,
+      difficulty_level: s.difficulty,
+      difficulty_label: cefr,
+      cefr_level: cefr,
+      icon_name: catMeta.icon_name,
+      card_count: s.card_count,
+      garrisoned_count: garrisoned,
+      mastered_count: mastered,
+      is_pro: false,
+      is_locked: false,
     });
   }
 
@@ -844,462 +508,810 @@ export async function getThemesWithProgressiveDecks(): Promise<ThemeGroup[]> {
 }
 
 /**
- * Retrieves the vocabulary items for a given deck.
+ * Parses deckId or sliceId (e.g. "diff_2_1" -> { realDeckId: 2, difficultySlice: 1 })
  */
-export async function getCardsByDeck(deckId: string, targetLang = 'es'): Promise<DeckCardDetail[]> {
-  const db = await getDatabase();
-  const query = `
-    SELECT 
-      con.id as concept_id,
-      con.description as concept_desc,
-      lf.id as front_lexeme_id,
-      lf.term as front_term,
-      lf.language as front_lang,
-      lf.pos as front_pos,
-      lf.cefr_level as front_cefr,
-      lb.id as back_lexeme_id,
-      lb.term as back_term,
-      lb.language as back_lang,
-      uc.id as user_card_id,
-      uc.stability,
-      uc.reps
-    FROM Concepts con
-    JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-    JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-    JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-    JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-    LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
-    WHERE con.domain_id = ?
-    ORDER BY lf.frequency_rank ASC, lf.term ASC;
-  `;
-  const rows = await db.getAllAsync<any>(query, [targetLang, deckId]);
-  return rows.map((r) => ({
-    concept_id: r.concept_id,
-    concept_desc: r.concept_desc,
-    front_lexeme_id: r.front_lexeme_id,
-    front_term: r.front_term,
-    front_lang: r.front_lang,
-    front_pos: r.front_pos,
-    front_cefr: r.front_cefr,
-    back_lexeme_id: r.back_lexeme_id,
-    back_term: r.back_term,
-    back_lang: r.back_lang,
-    is_garrisoned: Boolean(r.user_card_id),
-    user_card_id: r.user_card_id || undefined,
-    stability: r.stability,
-    reps: r.reps,
-  }));
-}
-
-/**
- * Garrisons all ungarrisoned cards in a deck in one tap.
- */
-export async function garrisonEntireDeck(deckId: string, targetLang = 'es'): Promise<number> {
-  const db = await getDatabase();
-  const pairs = await db.getAllAsync<{ front_id: number; back_id: number; concept_id: string }>(
-    `SELECT lf.id as front_id, lb.id as back_id, con.id as concept_id
-     FROM Concepts con
-     JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-     JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-     JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-     JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-     LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
-     WHERE con.domain_id = ? AND uc.id IS NULL;`,
-    [targetLang, deckId]
-  );
-
-  const now = new Date().toISOString();
-  let count = 0;
-  for (const p of pairs) {
-    const cardId = `card_${p.concept_id}_${p.front_id}`;
-    await db.runAsync(
-      `INSERT OR IGNORE INTO User_Cards (
-        id, front_lexeme_id, back_lexeme_id, due_date, state,
-        stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
-      ) VALUES (?, ?, ?, ?, 0, 0.0, 0.0, 0, 0, 0, 0, ?);`,
-      [cardId, p.front_id, p.back_id, now, now]
-    );
-    count++;
+function parseDeckIdentifier(
+  deckIdOrSliceId: string,
+  explicitDifficultySlice?: number
+): { realDeckId: number; difficultySlice?: number } {
+  if (deckIdOrSliceId.startsWith('diff_')) {
+    const parts = deckIdOrSliceId.split('_');
+    const dId = parseInt(parts[1], 10);
+    const diff = parseInt(parts[2], 10);
+    return {
+      realDeckId: dId,
+      difficultySlice: explicitDifficultySlice !== undefined ? explicitDifficultySlice : diff,
+    };
   }
-  return count;
+  return {
+    realDeckId: parseInt(deckIdOrSliceId, 10),
+    difficultySlice: explicitDifficultySlice,
+  };
 }
 
 /**
- * Adds a single word (front & back lexeme pair) to the user's SRS review queue.
+ * Returns cards for a deck. If difficultySlice is present, filters strictly to that difficulty tier.
  */
-export async function addWordToQueue(
-  frontLexemeId: number,
-  backLexemeId: number,
-  conceptId?: string
-): Promise<string> {
-  const db = await getDatabase();
-  const cardId = `card_${conceptId || 'word'}_${frontLexemeId}`;
-  const now = new Date().toISOString();
+export async function getCardsByDeck(
+  deckIdOrSliceId: string,
+  targetLang = 'es',
+  difficultySlice?: number
+): Promise<DeckCardDetail[]> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
 
-  await db.runAsync(
-    `INSERT OR IGNORE INTO User_Cards (
-      id, front_lexeme_id, back_lexeme_id, due_date, state,
-      stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
-    ) VALUES (?, ?, ?, ?, 0, 0.0, 0.0, 0, 0, 0, 0, ?);`,
-    [cardId, frontLexemeId, backLexemeId, now, now]
-  );
-  return cardId;
-}
-
-/**
- * Adds a lexeme to the SRS queue by looking up its English pair.
- */
-export async function addLexemeToQueue(frontLexemeId: number): Promise<string | null> {
-  const db = await getDatabase();
-  const pair = await db.getFirstAsync<{ front_id: number; back_id: number; concept_id: string }>(
-    `SELECT lf.id as front_id, lb.id as back_id, con.id as concept_id
-     FROM Concept_Lexeme clf
-     JOIN Concepts con ON con.id = clf.concept_id
-     JOIN Lexemes lf ON lf.id = clf.lexeme_id
-     JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-     JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-     WHERE lf.id = ?
-     LIMIT 1;`,
-    [frontLexemeId]
+  const { realDeckId, difficultySlice: slice } = parseDeckIdentifier(
+    deckIdOrSliceId,
+    difficultySlice
   );
 
-  if (!pair) return null;
-  return await addWordToQueue(pair.front_id, pair.back_id, pair.concept_id);
-}
-
-/**
- * Removes a card from the user's SRS queue.
- */
-export async function removeWordFromQueue(cardId: string): Promise<void> {
-  const db = await getDatabase();
-  await db.runAsync('DELETE FROM User_Cards WHERE id = ?;', [cardId]);
-}
-
-/**
- * Retrieves words categorized by difficulty (CEFR level), with SRS queue status.
- */
-export async function getWordsByDifficulty(
-  cefrLevel?: string,
-  targetLang = 'es'
-): Promise<DifficultyWordItem[]> {
-  const db = await getDatabase();
   let query = `
     SELECT 
-      con.id as concept_id,
-      con.description as concept_desc,
-      lf.id as front_lexeme_id,
-      lf.term as front_term,
-      lf.language as front_lang,
-      lf.pos as front_pos,
-      lf.cefr_level as front_cefr,
-      lf.frequency_rank,
-      lb.id as back_lexeme_id,
-      lb.term as back_term,
-      lb.language as back_lang,
-      COALESCE(d.name, 'General') as deck_name,
-      COALESCE(parent_d.name, 'Topics') as theme_name,
-      uc.id as user_card_id,
-      uc.stability,
-      uc.reps,
-      uc.lapses,
-      uc.due_date,
-      uc.state
-    FROM Concepts con
-    JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-    JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-    JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-    JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-    LEFT JOIN Domains d ON d.id = con.domain_id
-    LEFT JOIN Domains parent_d ON parent_d.id = d.parent_id
-    LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
+      c.card_id,
+      c.deck_id,
+      c.primary_term,
+      c.pos,
+      COALESCE(cd.definition, c.definition) as definition,
+      c.cili_id,
+      c.difficulty,
+      COALESCE(ct.translation, c.primary_term) as target_translation
+    FROM cards c
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    LEFT JOIN card_definitions cd ON cd.card_id = c.card_id AND cd.lang_name = ?
+    WHERE c.deck_id = ?
   `;
-  const params: any[] = [targetLang];
+  const params: any[] = [langName, langName, realDeckId];
 
-  if (cefrLevel && cefrLevel !== 'ALL') {
-    query += ' WHERE lf.cefr_level = ?';
-    params.push(cefrLevel);
+  if (slice !== undefined) {
+    query += ' AND c.difficulty = ?';
+    params.push(slice);
   }
 
-  query += ' ORDER BY lf.frequency_rank ASC, lf.term ASC LIMIT 100;';
+  query += ' ORDER BY c.card_id ASC;';
 
-  const rows = await db.getAllAsync<any>(query, params);
-  return rows.map((r) => ({
-    concept_id: r.concept_id,
-    concept_desc: r.concept_desc,
-    front_lexeme_id: r.front_lexeme_id,
-    front_term: r.front_term,
-    front_lang: r.front_lang,
-    front_pos: r.front_pos,
-    front_cefr: r.front_cefr,
-    frequency_rank: r.frequency_rank,
-    back_lexeme_id: r.back_lexeme_id,
-    back_term: r.back_term,
-    back_lang: r.back_lang,
-    deck_name: r.deck_name,
-    theme_name: r.theme_name,
-    is_queued: Boolean(r.user_card_id),
-    user_card_id: r.user_card_id || undefined,
-    stability: r.stability,
-    reps: r.reps,
-    lapses: r.lapses,
-    due_date: r.due_date,
-    state: r.state,
-  }));
-}
+  const cardRows = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    primary_term: string;
+    pos: string;
+    definition: string;
+    cili_id: string;
+    difficulty: number;
+    target_translation: string;
+  }>(query, params);
 
-/**
- * Returns breakdown statistics across CEFR levels.
- */
-export async function getDifficultyStats(targetLang = 'es'): Promise<DifficultyStat[]> {
-  const db = await getDatabase();
-  const levels: { cefr: CEFRLevel; label: string; tier: number }[] = [
-    { cefr: 'A1', label: 'Novice', tier: 1 },
-    { cefr: 'A2', label: 'Apprentice', tier: 2 },
-    { cefr: 'B1', label: 'Adept', tier: 3 },
-    { cefr: 'B2', label: 'Expert', tier: 4 },
-    { cefr: 'C1', label: 'Master', tier: 5 },
-    { cefr: 'C2', label: 'Grandmaster', tier: 6 },
-  ];
+  if (cardRows.length === 0) return [];
 
-  const rows = await db.getAllAsync<{
-    cefr_level: string;
-    total_count: number;
-    queued_count: number;
-    mastered_count: number;
-  }>(`
-    SELECT 
-      lf.cefr_level,
-      COUNT(DISTINCT lf.id) as total_count,
-      COUNT(DISTINCT uc.id) as queued_count,
-      COUNT(DISTINCT CASE WHEN uc.stability >= 10.0 THEN uc.id END) as mastered_count
-    FROM Concepts con
-    JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-    JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-    LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
-    GROUP BY lf.cefr_level;
-  `, [targetLang]);
+  // Fetch user card records for these card IDs
+  const cardIds = cardRows.map((c) => c.card_id);
+  const placeholders = cardIds.map(() => '?').join(',');
+  const userCards = await userDb.getAllAsync<{
+    id: string;
+    card_id: number;
+    stability: number;
+    reps: number;
+  }>(
+    `SELECT id, card_id, stability, reps FROM User_Cards WHERE target_lang = ? AND card_id IN (${placeholders});`,
+    [langName, ...cardIds]
+  );
 
-  const map = new Map<string, { total_count: number; queued_count: number; mastered_count: number }>();
-  for (const r of rows) {
-    map.set(r.cefr_level, r);
-  }
+  const userMap = new Map<
+    number,
+    { id: string; stability: number; reps: number }
+  >();
+  userCards.forEach((uc) =>
+    userMap.set(uc.card_id, {
+      id: uc.id,
+      stability: uc.stability,
+      reps: uc.reps,
+    })
+  );
 
-  return levels.map((lvl) => {
-    const data = map.get(lvl.cefr) || { total_count: 0, queued_count: 0, mastered_count: 0 };
+  return cardRows.map((c) => {
+    const uc = userMap.get(c.card_id);
     return {
-      cefr: lvl.cefr,
-      label: lvl.label,
-      tier: lvl.tier,
-      total_count: data.total_count,
-      queued_count: data.queued_count,
-      mastered_count: data.mastered_count,
-      available_count: Math.max(0, data.total_count - data.queued_count),
+      concept_id: c.cili_id || `c_${c.card_id}`,
+      concept_desc: c.definition || '',
+      front_lexeme_id: c.card_id,
+      front_term: c.target_translation,
+      front_lang: targetLang,
+      front_pos: c.pos || null,
+      front_cefr: difficultyToCefr(c.difficulty),
+      back_lexeme_id: c.card_id,
+      back_term: c.primary_term,
+      back_lang: 'en',
+      is_garrisoned: !!uc,
+      user_card_id: uc ? uc.id : undefined,
+      stability: uc ? uc.stability : undefined,
+      reps: uc ? uc.reps : undefined,
     };
   });
 }
 
 /**
- * Adds all unqueued words of a given CEFR tier into the SRS queue.
+ * Garrisons all unqueued cards in a deck (or difficulty slice) into User_Cards in user_vault.sqlite.
  */
-export async function addWordsByDifficultyToQueue(
-  cefrLevel: string,
-  targetLang = 'es'
+export async function garrisonEntireDeck(
+  deckIdOrSliceId: string,
+  targetLang = 'es',
+  difficultySlice?: number
 ): Promise<number> {
-  const db = await getDatabase();
-  const pairs = await db.getAllAsync<{ front_id: number; back_id: number; concept_id: string }>(
-    `SELECT lf.id as front_id, lb.id as back_id, con.id as concept_id
-     FROM Concepts con
-     JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-     JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-     JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-     JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-     LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
-     WHERE lf.cefr_level = ? AND uc.id IS NULL;`,
-    [targetLang, cefrLevel]
-  );
+  const cards = await getCardsByDeck(deckIdOrSliceId, targetLang, difficultySlice);
+  const unqueued = cards.filter((c) => !c.is_garrisoned);
+  if (unqueued.length === 0) return 0;
 
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
-  let count = 0;
-  for (const p of pairs) {
-    const cardId = `card_${p.concept_id}_${p.front_id}`;
-    await db.runAsync(
-      `INSERT OR IGNORE INTO User_Cards (
-        id, front_lexeme_id, back_lexeme_id, due_date, state,
-        stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
-      ) VALUES (?, ?, ?, ?, 0, 0.0, 0.0, 0, 0, 0, 0, ?);`,
-      [cardId, p.front_id, p.back_id, now, now]
+
+  for (const c of unqueued) {
+    const cardIdStr = `card_${c.front_lexeme_id}_${langName}`;
+    await userDb.runAsync(
+      `INSERT OR REPLACE INTO User_Cards (
+        id, card_id, target_lang, due_date, state, stability, difficulty,
+        elapsed_days, scheduled_days, reps, lapses, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      [cardIdStr, c.front_lexeme_id, langName, now, 0, 0, 0, 0, 0, 0, 0, now]
     );
-    count++;
   }
-  return count;
+
+  return unqueued.length;
 }
 
 /**
- * Returns overall mastery counts across SRS retention stages.
+ * Adds a single card to User_Cards queue.
  */
-export async function getMasterySummary(targetLang = 'es'): Promise<MasterySummary> {
-  const db = await getDatabase();
+export async function addWordToQueue(
+  frontLexemeId: number,
+  _backLexemeId: number,
+  _conceptId: string,
+  targetLang = 'es'
+): Promise<string> {
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+  const now = new Date().toISOString();
+  const cardIdStr = `card_${frontLexemeId}_${langName}`;
+
+  await userDb.runAsync(
+    `INSERT OR REPLACE INTO User_Cards (
+      id, card_id, target_lang, due_date, state, stability, difficulty,
+      elapsed_days, scheduled_days, reps, lapses, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    [cardIdStr, frontLexemeId, langName, now, 0, 0, 0, 0, 0, 0, 0, now]
+  );
+
+  return cardIdStr;
+}
+
+export async function addLexemeToQueue(
+  frontLexemeId: number,
+  targetLang = 'es'
+): Promise<string | null> {
+  return addWordToQueue(frontLexemeId, frontLexemeId, `c_${frontLexemeId}`, targetLang);
+}
+
+export async function removeWordFromQueue(cardId: string): Promise<void> {
+  const userDb = await getUserDb();
+  await userDb.runAsync('DELETE FROM User_Cards WHERE id = ?;', [cardId]);
+}
+
+/**
+ * Returns cards currently due for spaced repetition review.
+ */
+export async function getDueCards(
+  filterDeckId?: string,
+  targetLang = 'es'
+): Promise<CardWithDetails[]> {
+  const userDb = await getUserDb();
+  const staticDb = await getStaticDb();
+  const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
 
-  const totalLib = await db.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(DISTINCT lf.id) as count
-     FROM Concepts con
-     JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-     JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?;`,
-    [targetLang]
+  // 1. Get due user cards
+  const userCards = await userDb.getAllAsync<{
+    id: string;
+    card_id: number;
+    target_lang: string;
+    due_date: string;
+    state: number;
+    stability: number;
+    difficulty: number;
+    elapsed_days: number;
+    scheduled_days: number;
+    reps: number;
+    lapses: number;
+    updated_at: string;
+  }>(
+    'SELECT * FROM User_Cards WHERE target_lang = ? AND due_date <= ? ORDER BY due_date ASC;',
+    [langName, now]
   );
-  const total_library_count = totalLib?.count || 0;
 
-  const stats = await db.getAllAsync<{
-    is_mastered: number;
-    is_slipping: number;
-    is_learning: number;
-    is_new: number;
-    total_queued: number;
-  }>(`
+  if (userCards.length === 0) return [];
+
+  // 2. Fetch static card info
+  const cardIds = userCards.map((uc) => uc.card_id);
+  const placeholders = cardIds.map(() => '?').join(',');
+
+  let filterSlice: number | undefined;
+  let filterRealDeckId: number | undefined;
+  if (filterDeckId) {
+    const parsed = parseDeckIdentifier(filterDeckId);
+    filterRealDeckId = parsed.realDeckId;
+    filterSlice = parsed.difficultySlice;
+  }
+
+  const staticRows = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    primary_term: string;
+    pos: string;
+    definition: string;
+    cili_id: string;
+    difficulty: number;
+    target_translation: string;
+  }>(
+    `SELECT 
+      c.card_id,
+      c.deck_id,
+      c.primary_term,
+      c.pos,
+      COALESCE(cd.definition, c.definition) as definition,
+      c.cili_id,
+      c.difficulty,
+      COALESCE(ct.translation, c.primary_term) as target_translation
+    FROM cards c
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    LEFT JOIN card_definitions cd ON cd.card_id = c.card_id AND cd.lang_name = ?
+    WHERE c.card_id IN (${placeholders});`,
+    [langName, langName, ...cardIds]
+  );
+
+  const staticMap = new Map<number, (typeof staticRows)[0]>();
+  staticRows.forEach((r) => staticMap.set(r.card_id, r));
+
+  const result: CardWithDetails[] = [];
+
+  for (const uc of userCards) {
+    const sCard = staticMap.get(uc.card_id);
+    if (!sCard) continue;
+
+    if (filterRealDeckId !== undefined && sCard.deck_id !== filterRealDeckId) {
+      continue;
+    }
+    if (filterSlice !== undefined && sCard.difficulty !== filterSlice) {
+      continue;
+    }
+
+    const cefr = difficultyToCefr(sCard.difficulty);
+
+    result.push({
+      id: uc.id,
+      front_lexeme_id: uc.card_id,
+      back_lexeme_id: uc.card_id,
+      due_date: uc.due_date,
+      state: uc.state,
+      stability: uc.stability,
+      difficulty: uc.difficulty,
+      elapsed_days: uc.elapsed_days,
+      scheduled_days: uc.scheduled_days,
+      reps: uc.reps,
+      lapses: uc.lapses,
+      updated_at: uc.updated_at,
+      front_term: sCard.target_translation,
+      front_lang: targetLang,
+      front_pos: sCard.pos || null,
+      front_cefr: cefr,
+      back_term: sCard.primary_term,
+      back_lang: 'en',
+      back_pos: sCard.pos || null,
+      back_cefr: cefr,
+      concept_desc: sCard.definition || '',
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Returns cards for review in a specific deck (even if not strictly due, for practice mode).
+ */
+export async function getDeckCardsForReview(
+  deckIdOrSliceId: string,
+  targetLang = 'es'
+): Promise<CardWithDetails[]> {
+  const userDb = await getUserDb();
+  const staticDb = await getStaticDb();
+  const langName = resolveLanguageName(targetLang);
+
+  const { realDeckId, difficultySlice: slice } = parseDeckIdentifier(deckIdOrSliceId);
+
+  let query = `
     SELECT 
-      COUNT(DISTINCT CASE WHEN uc.stability >= 10.0 THEN uc.id END) as is_mastered,
-      COUNT(DISTINCT CASE WHEN (uc.lapses > 0 OR (uc.due_date <= ? AND uc.state > 0)) AND uc.stability < 10.0 THEN uc.id END) as is_slipping,
-      COUNT(DISTINCT CASE WHEN uc.state IN (1, 2, 3) AND uc.stability < 10.0 AND (uc.lapses = 0 OR uc.lapses IS NULL) AND uc.due_date > ? THEN uc.id END) as is_learning,
-      COUNT(DISTINCT CASE WHEN uc.state = 0 THEN uc.id END) as is_new,
-      COUNT(DISTINCT uc.id) as total_queued
-    FROM User_Cards uc
-    JOIN Lexemes lf ON lf.id = uc.front_lexeme_id AND lf.language = ?;
-  `, [now, now, targetLang]);
+      c.card_id,
+      c.deck_id,
+      c.primary_term,
+      c.pos,
+      COALESCE(cd.definition, c.definition) as definition,
+      c.cili_id,
+      c.difficulty,
+      COALESCE(ct.translation, c.primary_term) as target_translation
+    FROM cards c
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    LEFT JOIN card_definitions cd ON cd.card_id = c.card_id AND cd.lang_name = ?
+    WHERE c.deck_id = ?
+  `;
+  const params: any[] = [langName, langName, realDeckId];
 
-  const row = stats[0] || { is_mastered: 0, is_slipping: 0, is_learning: 0, is_new: 0, total_queued: 0 };
-  const available_count = Math.max(0, total_library_count - row.total_queued);
+  if (slice !== undefined) {
+    query += ' AND c.difficulty = ?';
+    params.push(slice);
+  }
+
+  const staticRows = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    primary_term: string;
+    pos: string;
+    definition: string;
+    cili_id: string;
+    difficulty: number;
+    target_translation: string;
+  }>(query, params);
+
+  if (staticRows.length === 0) return [];
+
+  const cardIds = staticRows.map((r) => r.card_id);
+  const placeholders = cardIds.map(() => '?').join(',');
+
+  const userCards = await userDb.getAllAsync<{
+    id: string;
+    card_id: number;
+    target_lang: string;
+    due_date: string;
+    state: number;
+    stability: number;
+    difficulty: number;
+    elapsed_days: number;
+    scheduled_days: number;
+    reps: number;
+    lapses: number;
+    updated_at: string;
+  }>(
+    `SELECT * FROM User_Cards WHERE target_lang = ? AND card_id IN (${placeholders});`,
+    [langName, ...cardIds]
+  );
+
+  const staticMap = new Map<number, (typeof staticRows)[0]>();
+  staticRows.forEach((r) => staticMap.set(r.card_id, r));
+
+  const result: CardWithDetails[] = [];
+
+  for (const uc of userCards) {
+    const sCard = staticMap.get(uc.card_id);
+    if (!sCard) continue;
+
+    const cefr = difficultyToCefr(sCard.difficulty);
+    result.push({
+      id: uc.id,
+      front_lexeme_id: uc.card_id,
+      back_lexeme_id: uc.card_id,
+      due_date: uc.due_date,
+      state: uc.state,
+      stability: uc.stability,
+      difficulty: uc.difficulty,
+      elapsed_days: uc.elapsed_days,
+      scheduled_days: uc.scheduled_days,
+      reps: uc.reps,
+      lapses: uc.lapses,
+      updated_at: uc.updated_at,
+      front_term: sCard.target_translation,
+      front_lang: targetLang,
+      front_pos: sCard.pos || null,
+      front_cefr: cefr,
+      back_term: sCard.primary_term,
+      back_lang: 'en',
+      back_pos: sCard.pos || null,
+      back_cefr: cefr,
+      concept_desc: sCard.definition || '',
+    });
+  }
+
+  // If no user cards exist in this deck yet, auto-garrison them so the user can immediately practice!
+  if (result.length === 0) {
+    await garrisonEntireDeck(deckIdOrSliceId, targetLang, slice);
+    return getDeckCardsForReview(deckIdOrSliceId, targetLang);
+  }
+
+  return result;
+}
+
+/**
+ * Returns words for the Difficulty list view.
+ */
+export async function getWordsByDifficulty(
+  cefr: string,
+  targetLang = 'es'
+): Promise<DifficultyWordItem[]> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+
+  let query = `
+    SELECT 
+      c.card_id,
+      c.deck_id,
+      c.primary_term,
+      c.pos,
+      COALESCE(cd.definition, c.definition) as definition,
+      c.cili_id,
+      c.difficulty,
+      d.category,
+      d.subcategory,
+      COALESCE(ct.translation, c.primary_term) as target_translation
+    FROM cards c
+    JOIN decks d ON d.deck_id = c.deck_id
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    LEFT JOIN card_definitions cd ON cd.card_id = c.card_id AND cd.lang_name = ?
+  `;
+  const params: any[] = [langName, langName];
+
+  if (cefr !== 'ALL') {
+    query += ' WHERE c.difficulty = ?';
+    params.push(cefrToDifficulty(cefr));
+  }
+
+  query += ' ORDER BY c.difficulty ASC, c.card_id ASC;';
+
+  const rows = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    primary_term: string;
+    pos: string;
+    definition: string;
+    cili_id: string;
+    difficulty: number;
+    category: string;
+    subcategory: string;
+    target_translation: string;
+  }>(query, params);
+
+  const cardIds = rows.map((r) => r.card_id);
+  const placeholders = cardIds.length > 0 ? cardIds.map(() => '?').join(',') : '0';
+  const userCards = await userDb.getAllAsync<{
+    id: string;
+    card_id: number;
+    state: number;
+    stability: number;
+    reps: number;
+    lapses: number;
+    due_date: string;
+  }>(
+    `SELECT id, card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE target_lang = ? AND card_id IN (${placeholders});`,
+    [langName, ...cardIds]
+  );
+
+  const ucMap = new Map<number, (typeof userCards)[0]>();
+  userCards.forEach((uc) => ucMap.set(uc.card_id, uc));
+
+  return rows.map((r) => {
+    const uc = ucMap.get(r.card_id);
+    const cefrLevel = difficultyToCefr(r.difficulty);
+    return {
+      concept_id: r.cili_id || `c_${r.card_id}`,
+      concept_desc: r.definition || '',
+      front_lexeme_id: r.card_id,
+      front_term: r.target_translation,
+      front_lang: targetLang,
+      front_pos: r.pos || null,
+      front_cefr: cefrLevel,
+      back_lexeme_id: r.card_id,
+      back_term: r.primary_term,
+      back_lang: 'en',
+      deck_name: formatSubcategoryName(r.subcategory),
+      theme_name: formatSubcategoryName(r.category),
+      frequency_rank: null,
+      is_queued: !!uc,
+      user_card_id: uc ? uc.id : undefined,
+      stability: uc ? uc.stability : undefined,
+      reps: uc ? uc.reps : undefined,
+      lapses: uc ? uc.lapses : undefined,
+      due_date: uc ? uc.due_date : undefined,
+      state: uc ? uc.state : undefined,
+    };
+  });
+}
+
+/**
+ * Returns CEFR tier statistics (total, queued, mastered, available).
+ */
+export async function getDifficultyStats(
+  targetLang = 'es'
+): Promise<DifficultyStat[]> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+
+  // Total cards per tier
+  const totalRows = await staticDb.getAllAsync<{
+    difficulty: number;
+    count: number;
+  }>('SELECT difficulty, count(card_id) as count FROM cards GROUP BY difficulty;');
+
+  const totalMap = new Map<number, number>();
+  totalRows.forEach((r) => totalMap.set(r.difficulty, r.count));
+
+  // User cards per card_id
+  const userCards = await userDb.getAllAsync<{
+    card_id: number;
+    stability: number;
+    reps: number;
+  }>('SELECT card_id, stability, reps FROM User_Cards WHERE target_lang = ?;', [langName]);
+
+  const cardDiffRows = await staticDb.getAllAsync<{
+    card_id: number;
+    difficulty: number;
+  }>('SELECT card_id, difficulty FROM cards;');
+
+  const cardDiffMap = new Map<number, number>();
+  cardDiffRows.forEach((r) => cardDiffMap.set(r.card_id, r.difficulty));
+
+  const queuedMap = new Map<number, number>();
+  const masteredMap = new Map<number, number>();
+
+  for (const uc of userCards) {
+    const diff = cardDiffMap.get(uc.card_id);
+    if (diff !== undefined) {
+      queuedMap.set(diff, (queuedMap.get(diff) || 0) + 1);
+      if (uc.stability >= 21 || uc.reps >= 3) {
+        masteredMap.set(diff, (masteredMap.get(diff) || 0) + 1);
+      }
+    }
+  }
+
+  const tiers: { cefr: CEFRLevel; label: string; tier: number }[] = [
+    { cefr: 'A1', label: 'Novice Gateway', tier: 1 },
+    { cefr: 'A2', label: 'Apprentice Trail', tier: 2 },
+    { cefr: 'B1', label: 'Adept Realm', tier: 3 },
+    { cefr: 'B2', label: 'Expert Expedition', tier: 4 },
+    { cefr: 'C1', label: 'Master Scriptorium', tier: 5 },
+    { cefr: 'C2', label: 'Grandmaster Citadel', tier: 6 },
+  ];
+
+  return tiers.map((t) => {
+    const total = totalMap.get(t.tier) || 0;
+    const queued = queuedMap.get(t.tier) || 0;
+    const mastered = masteredMap.get(t.tier) || 0;
+    return {
+      cefr: t.cefr,
+      label: t.label,
+      tier: t.tier,
+      total_count: total,
+      queued_count: queued,
+      mastered_count: mastered,
+      available_count: Math.max(0, total - queued),
+    };
+  });
+}
+
+/**
+ * Adds all unqueued words of a specific CEFR tier to User_Cards.
+ */
+export async function addWordsByDifficultyToQueue(
+  cefr: string,
+  targetLang = 'es'
+): Promise<number> {
+  const words = await getWordsByDifficulty(cefr, targetLang);
+  const unqueued = words.filter((w) => !w.is_queued);
+  if (unqueued.length === 0) return 0;
+
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+  const now = new Date().toISOString();
+
+  for (const w of unqueued) {
+    const cardIdStr = `card_${w.front_lexeme_id}_${langName}`;
+    await userDb.runAsync(
+      `INSERT OR REPLACE INTO User_Cards (
+        id, card_id, target_lang, due_date, state, stability, difficulty,
+        elapsed_days, scheduled_days, reps, lapses, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      [cardIdStr, w.front_lexeme_id, langName, now, 0, 0, 0, 0, 0, 0, 0, now]
+    );
+  }
+
+  return unqueued.length;
+}
+
+/**
+ * Returns overview summary of cards by SRS mastery stage.
+ */
+export async function getMasterySummary(
+  targetLang = 'es'
+): Promise<MasterySummary> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+  const now = new Date().toISOString();
+
+  const totalCardRow = await staticDb.getFirstAsync<{ count: number }>(
+    'SELECT count(card_id) as count FROM cards;'
+  );
+  const totalLibrary = totalCardRow?.count || 0;
+
+  const userCards = await userDb.getAllAsync<{
+    card_id: number;
+    state: number;
+    stability: number;
+    reps: number;
+    lapses: number;
+    due_date: string;
+  }>('SELECT card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE target_lang = ?;', [langName]);
+
+  let slipping = 0;
+  let learning = 0;
+  let mastered = 0;
+  let newQueue = 0;
+
+  for (const uc of userCards) {
+    if (uc.reps === 0 || uc.state === 0) {
+      newQueue++;
+    } else if (uc.lapses > 0 && uc.due_date < now) {
+      slipping++;
+    } else if (uc.stability >= 21 || uc.reps >= 3) {
+      mastered++;
+    } else {
+      learning++;
+    }
+  }
+
+  const queuedCount = userCards.length;
+  const available = Math.max(0, totalLibrary - queuedCount);
 
   return {
-    slipping_count: row.is_slipping,
-    learning_count: row.is_learning,
-    mastered_count: row.is_mastered,
-    new_queue_count: row.is_new,
-    available_count,
-    total_library_count,
+    slipping_count: slipping,
+    learning_count: learning,
+    mastered_count: mastered,
+    new_queue_count: newQueue,
+    available_count: available,
+    total_library_count: totalLibrary,
   };
 }
 
 /**
- * Retrieves words belonging to a specific SRS mastery/retention stage.
+ * Returns words filtered by their mastery stage.
  */
 export async function getMasteryWords(
   stage: MasteryStage,
   targetLang = 'es'
 ): Promise<MasteryWordItem[]> {
-  const db = await getDatabase();
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
 
-  let whereClause = '';
-  if (stage === 'available') {
-    whereClause = 'WHERE uc.id IS NULL';
-  } else if (stage === 'mastered') {
-    whereClause = 'WHERE uc.stability >= 10.0';
-  } else if (stage === 'slipping') {
-    whereClause = 'WHERE (uc.lapses > 0 OR (uc.due_date <= ? AND uc.state > 0)) AND uc.stability < 10.0';
-  } else if (stage === 'learning') {
-    whereClause = 'WHERE uc.state IN (1, 2, 3) AND uc.stability < 10.0 AND (uc.lapses = 0 OR uc.lapses IS NULL) AND uc.due_date > ?';
-  } else if (stage === 'new_in_queue') {
-    whereClause = 'WHERE uc.state = 0';
+  // 1. Fetch all cards with translations and deck info
+  const allCards = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    primary_term: string;
+    pos: string;
+    definition: string;
+    cili_id: string;
+    difficulty: number;
+    category: string;
+    subcategory: string;
+    target_translation: string;
+  }>(
+    `SELECT 
+      c.card_id,
+      c.deck_id,
+      c.primary_term,
+      c.pos,
+      COALESCE(cd.definition, c.definition) as definition,
+      c.cili_id,
+      c.difficulty,
+      d.category,
+      d.subcategory,
+      COALESCE(ct.translation, c.primary_term) as target_translation
+    FROM cards c
+    JOIN decks d ON d.deck_id = c.deck_id
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    LEFT JOIN card_definitions cd ON cd.card_id = c.card_id AND cd.lang_name = ?
+    ORDER BY c.card_id ASC;`,
+    [langName, langName]
+  );
+
+  // 2. Fetch all user cards for this language
+  const userCards = await userDb.getAllAsync<{
+    id: string;
+    card_id: number;
+    state: number;
+    stability: number;
+    scheduled_days: number;
+    reps: number;
+    lapses: number;
+    due_date: string;
+  }>('SELECT id, card_id, state, stability, scheduled_days, reps, lapses, due_date FROM User_Cards WHERE target_lang = ?;', [langName]);
+
+  const userMap = new Map<number, (typeof userCards)[0]>();
+  userCards.forEach((uc) => userMap.set(uc.card_id, uc));
+
+  const items: MasteryWordItem[] = [];
+
+  for (const c of allCards) {
+    const uc = userMap.get(c.card_id);
+    let cardStage: MasteryStage = 'available';
+
+    if (uc) {
+      if (uc.reps === 0 || uc.state === 0) {
+        cardStage = 'new_in_queue';
+      } else if (uc.lapses > 0 && uc.due_date < now) {
+        cardStage = 'slipping';
+      } else if (uc.stability >= 21 || uc.reps >= 3) {
+        cardStage = 'mastered';
+      } else {
+        cardStage = 'learning';
+      }
+    }
+
+    if (cardStage !== stage) continue;
+
+    items.push({
+      concept_id: c.cili_id || `c_${c.card_id}`,
+      concept_desc: c.definition || '',
+      front_lexeme_id: c.card_id,
+      front_term: c.target_translation,
+      front_lang: targetLang,
+      front_pos: c.pos || null,
+      front_cefr: difficultyToCefr(c.difficulty),
+      back_lexeme_id: c.card_id,
+      back_term: c.primary_term,
+      back_lang: 'en',
+      deck_name: formatSubcategoryName(c.subcategory),
+      theme_name: formatSubcategoryName(c.category),
+      is_queued: !!uc,
+      user_card_id: uc ? uc.id : undefined,
+      stage: cardStage,
+      stability: uc ? uc.stability : undefined,
+      scheduled_days: uc ? uc.scheduled_days : undefined,
+      reps: uc ? uc.reps : undefined,
+      lapses: uc ? uc.lapses : undefined,
+      due_date: uc ? uc.due_date : undefined,
+      state: uc ? uc.state : undefined,
+    });
   }
 
-  const query = `
-    SELECT 
-      con.id as concept_id,
-      con.description as concept_desc,
-      lf.id as front_lexeme_id,
-      lf.term as front_term,
-      lf.language as front_lang,
-      lf.pos as front_pos,
-      lf.cefr_level as front_cefr,
-      lb.id as back_lexeme_id,
-      lb.term as back_term,
-      lb.language as back_lang,
-      COALESCE(d.name, 'General') as deck_name,
-      COALESCE(parent_d.name, 'Topics') as theme_name,
-      uc.id as user_card_id,
-      uc.stability,
-      uc.scheduled_days,
-      uc.reps,
-      uc.lapses,
-      uc.due_date,
-      uc.state
-    FROM Concepts con
-    JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-    JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-    JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-    JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-    LEFT JOIN Domains d ON d.id = con.domain_id
-    LEFT JOIN Domains parent_d ON parent_d.id = d.parent_id
-    LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
-    ${whereClause}
-    ORDER BY 
-      CASE WHEN uc.due_date IS NOT NULL THEN uc.due_date ELSE '9999' END ASC,
-      lf.frequency_rank ASC
-    LIMIT 60;
-  `;
-
-  const params = stage === 'slipping' || stage === 'learning' ? [targetLang, now] : [targetLang];
-  const rows = await db.getAllAsync<any>(query, params);
-
-  return rows.map((r) => ({
-    concept_id: r.concept_id,
-    concept_desc: r.concept_desc,
-    front_lexeme_id: r.front_lexeme_id,
-    front_term: r.front_term,
-    front_lang: r.front_lang,
-    front_pos: r.front_pos,
-    front_cefr: r.front_cefr,
-    back_lexeme_id: r.back_lexeme_id,
-    back_term: r.back_term,
-    back_lang: r.back_lang,
-    deck_name: r.deck_name,
-    theme_name: r.theme_name,
-    is_queued: Boolean(r.user_card_id),
-    user_card_id: r.user_card_id || undefined,
-    stage,
-    stability: r.stability,
-    scheduled_days: r.scheduled_days,
-    reps: r.reps,
-    lapses: r.lapses,
-    due_date: r.due_date,
-    state: r.state,
-  }));
+  return items;
 }
 
 /**
- * Adopts/queues a batch of available words into the SRS queue.
+ * Adds available (unqueued) words into User_Cards up to a limit.
  */
-export async function addAvailableWordsToQueue(limit = 10, targetLang = 'es'): Promise<number> {
-  const db = await getDatabase();
-  const pairs = await db.getAllAsync<{ front_id: number; back_id: number; concept_id: string }>(
-    `SELECT lf.id as front_id, lb.id as back_id, con.id as concept_id
-     FROM Concepts con
-     JOIN Concept_Lexeme clf ON clf.concept_id = con.id
-     JOIN Lexemes lf ON lf.id = clf.lexeme_id AND lf.language = ?
-     JOIN Concept_Lexeme clb ON clb.concept_id = con.id
-     JOIN Lexemes lb ON lb.id = clb.lexeme_id AND lb.language = 'en'
-     LEFT JOIN User_Cards uc ON uc.front_lexeme_id = lf.id
-     WHERE uc.id IS NULL
-     ORDER BY lf.frequency_rank ASC
-     LIMIT ?;`,
-    [targetLang, limit]
-  );
+export async function addAvailableWordsToQueue(
+  limit = 10,
+  targetLang = 'es'
+): Promise<number> {
+  const available = await getMasteryWords('available', targetLang);
+  const toAdd = available.slice(0, limit);
+  if (toAdd.length === 0) return 0;
 
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
-  let count = 0;
-  for (const p of pairs) {
-    const cardId = `card_${p.concept_id}_${p.front_id}`;
-    await db.runAsync(
-      `INSERT OR IGNORE INTO User_Cards (
-        id, front_lexeme_id, back_lexeme_id, due_date, state,
-        stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
-      ) VALUES (?, ?, ?, ?, 0, 0.0, 0.0, 0, 0, 0, 0, ?);`,
-      [cardId, p.front_id, p.back_id, now, now]
+
+  for (const w of toAdd) {
+    const cardIdStr = `card_${w.front_lexeme_id}_${langName}`;
+    await userDb.runAsync(
+      `INSERT OR REPLACE INTO User_Cards (
+        id, card_id, target_lang, due_date, state, stability, difficulty,
+        elapsed_days, scheduled_days, reps, lapses, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      [cardIdStr, w.front_lexeme_id, langName, now, 0, 0, 0, 0, 0, 0, 0, now]
     );
-    count++;
   }
-  return count;
+
+  return toAdd.length;
 }
 
 /**
@@ -1318,10 +1330,10 @@ export async function updateCardFSRS(
     lapses: number;
   }
 ): Promise<void> {
-  const db = await getDatabase();
+  const userDb = await getUserDb();
   const now = new Date().toISOString();
 
-  await db.runAsync(
+  await userDb.runAsync(
     `UPDATE User_Cards SET
       due_date = ?,
       state = ?,
@@ -1349,313 +1361,367 @@ export async function updateCardFSRS(
 }
 
 /**
- * Ultra-fast FTS5 full-text search across all lexemes.
+ * Searches cards & translations in the static lexicon database.
  */
-export async function searchLexemesFTS(searchTerm: string): Promise<(Lexeme & { concept_desc: string; concept_id: string })[]> {
-  const db = await getDatabase();
-  const cleanTerm = searchTerm.trim().replace(/['"*;]/g, '');
-  if (!cleanTerm) return [];
+export async function searchLexemesFTS(
+  searchTerm: string,
+  targetLang = 'es'
+): Promise<(Lexeme & { concept_desc: string; concept_id: string })[]> {
+  if (!searchTerm.trim()) return [];
+  const staticDb = await getStaticDb();
+  const langName = resolveLanguageName(targetLang);
+  const pattern = `%${searchTerm.trim()}%`;
 
-  const ftsQuery = `
-    SELECT 
-      l.id, l.language, l.term, l.pos, l.cefr_level, l.frequency_rank,
-      con.description as concept_desc, con.id as concept_id
-    FROM Lexemes_FTS fts
-    JOIN Lexemes l ON fts.rowid = l.id
-    JOIN Concept_Lexeme cl ON cl.lexeme_id = l.id
-    JOIN Concepts con ON con.id = cl.concept_id
-    WHERE Lexemes_FTS MATCH ?
-    LIMIT 30;
-  `;
+  const rows = await staticDb.getAllAsync<{
+    card_id: number;
+    primary_term: string;
+    pos: string;
+    definition: string;
+    cili_id: string;
+    difficulty: number;
+    translation: string;
+  }>(
+    `SELECT 
+      c.card_id,
+      c.primary_term,
+      c.pos,
+      c.definition,
+      c.cili_id,
+      c.difficulty,
+      COALESCE(ct.translation, c.primary_term) as translation
+    FROM cards c
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    WHERE c.primary_term LIKE ? OR ct.translation LIKE ? OR c.definition LIKE ?
+    LIMIT 30;`,
+    [langName, pattern, pattern, pattern]
+  );
 
-  return await db.getAllAsync<Lexeme & { concept_desc: string; concept_id: string }>(ftsQuery, [`${cleanTerm}*`]);
+  return rows.map((r) => ({
+    id: r.card_id,
+    language: targetLang,
+    term: r.translation,
+    pos: r.pos || null,
+    cefr_level: difficultyToCefr(r.difficulty),
+    frequency_rank: null,
+    concept_desc: r.definition || '',
+    concept_id: r.cili_id || `c_${r.card_id}`,
+  }));
 }
 
 /**
- * Returns kingdom domains and subdomains hierarchy with card counts.
+ * Returns domains hierarchy for DomainBrowser.
  */
 export async function getDomainsHierarchy(): Promise<Domain[]> {
-  const db = await getDatabase();
-  const allDomains = await db.getAllAsync<{ id: string; parent_id: string | null; name: string }>(
-    'SELECT id, parent_id, name FROM Domains ORDER BY name ASC;'
-  );
+  const staticDb = await getStaticDb();
+  const rows = await staticDb.getAllAsync<{
+    deck_id: number;
+    category: string;
+    subcategory: string;
+    difficulty: number;
+    description: string;
+  }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
 
-  const topLevel: Domain[] = [];
-  const domainMap = new Map<string, Domain>();
+  const categories = Array.from(new Set(rows.map((r) => r.category)));
+  const domains: Domain[] = [];
 
-  for (const d of allDomains) {
-    const isPro = d.id.includes('forbidden');
-    const domainObj: Domain = { ...d, subdomains: [], isPro };
-    domainMap.set(d.id, domainObj);
-    if (!d.parent_id) {
-      topLevel.push(domainObj);
-    }
+  for (const cat of categories) {
+    const meta = CATEGORY_META[cat] || {
+      name: cat,
+      description: '',
+      icon_name: 'book',
+    };
+    domains.push({
+      id: `domain_${cat}`,
+      parent_id: null,
+      name: meta.name,
+      description: meta.description,
+      difficulty_level: 1,
+      icon_name: meta.icon_name,
+      is_introductory: false,
+    });
   }
 
-  for (const d of allDomains) {
-    if (d.parent_id && domainMap.has(d.parent_id)) {
-      domainMap.get(d.parent_id)!.subdomains!.push(domainMap.get(d.id)!);
-    }
+  for (const r of rows) {
+    domains.push({
+      id: `sub_${r.deck_id}`,
+      parent_id: `domain_${r.category}`,
+      name: formatSubcategoryName(r.subcategory),
+      description: r.description || `${formatSubcategoryName(r.subcategory)} vocabulary`,
+      difficulty_level: r.difficulty,
+      icon_name: CATEGORY_META[r.category]?.icon_name || 'book',
+      is_introductory: r.difficulty === 1,
+    });
   }
 
-  return topLevel;
+  return domains;
 }
 
 /**
- * Returns lexemes belonging to a domain or subdomain, with optional CEFR filter.
+ * Returns lexemes by domain for DomainBrowser.
  */
-export async function getLexemesByDomain(domainId: string, cefrFilter?: string): Promise<Lexeme[]> {
-  const db = await getDatabase();
+export async function getLexemesByDomain(
+  domainId: string,
+  cefrFilter?: string
+): Promise<Lexeme[]> {
+  const staticDb = await getStaticDb();
+  let deckId: number | null = null;
+  let categoryFilter: string | null = null;
+
+  if (domainId.startsWith('sub_')) {
+    deckId = parseInt(domainId.replace('sub_', ''), 10);
+  } else if (domainId.startsWith('domain_')) {
+    categoryFilter = domainId.replace('domain_', '');
+  }
+
   let query = `
-    SELECT DISTINCT l.id, l.language, l.term, l.pos, l.cefr_level, l.frequency_rank
-    FROM Lexemes l
-    JOIN Concept_Lexeme cl ON cl.lexeme_id = l.id
-    JOIN Concepts c ON c.id = cl.concept_id
-    WHERE (c.domain_id = ? OR c.domain_id IN (SELECT id FROM Domains WHERE parent_id = ?))
+    SELECT 
+      c.card_id,
+      c.primary_term,
+      c.pos,
+      c.difficulty
+    FROM cards c
+    JOIN decks d ON d.deck_id = c.deck_id
   `;
-  const params: any[] = [domainId, domainId];
+  const params: any[] = [];
+  const whereClauses: string[] = [];
+
+  if (deckId !== null) {
+    whereClauses.push('c.deck_id = ?');
+    params.push(deckId);
+  } else if (categoryFilter !== null) {
+    whereClauses.push('d.category = ?');
+    params.push(categoryFilter);
+  }
 
   if (cefrFilter && cefrFilter !== 'ALL') {
-    query += ' AND l.cefr_level = ?';
-    params.push(cefrFilter);
+    whereClauses.push('c.difficulty = ?');
+    params.push(cefrToDifficulty(cefrFilter));
   }
 
-  query += ' ORDER BY l.frequency_rank ASC LIMIT 60;';
-  return await db.getAllAsync<Lexeme>(query, params);
+  if (whereClauses.length > 0) {
+    query += ' WHERE ' + whereClauses.join(' AND ');
+  }
+
+  query += ' ORDER BY c.difficulty ASC, c.card_id ASC;';
+
+  const rows = await staticDb.getAllAsync<{
+    card_id: number;
+    primary_term: string;
+    pos: string;
+    difficulty: number;
+  }>(query, params);
+
+  return rows.map((r) => ({
+    id: r.card_id,
+    language: 'en',
+    term: r.primary_term,
+    pos: r.pos || null,
+    cefr_level: difficultyToCefr(r.difficulty),
+    frequency_rank: null,
+  }));
 }
 
 /**
- * Garrisons a lexeme into User_Cards for active FSRS training.
+ * Garrisons a single card for DomainBrowser or search.
  */
-export async function garrisonCard(frontLexemeId: number, backLexemeId: number): Promise<string> {
-  const db = await getDatabase();
-  const cardId = `card_custom_${Date.now()}`;
-  const now = new Date().toISOString();
-
-  await db.runAsync(
-    `INSERT INTO User_Cards (
-      id, front_lexeme_id, back_lexeme_id, due_date, state,
-      stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
-    ) VALUES (?, ?, ?, ?, 0, 0.0, 0.0, 0, 0, 0, 0, ?);`,
-    [cardId, frontLexemeId, backLexemeId, now, now]
-  );
-
-  return cardId;
+export async function garrisonCard(
+  frontLexemeId: number,
+  backLexemeId: number,
+  targetLang = 'es'
+): Promise<string> {
+  return addWordToQueue(frontLexemeId, backLexemeId, `c_${frontLexemeId}`, targetLang);
 }
 
 /**
- * Logs a study/review event for a card into Review_Logs.
+ * Logs a review attempt in Review_Logs for activity heatmap & streaks.
  */
-export async function logReviewEvent(cardId: string, rating: number): Promise<void> {
-  const db = await getDatabase();
+export async function logReviewEvent(
+  cardId: string | number,
+  rating: number
+): Promise<void> {
+  const userDb = await getUserDb();
+  const numericId = typeof cardId === 'number' ? cardId : parseInt(cardId.split('_')[1] || '1', 10);
   const now = new Date().toISOString();
-  await db.runAsync(
+
+  await userDb.runAsync(
     'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);',
-    [cardId, rating, now]
+    [numericId, rating, now]
   );
 }
 
 /**
- * Seeds realistic historical activity logs across past 60 days if empty.
+ * Seeds sample past review events into user_vault.sqlite Review_Logs so heatmap shows realistic streaks.
  */
 export async function seedSampleReviewLogs(db: SQLite.SQLiteDatabase): Promise<void> {
-  const cards = await db.getAllAsync<{ id: string }>('SELECT id FROM User_Cards LIMIT 10;');
-  if (!cards || cards.length === 0) return;
-
   const now = new Date();
-  const insertStmt = 'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);';
+  const daysActive = [0, 1, 2, 4, 5, 7, 8, 9, 11, 14, 15, 18, 20, 22, 25, 28, 30, 35, 42];
 
-  for (let i = 60; i >= 0; i--) {
-    const dayDate = new Date(now);
-    dayDate.setDate(now.getDate() - i);
-    const dayOfWeek = dayDate.getDay();
-
-    // Preserve 4-day current streak while having realistic rest days in past
-    if (i > 4 && (i % 7 === 2 || (i % 11 === 0 && dayOfWeek === 0))) {
-      continue;
-    }
-
-    const count = i <= 4 ? 4 + ((i * 3) % 12) : ((i * 7 + dayOfWeek * 5) % 15) + 2;
-    for (let r = 0; r < count; r++) {
-      const card = cards[r % cards.length];
-      const rating = (r % 4) + 1;
-      const reviewTime = new Date(dayDate);
-      reviewTime.setHours(9 + (r % 12), (r * 7) % 60, 0, 0);
-      await db.runAsync(insertStmt, [card.id, rating, reviewTime.toISOString()]);
+  for (const dayOffset of daysActive) {
+    const reviewDate = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+    const reviewsCount = Math.floor(Math.random() * 8) + 3;
+    for (let i = 0; i < reviewsCount; i++) {
+      const cardId = Math.floor(Math.random() * 50) + 1;
+      const rating = Math.random() > 0.15 ? 3 : 1;
+      const hoursOffset = Math.floor(Math.random() * 12);
+      const timestamp = new Date(reviewDate.getTime() + hoursOffset * 3600000).toISOString();
+      await db.runAsync(
+        'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);',
+        [cardId, rating, timestamp]
+      );
     }
   }
 }
 
 /**
- * Returns complete GitHub-style commit activity grid and progress statistics.
+ * Returns progress overview data for ProgressScreen.
  */
-export async function getProgressOverview(weeksCount = 18): Promise<ProgressOverview> {
-  const db = await getDatabase();
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+export async function getProgressOverview(
+  weeksCount = 18
+): Promise<ProgressOverview> {
+  const userDb = await getUserDb();
+  const staticDb = await getStaticDb();
 
-  // End on Saturday of the current week
-  const todayDow = today.getDay(); // 0 = Sun ... 6 = Sat
-  const endOfCurrentWeek = new Date(today);
-  endOfCurrentWeek.setDate(today.getDate() + (6 - todayDow));
-  endOfCurrentWeek.setHours(23, 59, 59, 999);
+  const totalCardsRow = await staticDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM cards;'
+  );
+  const totalCards = totalCardsRow?.count || 0;
 
-  // Total days in grid
-  const totalDays = weeksCount * 7;
-  const startDate = new Date(endOfCurrentWeek);
-  startDate.setDate(endOfCurrentWeek.getDate() - (totalDays - 1));
-  startDate.setHours(0, 0, 0, 0);
-  const startDateStr = startDate.toISOString().split('T')[0];
+  const masteredRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM User_Cards WHERE stability >= 21 OR reps >= 3;'
+  );
+  const masteredCards = masteredRow?.count || 0;
 
-  // Fetch daily review counts
-  const rows = await db.getAllAsync<{ review_date: string; count: number }>(
-    `SELECT date(reviewed_at) as review_date, count(*) as count 
-     FROM Review_Logs 
-     WHERE date(reviewed_at) >= date(?) 
-     GROUP BY date(reviewed_at);`,
-    [startDateStr]
+  const totalReviewsRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM Review_Logs;'
+  );
+  const totalReviews = totalReviewsRow?.count || 0;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayReviewsRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM Review_Logs WHERE reviewed_at LIKE ?;',
+    [`${todayStr}%`]
+  );
+  const todayReviews = todayReviewsRow?.count || 0;
+
+  // Compute daily review counts
+  const logs = await userDb.getAllAsync<{ reviewed_at: string }>(
+    'SELECT reviewed_at FROM Review_Logs ORDER BY reviewed_at ASC;'
   );
 
-  const countMap = new Map<string, number>();
-  for (const r of rows) {
-    countMap.set(r.review_date, r.count);
+  const dayCounts = new Map<string, number>();
+  for (const l of logs) {
+    const day = l.reviewed_at.split('T')[0];
+    dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
   }
 
-  // Build weeks matrix
-  const gridWeeks: ActivityWeek[] = [];
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const monthLabels: { weekIndex: number; label: string }[] = [];
-  let lastMonth = -1;
+  // Calculate streak
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let runningStreak = 0;
 
-  for (let w = 0; w < weeksCount; w++) {
-    const days: (ActivityDay | null)[] = [];
-
-    for (let d = 0; d < 7; d++) {
-      const cellDate = new Date(startDate);
-      cellDate.setDate(startDate.getDate() + (w * 7 + d));
-      const cellStr = cellDate.toISOString().split('T')[0];
-
-      // Track month transitions
-      if (d === 0) {
-        const monthIdx = cellDate.getMonth();
-        if (monthIdx !== lastMonth && w < weeksCount - 1) {
-          monthLabels.push({ weekIndex: w, label: monthNames[monthIdx] });
-          lastMonth = monthIdx;
+  const cursor = new Date();
+  while (true) {
+    const dayKey = cursor.toISOString().split('T')[0];
+    if (dayCounts.has(dayKey) && dayCounts.get(dayKey)! > 0) {
+      currentStreak++;
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      if (currentStreak === 0) {
+        cursor.setDate(cursor.getDate() - 1);
+        const prevKey = cursor.toISOString().split('T')[0];
+        if (dayCounts.has(prevKey) && dayCounts.get(prevKey)! > 0) {
+          currentStreak++;
+          cursor.setDate(cursor.getDate() - 1);
+          continue;
         }
       }
-
-      if (cellStr > todayStr) {
-        // Future day in the current week
-        days.push(null);
-      } else {
-        const count = countMap.get(cellStr) || 0;
-        let level: 0 | 1 | 2 | 3 | 4 = 0;
-        if (count >= 15) level = 4;
-        else if (count >= 8) level = 3;
-        else if (count >= 4) level = 2;
-        else if (count >= 1) level = 1;
-
-        days.push({
-          date: cellStr,
-          count,
-          level,
-        });
-      }
-    }
-
-    gridWeeks.push({ days });
-  }
-
-  // Calculate current streak
-  let currentStreak = 0;
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-  const todayCount = countMap.get(todayStr) || 0;
-  let checkDate = new Date(today);
-  if (todayCount === 0 && (countMap.get(yesterdayStr) || 0) > 0) {
-    checkDate = new Date(yesterday);
-  }
-
-  while (true) {
-    const dateKey = checkDate.toISOString().split('T')[0];
-    const cnt = countMap.get(dateKey) || 0;
-    if (cnt > 0) {
-      currentStreak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
       break;
     }
   }
 
-  // Calculate longest streak & total reviews from all logs
-  const allLogs = await db.getAllAsync<{ review_date: string }>(
-    `SELECT DISTINCT date(reviewed_at) as review_date 
-     FROM Review_Logs 
-     ORDER BY review_date ASC;`
-  );
-
-  let longestStreak = 0;
-  let tempStreak = 0;
-  let prevTime: number | null = null;
-
-  for (const item of allLogs) {
-    const d = new Date(item.review_date);
-    if (prevTime !== null) {
-      const diffDays = Math.round((d.getTime() - prevTime) / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        tempStreak++;
-      } else {
-        tempStreak = 1;
-      }
+  const sortedDays = Array.from(dayCounts.keys()).sort();
+  for (let i = 0; i < sortedDays.length; i++) {
+    if (i === 0) {
+      runningStreak = 1;
     } else {
-      tempStreak = 1;
+      const prev = new Date(sortedDays[i - 1]);
+      const curr = new Date(sortedDays[i]);
+      const diff = Math.round((curr.getTime() - prev.getTime()) / (1000 * 3600 * 24));
+      if (diff === 1) {
+        runningStreak++;
+      } else {
+        runningStreak = 1;
+      }
     }
-    prevTime = d.getTime();
-    if (tempStreak > longestStreak) {
-      longestStreak = tempStreak;
+    if (runningStreak > longestStreak) {
+      longestStreak = runningStreak;
     }
   }
   if (currentStreak > longestStreak) {
     longestStreak = currentStreak;
   }
 
-  const totalReviewsRes = await db.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM Review_Logs;'
-  );
-  const totalReviews = totalReviewsRes?.count || 0;
+  // Activity Grid
+  const totalDays = weeksCount * 7;
+  const gridEndDate = new Date();
+  const dayOfWeek = gridEndDate.getDay(); // 0 = Sunday
+  gridEndDate.setDate(gridEndDate.getDate() + (6 - dayOfWeek));
 
-  // Mastered & total cards
-  const totalCardsRes = await db.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM User_Cards;');
-  const masteredRes = await db.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE stability >= 10.0;'
-  );
+  const gridStartDate = new Date(gridEndDate);
+  gridStartDate.setDate(gridStartDate.getDate() - totalDays + 1);
 
-  // Weekly distribution (Sun=0 to Sat=6)
-  const dowRows = await db.getAllAsync<{ dow: string; count: number }>(
-    `SELECT strftime('%w', reviewed_at) as dow, count(*) as count 
-     FROM Review_Logs 
-     GROUP BY strftime('%w', reviewed_at);`
-  );
-  const dowMap = new Map<number, number>();
-  for (const r of dowRows) {
-    dowMap.set(parseInt(r.dow, 10), r.count);
+  const gridWeeks: ActivityWeek[] = [];
+  const monthLabels: { weekIndex: number; label: string }[] = [];
+  let currentMonth = -1;
+
+  let iterDate = new Date(gridStartDate);
+  for (let w = 0; w < weeksCount; w++) {
+    const days: (ActivityDay | null)[] = [];
+    for (let d = 0; d < 7; d++) {
+      const dateStr = iterDate.toISOString().split('T')[0];
+      const count = dayCounts.get(dateStr) || 0;
+      let level: 0 | 1 | 2 | 3 | 4 = 0;
+      if (count >= 12) level = 4;
+      else if (count >= 8) level = 3;
+      else if (count >= 4) level = 2;
+      else if (count >= 1) level = 1;
+
+      days.push({ date: dateStr, count, level });
+
+      if (d === 0) {
+        const m = iterDate.getMonth();
+        if (m !== currentMonth) {
+          currentMonth = m;
+          const label = iterDate.toLocaleDateString('en-US', { month: 'short' });
+          monthLabels.push({ weekIndex: w, label });
+        }
+      }
+
+      iterDate.setDate(iterDate.getDate() + 1);
+    }
+    gridWeeks.push({ days });
   }
 
-  const dowNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const weeklyDistribution = dowNames.map((name, idx) => ({
-    day: name,
-    count: dowMap.get(idx) || 0,
+  // Weekly distribution
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayDistMap = new Map<number, number>();
+  for (const l of logs) {
+    const d = new Date(l.reviewed_at).getDay();
+    dayDistMap.set(d, (dayDistMap.get(d) || 0) + 1);
+  }
+
+  const weeklyDistribution = dayLabels.map((day, idx) => ({
+    day,
+    count: dayDistMap.get(idx) || 0,
   }));
 
   return {
     currentStreak,
-    longestStreak: Math.max(longestStreak, currentStreak),
+    longestStreak,
     totalReviews,
-    todayReviews: todayCount,
-    masteredCards: masteredRes?.count || 0,
-    totalCards: totalCardsRes?.count || 0,
+    todayReviews,
+    masteredCards,
+    totalCards,
     gridWeeks,
     monthLabels,
     weeklyDistribution,
@@ -1663,77 +1729,102 @@ export async function getProgressOverview(weeksCount = 18): Promise<ProgressOver
 }
 
 /**
- * Fetches high-level Fortress & SRS stats for the kingdom dashboard.
+ * Returns summary stats for App header and dashboard.
  */
-export async function getVaultStats(): Promise<VaultStats> {
-  const db = await getDatabase();
+export async function getVaultStats(targetLang = 'es'): Promise<VaultStats> {
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
 
-  const total = await db.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM User_Cards;');
-  const due = await db.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE due_date <= ? OR state = 0;',
-    [now]
+  const totalRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ?;',
+    [langName]
   );
-  const newC = await db.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM User_Cards WHERE state = 0;');
-  const mastered = await db.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE stability >= 10.0;'
+  const totalCards = totalRow?.count || 0;
+
+  const dueRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ? AND due_date <= ?;',
+    [langName, now]
+  );
+  const dueCards = dueRow?.count || 0;
+
+  const newRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ? AND (reps = 0 OR state = 0);',
+    [langName]
+  );
+  const newCards = newRow?.count || 0;
+
+  const masteredRow = await userDb.getFirstAsync<{ count: number }>(
+    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ? AND (stability >= 21 OR reps >= 3);',
+    [langName]
+  );
+  const masteredCards = masteredRow?.count || 0;
+
+  // Streak calculation
+  const logs = await userDb.getAllAsync<{ reviewed_at: string }>(
+    'SELECT reviewed_at FROM Review_Logs ORDER BY reviewed_at DESC;'
   );
 
-  // Get active streak from Review_Logs
-  const progress = await getProgressOverview(4);
+  const daySet = new Set(logs.map((l) => l.reviewed_at.split('T')[0]));
+  let streakDays = 0;
+  const cursor = new Date();
+  while (true) {
+    const key = cursor.toISOString().split('T')[0];
+    if (daySet.has(key)) {
+      streakDays++;
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      if (streakDays === 0) {
+        cursor.setDate(cursor.getDate() - 1);
+        const prevKey = cursor.toISOString().split('T')[0];
+        if (daySet.has(prevKey)) {
+          streakDays++;
+          cursor.setDate(cursor.getDate() - 1);
+          continue;
+        }
+      }
+      break;
+    }
+  }
 
-  const totalCards = total?.count || 0;
-  const dueCards = due?.count || 0;
-  const newCards = newC?.count || 0;
-  const masteredCards = mastered?.count || 0;
+  const xpPoints = (logs.length || 0) * 15;
 
   return {
     totalCards,
     dueCards,
     newCards,
     masteredCards,
-    streakDays: Math.max(progress.currentStreak, 1),
-    xpPoints: masteredCards * 50 + (totalCards - dueCards) * 15 + progress.totalReviews * 10,
+    streakDays,
+    xpPoints,
   };
 }
 
 /**
- * Retrieves a key-value setting from the local fortress Settings table.
+ * Settings store in user_vault.sqlite.
  */
 export async function getSetting(key: string): Promise<string | null> {
-  const db = await getDatabase();
-  const row = await db.getFirstAsync<{ value: string }>(
+  const userDb = await getUserDb();
+  const row = await userDb.getFirstAsync<{ value: string }>(
     'SELECT value FROM Settings WHERE key = ?;',
     [key]
   );
   return row ? row.value : null;
 }
 
-/**
- * Persists a key-value setting to the local fortress Settings table (offline-first).
- */
 export async function setSetting(key: string, value: string): Promise<void> {
-  const db = await getDatabase();
+  const userDb = await getUserDb();
   const now = new Date().toISOString();
-  await db.runAsync(
-    `INSERT INTO Settings (key, value, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at;`,
+  await userDb.runAsync(
+    'INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);',
     [key, value, now]
   );
 }
 
-/**
- * Checks if the user is entitled to ad-free status (persisted locally in SQLite).
- */
 export async function isAdFreeUser(): Promise<boolean> {
   const val = await getSetting('is_ad_free');
   return val === 'true';
 }
 
-/**
- * Updates the user's ad-free entitlement status in SQLite.
- */
 export async function setAdFreeUser(adFree: boolean): Promise<void> {
   await setSetting('is_ad_free', adFree ? 'true' : 'false');
 }
-

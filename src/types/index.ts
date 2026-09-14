@@ -10,11 +10,13 @@ export interface Domain {
   subdomains?: Domain[];
   cardCount?: number;
   isPro?: boolean;
+  is_introductory?: boolean;
 }
 
 export interface DeckWithProgress {
   id: string;
   theme_id: string;
+  theme_name?: string;
   name: string;
   description: string;
   difficulty_level: number;
@@ -25,6 +27,9 @@ export interface DeckWithProgress {
   garrisoned_count: number;
   mastered_count: number;
   is_pro: boolean;
+  is_locked?: boolean;
+  difficulty_slice?: number;
+  real_deck_id?: number;
 }
 
 export interface ThemeGroup {

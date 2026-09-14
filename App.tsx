@@ -24,7 +24,6 @@ import { FullScreenAdModal } from './src/components/ads/FullScreenAdModal';
 import { iapService } from './src/services/iapService';
 import { adManager } from './src/services/adManager';
 import { srsManager } from './src/srs';
-import { AlgorithmSelectorModal } from './src/components/modals/AlgorithmSelectorModal';
 import {
   Swords,
   Library,
@@ -38,6 +37,7 @@ import {
   Globe,
   Sparkles,
   Zap,
+  Check,
 } from 'lucide-react-native';
 
 type TabType = 'pipeline' | 'archives' | 'search' | 'chronicles' | 'treasury';
@@ -59,7 +59,6 @@ export default function App() {
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [adFreeModalOpen, setAdFreeModalOpen] = useState(false);
   const [fullScreenAdOpen, setFullScreenAdOpen] = useState(false);
-  const [algorithmModalOpen, setAlgorithmModalOpen] = useState(false);
   const [isAdFree, setIsAdFree] = useState(false);
   const [activeAlgoName, setActiveAlgoName] = useState(srsManager.getActiveAlgorithm().meta.name);
 
@@ -244,25 +243,22 @@ export default function App() {
               </View>
             </View>
 
-            {/* SRS Algorithm Selector Card in Treasury */}
-            <TouchableOpacity
-              style={styles.treasuryAlgoBtn}
-              onPress={() => setAlgorithmModalOpen(true)}
-              activeOpacity={0.85}
-            >
+            {/* SRS Engine Card in Treasury (FSRS v5 Exclusively) */}
+            <View style={styles.treasuryAlgoBtn}>
               <Zap size={20} color="#B45309" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.treasuryAlgoTitle}>
-                  SRS ENGINE: {srsManager.getActiveAlgorithm().meta.shortName.toUpperCase()}
+                  SRS ENGINE: FSRS v5
                 </Text>
                 <Text style={styles.treasuryAlgoSub} numberOfLines={1}>
-                  {srsManager.getActiveAlgorithm().meta.tagline}
+                  State-of-the-Art Machine Learning (Highest Efficiency)
                 </Text>
               </View>
-              <View style={styles.treasuryAlgoBadge}>
-                <Text style={styles.treasuryAlgoActionText}>CHANGE</Text>
+              <View style={styles.treasuryAlgoActiveBadge}>
+                <Check size={12} color="#065F46" />
+                <Text style={styles.treasuryAlgoActiveText}>ACTIVE</Text>
               </View>
-            </TouchableOpacity>
+            </View>
 
             {/* Ad-Free Status in Treasury */}
             {isAdFree ? (
@@ -394,16 +390,6 @@ export default function App() {
         visible={fullScreenAdOpen && !isAdFree}
         onClose={() => setFullScreenAdOpen(false)}
         onOpenAdFreeModal={() => setAdFreeModalOpen(true)}
-      />
-
-      {/* Modular Spaced Repetition Algorithm Selector Modal */}
-      <AlgorithmSelectorModal
-        visible={algorithmModalOpen}
-        onClose={() => setAlgorithmModalOpen(false)}
-        onAlgorithmChanged={() => {
-          setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
-          refreshStats();
-        }}
       />
     </SafeAreaView>
   );
@@ -670,16 +656,21 @@ const styles = StyleSheet.create({
     color: '#92400E',
     marginTop: 2,
   },
-  treasuryAlgoBadge: {
-    backgroundColor: '#D97706',
+  treasuryAlgoActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#D1FAE5',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
-  treasuryAlgoActionText: {
+  treasuryAlgoActiveText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: '#065F46',
     letterSpacing: 0.5,
   },
 });
