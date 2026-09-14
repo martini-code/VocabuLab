@@ -1,87 +1,50 @@
-import { fsrs, Card as FSRSCard, Rating, State, Grade } from 'ts-fsrs';
+import { Grade, Rating } from 'ts-fsrs';
 import { UserCard } from '../types';
-
-const f = fsrs();
-
-/**
- * Converts our local SQLite UserCard model to ts-fsrs Card object.
- */
-export function toFSRSCard(card: UserCard): FSRSCard {
-  return {
-    due: new Date(card.due_date),
-    stability: card.stability || 0,
-    difficulty: card.difficulty || 0,
-    elapsed_days: card.elapsed_days || 0,
-    scheduled_days: card.scheduled_days || 0,
-    learning_steps: 0,
-    reps: card.reps || 0,
-    lapses: card.lapses || 0,
-    state: (card.state as State) ?? State.New,
-    last_review: new Date(card.updated_at),
-  };
-}
+import { srsManager, SRSRating, ReviewOption as SRSReviewOption, SRSUpdatePayload } from '../srs';
 
 export interface ReviewOption {
   rating: Grade;
   label: string;
   intervalText: string;
-  card: FSRSCard;
+  due?: Date;
 }
 
 /**
- * Computes preview intervals for all 4 review ratings.
+ * Maps ts-fsrs Grade enum to universal SRSRating.
+ */
+function toSRSRating(grade: Grade): SRSRating {
+  switch (grade) {
+    case Rating.Again:
+      return SRSRating.Again;
+    case Rating.Hard:
+      return SRSRating.Hard;
+    case Rating.Good:
+      return SRSRating.Good;
+    case Rating.Easy:
+      return SRSRating.Easy;
+    default:
+      return SRSRating.Good;
+  }
+}
+
+/**
+ * Computes preview intervals using the user's currently selected SRS algorithm.
  */
 export function getReviewOptions(userCard: UserCard, now: Date = new Date()): ReviewOption[] {
-  const fsrsCard = toFSRSCard(userCard);
-  const schedulingCards = f.repeat(fsrsCard, now);
-
-  const ratings: { rating: Grade; label: string }[] = [
-    { rating: Rating.Again as Grade, label: 'Again' },
-    { rating: Rating.Hard as Grade, label: 'Hard' },
-    { rating: Rating.Good as Grade, label: 'Good' },
-    { rating: Rating.Easy as Grade, label: 'Easy' },
-  ];
-
-  return ratings.map((r) => {
-    const nextCard = schedulingCards[r.rating].card;
-    const diffMs = nextCard.due.getTime() - now.getTime();
-    const diffMinutes = Math.round(diffMs / (1000 * 60));
-    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-    let intervalText = '10m';
-    if (diffDays >= 1) {
-      intervalText = `${diffDays}d`;
-    } else if (diffMinutes > 60) {
-      intervalText = `${Math.round(diffMinutes / 60)}h`;
-    } else if (diffMinutes > 0) {
-      intervalText = `${diffMinutes}m`;
-    }
-
-    return {
-      rating: r.rating,
-      label: r.label,
-      intervalText,
-      card: nextCard,
-    };
-  });
+  const options = srsManager.getReviewOptions(userCard, now);
+  return options.map((opt) => ({
+    rating: opt.rating as unknown as Grade,
+    label: opt.label,
+    intervalText: opt.intervalText,
+    due: opt.due,
+  }));
 }
 
 /**
- * Applies a grade to a card using FSRS algorithm and prepares database update payload.
+ * Applies a grade to a card using the user's active spaced repetition algorithm
+ * (FSRS, SM-2, or Leitner) and returns the database update payload.
  */
-export function gradeCardFSRS(userCard: UserCard, rating: Grade, now: Date = new Date()) {
-  const fsrsCard = toFSRSCard(userCard);
-  const repeatResult = f.repeat(fsrsCard, now);
-  const nextCard = repeatResult[rating].card;
-
-  return {
-    due_date: nextCard.due.toISOString(),
-    state: nextCard.state,
-    stability: Number(nextCard.stability.toFixed(4)),
-    difficulty: Number(nextCard.difficulty.toFixed(4)),
-    elapsed_days: nextCard.elapsed_days,
-    scheduled_days: nextCard.scheduled_days,
-    reps: nextCard.reps,
-    lapses: nextCard.lapses,
-  };
+export function gradeCardFSRS(userCard: UserCard, rating: Grade, now: Date = new Date()): SRSUpdatePayload {
+  const srsRating = toSRSRating(rating);
+  return srsManager.gradeCard(userCard, srsRating, now);
 }

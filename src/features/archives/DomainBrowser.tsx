@@ -14,17 +14,14 @@ import { speakWord } from '../../utils/tts';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
-import { isLocalProActive } from '../../services/purchases';
 
 const CEFR_LEVELS: (CEFRLevel | 'ALL')[] = ['ALL', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 interface DomainBrowserProps {
-  onOpenPaywall: () => void;
   onStartTraining: () => void;
 }
 
 export const DomainBrowser: React.FC<DomainBrowserProps> = ({
-  onOpenPaywall,
   onStartTraining,
 }) => {
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -33,8 +30,6 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   const [lexemes, setLexemes] = useState<Lexeme[]>([]);
   const [loading, setLoading] = useState(true);
   const [garrisonedIds, setGarrisonedIds] = useState<Set<number>>(new Set());
-
-  const hasPro = isLocalProActive();
 
   useEffect(() => {
     loadDomains();
@@ -62,10 +57,6 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   };
 
   const handleSelectDomain = (domain: Domain) => {
-    if (domain.isPro && !hasPro) {
-      onOpenPaywall();
-      return;
-    }
     setSelectedDomain(domain);
   };
 
@@ -99,7 +90,6 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
       >
         {domains.map((d) => {
           const isSelected = selectedDomain?.id === d.id;
-          const isLocked = d.isPro && !hasPro;
 
           return (
             <TouchableOpacity
@@ -109,7 +99,6 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
               style={[
                 styles.domainTab,
                 isSelected && styles.domainTabSelected,
-                isLocked && styles.domainTabLocked,
               ]}
             >
               <Text style={styles.domainEmoji}>
@@ -129,13 +118,11 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 style={[
                   styles.domainName,
                   isSelected && styles.domainNameSelected,
-                  isLocked && styles.domainNameLocked,
                 ]}
                 numberOfLines={1}
               >
                 {d.name}
               </Text>
-              {isLocked && <Text style={styles.lockBadge}>PRO</Text>}
             </TouchableOpacity>
           );
         })}

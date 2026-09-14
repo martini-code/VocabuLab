@@ -23,7 +23,7 @@ class TestVocabKeepVault(unittest.TestCase):
     def test_tables_exist(self):
         self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = {row["name"] for row in self.cursor.fetchall()}
-        required = {"Domains", "Concepts", "Lexemes", "Lexemes_FTS", "Concept_Lexeme", "User_Cards"}
+        required = {"Domains", "Concepts", "Lexemes", "Lexemes_FTS", "Concept_Lexeme", "User_Cards", "Review_Logs"}
         for table in required:
             self.assertIn(table, tables, f"Missing required table: {table}")
 
@@ -84,6 +84,67 @@ class TestVocabKeepVault(unittest.TestCase):
         self.cursor.execute("SELECT * FROM Lexemes_FTS WHERE Lexemes_FTS MATCH 'catapulta*';")
         match_after = self.cursor.fetchall()
         self.assertEqual(len(match_after), 0, "FTS trigger should remove deleted lexeme")
+
+    def test_review_logs_and_activity_aggregation(self):
+        self.cursor.execute("SELECT count(*) as count FROM Review_Logs;")
+        cnt = self.cursor.fetchone()["count"]
+        self.assertGreater(cnt, 0, "Review_Logs should contain seeded campaign logs")
+
+        # Test daily grouping query used by the GitHub activity matrix
+        self.cursor.execute("""
+            SELECT date(reviewed_at) as day, count(*) as daily_cnt 
+            FROM Review_Logs 
+            GROUP BY date(reviewed_at) 
+            ORDER BY day DESC;
+        """)
+        daily_rows = self.cursor.fetchall()
+        self.assertGreater(len(daily_rows), 10, "Should have multiple distinct active review days")
+        self.assertGreater(daily_rows[0]["daily_cnt"], 0)
+
+    def test_progressive_difficulty_decks(self):
+        # Verify themes and their sub-decks order ascending by difficulty_level
+        self.cursor.execute("SELECT id, name, difficulty_level FROM Domains WHERE parent_id IS NULL ORDER BY difficulty_level ASC;")
+        themes = self.cursor.fetchall()
+        self.assertGreaterEqual(len(themes), 6, "Should have 6 themes")
+
+        for theme in themes:
+            self.cursor.execute(
+                "SELECT id, name, difficulty_level FROM Domains WHERE parent_id = ? ORDER BY difficulty_level ASC;",
+                (theme["id"],)
+            )
+            decks = self.cursor.fetchall()
+            self.assertGreaterEqual(len(decks), 1, f"Theme {theme['id']} should have decks")
+            prev_diff = 0
+            for deck in decks:
+                self.assertIsNotNone(deck["difficulty_level"])
+                self.assertGreaterEqual(deck["difficulty_level"], prev_diff, f"Deck {deck['id']} must be ordered progressively (got {deck['difficulty_level']} after {prev_diff})")
+                prev_diff = deck["difficulty_level"]
+
+    def test_settings_and_ad_free_persistence(self):
+        # Verify Settings table exists and handles key-value upserts
+        now = datetime.now(timezone.utc).isoformat()
+        self.cursor.execute(
+            "INSERT INTO Settings (key, value, updated_at) VALUES ('is_ad_free', 'true', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at;",
+            (now,)
+        )
+        self.conn.commit()
+
+        self.cursor.execute("SELECT value FROM Settings WHERE key = 'is_ad_free';")
+        row = self.cursor.fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["value"], "true")
+
+        # Test updating to false
+        self.cursor.execute(
+            "INSERT INTO Settings (key, value, updated_at) VALUES ('is_ad_free', 'false', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at;",
+            (now,)
+        )
+        self.conn.commit()
+
+        self.cursor.execute("SELECT value FROM Settings WHERE key = 'is_ad_free';")
+        row = self.cursor.fetchone()
+        self.assertEqual(row["value"], "false")
+
 
 if __name__ == "__main__":
     unittest.main()

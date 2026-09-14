@@ -4,9 +4,53 @@ export interface Domain {
   id: string;
   parent_id: string | null;
   name: string;
+  description?: string;
+  difficulty_level?: number;
+  icon_name?: string;
   subdomains?: Domain[];
   cardCount?: number;
   isPro?: boolean;
+}
+
+export interface DeckWithProgress {
+  id: string;
+  theme_id: string;
+  name: string;
+  description: string;
+  difficulty_level: number;
+  difficulty_label: string;
+  cefr_level: string;
+  icon_name: string;
+  card_count: number;
+  garrisoned_count: number;
+  mastered_count: number;
+  is_pro: boolean;
+}
+
+export interface ThemeGroup {
+  id: string;
+  name: string;
+  description: string;
+  icon_name: string;
+  is_pro: boolean;
+  decks: DeckWithProgress[];
+}
+
+export interface DeckCardDetail {
+  concept_id: string;
+  concept_desc: string;
+  front_lexeme_id: number;
+  front_term: string;
+  front_lang: string;
+  front_pos: string | null;
+  front_cefr: string;
+  back_lexeme_id: number;
+  back_term: string;
+  back_lang: string;
+  is_garrisoned: boolean;
+  user_card_id?: string;
+  stability?: number;
+  reps?: number;
 }
 
 export interface Concept {
@@ -61,3 +105,93 @@ export interface VaultStats {
 }
 
 export type MascotMood = 'idle' | 'happy' | 'cheering' | 'thinking' | 'confused' | 'victorious';
+
+export interface ActivityDay {
+  date: string; // YYYY-MM-DD
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
+}
+
+export interface ActivityWeek {
+  days: (ActivityDay | null)[]; // 7 days (index 0 = Sunday, 6 = Saturday)
+}
+
+export interface ProgressOverview {
+  currentStreak: number;
+  longestStreak: number;
+  totalReviews: number;
+  todayReviews: number;
+  masteredCards: number;
+  totalCards: number;
+  gridWeeks: ActivityWeek[];
+  monthLabels: { weekIndex: number; label: string }[];
+  weeklyDistribution: { day: string; count: number }[];
+}
+
+export type MasteryStage = 'slipping' | 'learning' | 'mastered' | 'new_in_queue' | 'available';
+
+export interface DifficultyWordItem {
+  concept_id: string;
+  concept_desc: string;
+  front_lexeme_id: number;
+  front_term: string;
+  front_lang: string;
+  front_pos: string | null;
+  front_cefr: string;
+  back_lexeme_id: number;
+  back_term: string;
+  back_lang: string;
+  deck_name: string;
+  theme_name: string;
+  frequency_rank: number | null;
+  is_queued: boolean;
+  user_card_id?: string;
+  stability?: number;
+  reps?: number;
+  lapses?: number;
+  due_date?: string;
+  state?: number;
+}
+
+export interface DifficultyStat {
+  cefr: CEFRLevel;
+  label: string;
+  tier: number;
+  total_count: number;
+  queued_count: number;
+  mastered_count: number;
+  available_count: number;
+}
+
+export interface MasteryWordItem {
+  concept_id: string;
+  concept_desc: string;
+  front_lexeme_id: number;
+  front_term: string;
+  front_lang: string;
+  front_pos: string | null;
+  front_cefr: string;
+  back_lexeme_id: number;
+  back_term: string;
+  back_lang: string;
+  deck_name?: string;
+  theme_name?: string;
+  is_queued: boolean;
+  user_card_id?: string;
+  stage: MasteryStage;
+  stability?: number;
+  scheduled_days?: number;
+  reps?: number;
+  lapses?: number;
+  due_date?: string;
+  state?: number;
+}
+
+export interface MasterySummary {
+  slipping_count: number;
+  learning_count: number;
+  mastered_count: number;
+  new_queue_count: number;
+  available_count: number;
+  total_library_count: number;
+}

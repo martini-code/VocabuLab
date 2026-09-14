@@ -27,12 +27,15 @@ def create_database(db_path: str):
     cursor.execute("PRAGMA foreign_keys = ON;")
     cursor.execute("PRAGMA journal_mode = WAL;")
 
-    # 1. Domains Table
+    # 1. Domains Table (Themes and Difficulty-Ordered Decks)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Domains (
         id TEXT PRIMARY KEY,
         parent_id TEXT,
         name TEXT NOT NULL,
+        description TEXT,
+        difficulty_level INTEGER DEFAULT 1,
+        icon_name TEXT,
         FOREIGN KEY(parent_id) REFERENCES Domains(id)
     );
     """)
@@ -118,40 +121,80 @@ def create_database(db_path: str):
     );
     """)
 
+    # 7. Review_Logs Table (Activity & Contribution History)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Review_Logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        card_id TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        reviewed_at DATETIME NOT NULL,
+        FOREIGN KEY(card_id) REFERENCES User_Cards(id)
+    );
+    """)
+
+    # 8. Settings Table (Local Entitlements & App State)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at DATETIME NOT NULL
+    );
+    """)
+
     # Indexes
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_due_date ON User_Cards(due_date);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_lexeme_lang ON Lexemes(language);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_concept_lexeme ON Concept_Lexeme(concept_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_concepts_domain ON Concepts(domain_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_reviewed_at ON Review_Logs(reviewed_at);")
 
-    # Seed Domains (Medieval Realm Themed)
+    # Seed Domains & Themes
+    # (id, parent_id, name, description, difficulty_level, icon_name)
     domains = [
-        # Top-level realms
-        ("domain_castle", None, "The Castle Keep & Court"),
-        ("domain_academy", None, "The Grand Scriptorium & Lore"),
-        ("domain_wilderness", None, "The Enchanted Forest & Nature"),
-        ("domain_armory", None, "The Royal Armory & Strategy"),
-        ("domain_market", None, "The Merchant Guild & Trade"),
-        ("domain_forbidden", None, "The Forbidden Royal Archives (Pro)"),
+        # Top-level Themes
+        ("domain_castle", None, "The Castle Keep & Court", "Palace etiquette, pantry provisions, and festival banquets", 1, "castle"),
+        ("domain_wilderness", None, "The Enchanted Forest & Nature", "Wayfaring trails, tempest storms, and wild beasts", 2, "tree"),
+        ("domain_market", None, "The Merchant Guild & Trade", "Royal currency, marketplace barter, and commerce contracts", 2, "coins"),
+        ("domain_armory", None, "The Royal Armory & Strategy", "Bladed armaments, shield defenses, and battlefield valor", 3, "swords"),
+        ("domain_academy", None, "The Grand Scriptorium & Lore", "Celestial stars, epistemology, hypotheses, and logic axioms", 3, "book"),
+        ("domain_forbidden", None, "The Forbidden Royal Archives (Pro)", "High court statecraft, incorporeal metaphysics, and ancient mazes", 5, "crown"),
 
-        # Subdomains
-        ("sub_castle_daily", "domain_castle", "Everyday Courtesies & Greeting"),
-        ("sub_castle_feasts", "domain_castle", "Royal Banquets & Dining"),
-        ("sub_script_philosophy", "domain_academy", "Ancient Philosophy & Epistemology"),
-        ("sub_script_science", "domain_academy", "Natural Philosophy & Astronomy"),
-        ("sub_wild_creatures", "domain_wilderness", "Beasts & Herbology"),
-        ("sub_wild_travel", "domain_wilderness", "Wayfaring & Weather"),
-        ("sub_armory_combat", "domain_armory", "Combat, Tactics & Valor"),
-        ("sub_market_goods", "domain_market", "Coin, Goods & Barter"),
-        ("sub_forbid_diplomacy", "domain_forbidden", "Statecraft & High Intrigue (C1-C2)"),
-        ("sub_forbid_arcana", "domain_forbidden", "Abstract Metaphysics & Arcana (C2)"),
+        # Theme 1: Castle Keep & Court (Progressive Decks)
+        ("sub_castle_daily", "domain_castle", "Everyday Courtesies & Greetings", "Essential greetings and bonds of friendship", 1, "handshake"),
+        ("sub_castle_dining", "domain_castle", "Pantry & Dining Provisions", "Daily meals, sweet sugar crystals, and provisions", 2, "utensils"),
+        ("sub_castle_feasts", "domain_castle", "Royal Banquets & Celebrations", "Grand feast dining and vintage wine toasts", 3, "goblet"),
+
+        # Theme 2: Enchanted Forest & Nature (Progressive Decks)
+        ("sub_wild_creatures", "domain_wilderness", "Beasts & Royal Menagerie", "Carnivorous lions and fierce creatures of the woods", 2, "paw"),
+        ("sub_wild_weather", "domain_wilderness", "Wayfaring & Tempest Storms", "Surviving violent gale squalls and tempest rains", 3, "cloud-lightning"),
+        ("sub_wild_travel", "domain_wilderness", "Untamed Wilderness & Badlands", "Misty rugged terrain and mysterious badlands", 4, "compass"),
+
+        # Theme 3: Merchant Guild & Trade (Progressive Decks)
+        ("sub_market_goods", "domain_market", "Coinage & Royal Mint", "Stamped currency coins and standard traded wares", 2, "coins"),
+        ("sub_market_trade", "domain_market", "Guild Bargains & Trade Pacts", "Merchant exchange agreements and trade transactions", 3, "scale"),
+
+        # Theme 4: Royal Armory & Strategy (Progressive Decks)
+        ("sub_armory_weapons", "domain_armory", "Steel Blades & Armaments", "Forged swords and bladed melee weaponry", 2, "sword"),
+        ("sub_armory_defenses", "domain_armory", "Shields & Defensive Plate", "Personal defense shields and protective heraldic armor", 2, "shield"),
+        ("sub_armory_combat", "domain_armory", "Martial Valor & Battlefield Courage", "Chivalric courage, tactics, and battlefield valor", 4, "award"),
+
+        # Theme 5: Grand Scriptorium & Lore (Progressive Decks)
+        ("sub_script_astronomy", "domain_academy", "Celestial Stars & Heavens", "Luminous stellar bodies and the celestial sphere", 1, "sparkles"),
+        ("sub_script_philosophy", "domain_academy", "Truth & Foundational Epistemology", "The pursuit of genuine reality, veracity, and wisdom", 3, "scroll"),
+        ("sub_script_science", "domain_academy", "Natural Hypotheses & Deduction", "Formulating provisional suppositions and theories", 4, "microscope"),
+        ("sub_script_logic", "domain_academy", "First Principles & Axioms", "Propositions accepted as self-evidently true", 5, "brain"),
+
+        # Theme 6: Forbidden Royal Archives (Progressive Decks)
+        ("sub_forbid_diplomacy", "domain_forbidden", "Statecraft & High Intrigue", "Secret political maneuvers and oratorical eloquence", 5, "landmark"),
+        ("sub_forbid_arcana", "domain_forbidden", "Incorporeal Metaphysics & Arcana", "Non-physical ideas, spirits, and abstract doctrines", 6, "flame"),
+        ("sub_forbid_labyrinth", "domain_forbidden", "Labyrinthine Riddles of Antiquity", "Intricate, deceptive conceptual mazes of the ancients", 6, "network"),
     ]
-    cursor.executemany("INSERT INTO Domains (id, parent_id, name) VALUES (?, ?, ?);", domains)
+    cursor.executemany("INSERT INTO Domains (id, parent_id, name, description, difficulty_level, icon_name) VALUES (?, ?, ?, ?, ?, ?);", domains)
 
     # Rich Multilingual Corpus with CILI concepts & CEFR levels
     # Format: concept_id, domain_id, description, [ (lang, term, pos, cefr, rank) ]
     sample_corpus = [
-        # --- Greeting & Courtesies (A1) ---
+        # --- Castle Keep Decks ---
         ("cili_001", "sub_castle_daily", "A greeting of goodwill exchanged upon meeting", [
             ("en", "greeting", "noun", "A1", 10),
             ("es", "saludo", "noun", "A1", 12),
@@ -176,15 +219,13 @@ def create_database(db_path: str):
             ("ja", "友達", "noun", "A1", 11),
             ("it", "amico", "noun", "A1", 8),
         ]),
-
-        # --- Banquets & Food (A1-A2) ---
-        ("cili_004", "sub_castle_feasts", "A sweet crystalline substance obtained from sugarcane or beet", [
-            ("en", "sugar", "noun", "A1", 45),
-            ("es", "azúcar", "noun", "A1", 40),
-            ("fr", "sucre", "noun", "A1", 38),
-            ("de", "Zucker", "noun", "A1", 42),
-            ("ja", "砂糖", "noun", "A1", 50),
-            ("it", "zucchero", "noun", "A1", 41),
+        ("cili_004", "sub_castle_dining", "A sweet crystalline substance obtained from sugarcane or beet", [
+            ("en", "sugar", "noun", "A2", 45),
+            ("es", "azúcar", "noun", "A2", 40),
+            ("fr", "sucre", "noun", "A2", 38),
+            ("de", "Zucker", "noun", "A2", 42),
+            ("ja", "砂糖", "noun", "A2", 50),
+            ("it", "zucchero", "noun", "A2", 41),
         ]),
         ("cili_005", "sub_castle_feasts", "A grand celebration meal accompanied by music and speeches", [
             ("en", "banquet", "noun", "B1", 180),
@@ -195,38 +236,30 @@ def create_database(db_path: str):
             ("it", "banchetto", "noun", "B1", 185),
         ]),
         ("cili_006", "sub_castle_feasts", "Fermented beverage made from pressed grape juice", [
-            ("en", "wine", "noun", "A2", 60),
-            ("es", "vino", "noun", "A2", 55),
-            ("fr", "vin", "noun", "A2", 50),
-            ("de", "Wein", "noun", "A2", 58),
-            ("ja", "ワイン", "noun", "A2", 65),
-            ("it", "vino", "noun", "A2", 52),
+            ("en", "wine", "noun", "B1", 60),
+            ("es", "vino", "noun", "B1", 55),
+            ("fr", "vin", "noun", "B1", 50),
+            ("de", "Wein", "noun", "B1", 58),
+            ("ja", "ワイン", "noun", "B1", 65),
+            ("it", "vino", "noun", "B1", 52),
         ]),
 
-        # --- Scriptorium & Science / Philosophy (B1-C1) ---
-        ("cili_007", "sub_script_philosophy", "The quality of being true, genuine, or actual", [
-            ("en", "truth", "noun", "B1", 85),
-            ("es", "verdad", "noun", "B1", 80),
-            ("fr", "vérité", "noun", "B1", 82),
-            ("de", "Wahrheit", "noun", "B1", 84),
-            ("ja", "真理", "noun", "B2", 95),
-            ("it", "verità", "noun", "B1", 81),
-        ]),
-        ("cili_008", "sub_script_philosophy", "A proposition accepted as self-evidently true without need of proof", [
-            ("en", "axiom", "noun", "C1", 420),
-            ("es", "axioma", "noun", "C1", 410),
-            ("fr", "axiome", "noun", "C1", 415),
-            ("de", "Axiom", "noun", "C1", 430),
-            ("ja", "公理", "noun", "C1", 450),
-            ("it", "assioma", "noun", "C1", 418),
-        ]),
-        ("cili_009", "sub_script_science", "The luminous celestial body around which the Earth and planets orbit", [
+        # --- Grand Scriptorium Decks ---
+        ("cili_009", "sub_script_astronomy", "The luminous celestial body around which the Earth and planets orbit", [
             ("en", "star", "noun", "A1", 30),
             ("es", "estrella", "noun", "A1", 28),
             ("fr", "étoile", "noun", "A1", 27),
             ("de", "Stern", "noun", "A1", 32),
             ("ja", "星", "noun", "A1", 29),
             ("it", "stella", "noun", "A1", 28),
+        ]),
+        ("cili_007", "sub_script_philosophy", "The quality of being true, genuine, or actual", [
+            ("en", "truth", "noun", "B1", 85),
+            ("es", "verdad", "noun", "B1", 80),
+            ("fr", "vérité", "noun", "B1", 82),
+            ("de", "Wahrheit", "noun", "B1", 84),
+            ("ja", "真理", "noun", "B1", 95),
+            ("it", "verità", "noun", "B1", 81),
         ]),
         ("cili_010", "sub_script_science", "A provisional supposition made in order to draw out logical consequences", [
             ("en", "hypothesis", "noun", "B2", 230),
@@ -236,8 +269,16 @@ def create_database(db_path: str):
             ("ja", "仮説", "noun", "B2", 240),
             ("it", "ipotesi", "noun", "B2", 222),
         ]),
+        ("cili_008", "sub_script_logic", "A proposition accepted as self-evidently true without need of proof", [
+            ("en", "axiom", "noun", "C1", 420),
+            ("es", "axioma", "noun", "C1", 410),
+            ("fr", "axiome", "noun", "C1", 415),
+            ("de", "Axiom", "noun", "C1", 430),
+            ("ja", "公理", "noun", "C1", 450),
+            ("it", "assioma", "noun", "C1", 418),
+        ]),
 
-        # --- Wilderness & Nature (A2-B2) ---
+        # --- Enchanted Forest Decks ---
         ("cili_011", "sub_wild_creatures", "A large carnivorous feline of the genus Panthera with a regal mane", [
             ("en", "lion", "noun", "A2", 90),
             ("es", "león", "noun", "A2", 88),
@@ -246,13 +287,13 @@ def create_database(db_path: str):
             ("ja", "ライオン", "noun", "A2", 95),
             ("it", "leone", "noun", "A2", 89),
         ]),
-        ("cili_012", "sub_wild_travel", "A sudden violent burst of wind often accompanied by rain or tempest", [
-            ("en", "storm", "noun", "A2", 70),
-            ("es", "tormenta", "noun", "A2", 68),
-            ("fr", "tempête", "noun", "A2", 72),
-            ("de", "Sturm", "noun", "A2", 69),
-            ("ja", "嵐", "noun", "A2", 75),
-            ("it", "tempesta", "noun", "A2", 71),
+        ("cili_012", "sub_wild_weather", "A sudden violent burst of wind often accompanied by rain or tempest", [
+            ("en", "storm", "noun", "B1", 70),
+            ("es", "tormenta", "noun", "B1", 68),
+            ("fr", "tempête", "noun", "B1", 72),
+            ("de", "Sturm", "noun", "B1", 69),
+            ("ja", "嵐", "noun", "B1", 75),
+            ("it", "tempesta", "noun", "B1", 71),
         ]),
         ("cili_013", "sub_wild_travel", "An expanse of rugged terrain shrouded in mystery and mist", [
             ("en", "wilderness", "noun", "B2", 310),
@@ -263,8 +304,8 @@ def create_database(db_path: str):
             ("it", "natura selvaggia", "noun", "B2", 318),
         ]),
 
-        # --- Royal Armory & Strategy (A2-B2) ---
-        ("cili_014", "sub_armory_combat", "A bladed weapon consisting of a steel blade fitted with a hilt", [
+        # --- Royal Armory Decks ---
+        ("cili_014", "sub_armory_weapons", "A bladed weapon consisting of a steel blade fitted with a hilt", [
             ("en", "sword", "noun", "A2", 110),
             ("es", "espada", "noun", "A2", 105),
             ("fr", "épée", "noun", "A2", 108),
@@ -272,7 +313,7 @@ def create_database(db_path: str):
             ("ja", "剣", "noun", "A2", 115),
             ("it", "spada", "noun", "A2", 106),
         ]),
-        ("cili_015", "sub_armory_combat", "A piece of personal defensive armor carried on the arm", [
+        ("cili_015", "sub_armory_defenses", "A piece of personal defensive armor carried on the arm", [
             ("en", "shield", "noun", "A2", 120),
             ("es", "escudo", "noun", "A2", 118),
             ("fr", "bouclier", "noun", "A2", 122),
@@ -285,11 +326,11 @@ def create_database(db_path: str):
             ("es", "valentía", "noun", "B2", 270),
             ("fr", "vaillance", "noun", "B2", 275),
             ("de", "Tapferkeit", "noun", "B2", 285),
-            ("ja", "勇気", "noun", "B1", 260),
+            ("ja", "勇気", "noun", "B2", 260),
             ("it", "valore", "noun", "B2", 272),
         ]),
 
-        # --- Merchant Guild & Trade (A2-B1) ---
+        # --- Merchant Guild Decks ---
         ("cili_017", "sub_market_goods", "A flat rounded piece of metal stamped by royal authority used as money", [
             ("en", "coin", "noun", "A2", 130),
             ("es", "moneda", "noun", "A2", 128),
@@ -298,7 +339,7 @@ def create_database(db_path: str):
             ("ja", "硬貨", "noun", "A2", 140),
             ("it", "moneta", "noun", "A2", 129),
         ]),
-        ("cili_018", "sub_market_goods", "An agreement between merchants to exchange goods and wares", [
+        ("cili_018", "sub_market_trade", "An agreement between merchants to exchange goods and wares", [
             ("en", "bargain", "noun", "B1", 195),
             ("es", "regateo", "noun", "B1", 200),
             ("fr", "marchandage", "noun", "B1", 198),
@@ -307,7 +348,7 @@ def create_database(db_path: str):
             ("it", "affare", "noun", "B1", 192),
         ]),
 
-        # --- Forbidden Royal Archives (C1 - C2 Pro Tier) ---
+        # --- Forbidden Royal Archives Decks ---
         ("cili_019", "sub_forbid_diplomacy", "Secret art of political maneuvering and cunning negotiation", [
             ("en", "statecraft", "noun", "C1", 490),
             ("es", "arte de gobierno", "noun", "C1", 485),
@@ -332,7 +373,7 @@ def create_database(db_path: str):
             ("ja", "無形の", "adj", "C2", 660),
             ("it", "incorporeo", "adj", "C2", 646),
         ]),
-        ("cili_022", "sub_forbid_arcana", "An intricate or deceptive labyrinth of interconnected ideas", [
+        ("cili_022", "sub_forbid_labyrinth", "An intricate or deceptive labyrinth of interconnected ideas", [
             ("en", "labyrinthine", "adj", "C2", 720),
             ("es", "laberíntico", "adj", "C2", 710),
             ("fr", "labyrinthique", "adj", "C2", 715),
@@ -399,9 +440,34 @@ def create_database(db_path: str):
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, user_cards_to_create)
 
+    # Seed realistic study activity logs over past 60 days
+    sample_logs = []
+    card_ids = [c[0] for c in user_cards_to_create]
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
+
+    for i in range(60, -1, -1):
+        day_date = now_dt - datetime.timedelta(days=i)
+        weekday = day_date.weekday()
+
+        # Skip a few days earlier to keep streak realistic, but preserve last 4 consecutive days
+        if i > 4 and (i % 7 == 2 or (i % 11 == 0 and weekday == 6)):
+            continue
+
+        # Activity count between 2 and 16 reviews
+        count = (4 + (i * 3) % 12) if i <= 4 else ((i * 7 + weekday * 5) % 15) + 2
+        for r in range(count):
+            c_id = card_ids[r % len(card_ids)]
+            rating = (r % 4) + 1
+            log_time = day_date.replace(hour=9 + (r % 12), minute=(r * 7) % 60, second=0).isoformat()
+            sample_logs.append((c_id, rating, log_time))
+
+    cursor.executemany("""
+    INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);
+    """, sample_logs)
+
     conn.commit()
     conn.close()
-    print(f"Database successfully created at {db_path} with {lexeme_id_counter - 1} lexemes and {len(user_cards_to_create)} garrisoned cards.")
+    print(f"Database successfully created at {db_path} with {lexeme_id_counter - 1} lexemes, {len(user_cards_to_create)} garrisoned cards, and {len(sample_logs)} activity review logs.")
 
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent.parent

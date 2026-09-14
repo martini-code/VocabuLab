@@ -3,12 +3,22 @@ export const SCHEMA_SQL = `
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
--- Hierarchical Decks (Domains & Subdomains)
+-- Hierarchical Decks (Domains, Themes & Difficulty-Ordered Decks)
 CREATE TABLE IF NOT EXISTS Domains (
     id TEXT PRIMARY KEY,
     parent_id TEXT,
     name TEXT NOT NULL,
+    description TEXT,
+    difficulty_level INTEGER DEFAULT 1,
+    icon_name TEXT,
+    is_introductory INTEGER DEFAULT 0,
     FOREIGN KEY(parent_id) REFERENCES Domains(id)
+);
+
+CREATE TABLE IF NOT EXISTS Deck_Access (
+    deck_id TEXT PRIMARY KEY,
+    is_unlocked INTEGER DEFAULT 0,
+    unlocked_at DATETIME
 );
 
 -- Semantic Concepts (OMW V2 CILI Anchors)
@@ -78,9 +88,26 @@ CREATE TABLE IF NOT EXISTS User_Cards (
     FOREIGN KEY(back_lexeme_id) REFERENCES Lexemes(id)
 );
 
+-- Review Logs (Activity & Contribution History)
+CREATE TABLE IF NOT EXISTS Review_Logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_id TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    reviewed_at DATETIME NOT NULL,
+    FOREIGN KEY(card_id) REFERENCES User_Cards(id)
+);
+
+-- Settings & Local Entitlements (Offline-First Store State)
+CREATE TABLE IF NOT EXISTS Settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME NOT NULL
+);
+
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_due_date ON User_Cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_lexeme_lang ON Lexemes(language);
 CREATE INDEX IF NOT EXISTS idx_concept_lexeme ON Concept_Lexeme(concept_id);
 CREATE INDEX IF NOT EXISTS idx_concepts_domain ON Concepts(domain_id);
+CREATE INDEX IF NOT EXISTS idx_reviewed_at ON Review_Logs(reviewed_at);
 `;

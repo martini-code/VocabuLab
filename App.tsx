@@ -10,17 +10,40 @@ import {
 } from 'react-native';
 import { initVault, getVaultStats } from './src/db/vault';
 import { syncDatabaseFromR2 } from './src/db/downloader';
-import { initPurchases, isLocalProActive } from './src/services/purchases';
 import { VaultStats } from './src/types';
 import { ReviewSession } from './src/features/pipeline/ReviewSession';
-import { DomainBrowser } from './src/features/archives/DomainBrowser';
+import { DecksRoadmap } from './src/features/decks/DecksRoadmap';
 import { FastSearch } from './src/features/search/FastSearch';
-import { PaywallModal } from './src/features/paywall/PaywallModal';
+import { ProgressScreen } from './src/features/progress/ProgressScreen';
 import { SquireMascot } from './src/components/mascot/Mascots';
+import './src/locales';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
+import { AdFreeModal } from './src/components/modals/AdFreeModal';
+import { FullScreenAdModal } from './src/components/ads/FullScreenAdModal';
+import { iapService } from './src/services/iapService';
+import { adManager } from './src/services/adManager';
+import { srsManager } from './src/srs';
+import { AlgorithmSelectorModal } from './src/components/modals/AlgorithmSelectorModal';
+import {
+  Swords,
+  Library,
+  Search as SearchIcon,
+  Activity,
+  Coins,
+  Flame,
+  Shield,
+  ShieldCheck,
+  Award,
+  Globe,
+  Sparkles,
+  Zap,
+} from 'lucide-react-native';
 
-type TabType = 'pipeline' | 'archives' | 'search' | 'treasury';
+type TabType = 'pipeline' | 'archives' | 'search' | 'chronicles' | 'treasury';
 
 export default function App() {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [isVaultReady, setIsVaultReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Opening the fortress gates...');
@@ -32,11 +55,28 @@ export default function App() {
     streakDays: 4,
     xpPoints: 240,
   });
-  const [paywallOpen, setPaywallOpen] = useState(false);
-  const [isPro, setIsPro] = useState(false);
+  const [deckFilter, setDeckFilter] = useState<{ id: string; name: string } | null>(null);
+  const [languageModalOpen, setLanguageModalOpen] = useState(false);
+  const [adFreeModalOpen, setAdFreeModalOpen] = useState(false);
+  const [fullScreenAdOpen, setFullScreenAdOpen] = useState(false);
+  const [algorithmModalOpen, setAlgorithmModalOpen] = useState(false);
+  const [isAdFree, setIsAdFree] = useState(false);
+  const [activeAlgoName, setActiveAlgoName] = useState(srsManager.getActiveAlgorithm().meta.name);
 
   useEffect(() => {
     bootstrapKeep();
+    iapService.init((status) => {
+      setIsAdFree(status);
+    });
+
+    const unsubSRS = srsManager.subscribe(() => {
+      setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
+    });
+
+    return () => {
+      iapService.disconnect();
+      unsubSRS();
+    };
   }, []);
 
   const bootstrapKeep = async () => {
@@ -46,10 +86,8 @@ export default function App() {
 
       setStatusMessage('Inscribing SQLite vault with WAL mode & FTS5...');
       await initVault();
-
-      setStatusMessage('Consulting the Royal Guild...');
-      await initPurchases();
-      setIsPro(isLocalProActive());
+      await srsManager.init();
+      setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
 
       const currentStats = await getVaultStats();
       setStats(currentStats);
@@ -65,7 +103,6 @@ export default function App() {
     try {
       const currentStats = await getVaultStats();
       setStats(currentStats);
-      setIsPro(isLocalProActive());
     } catch (error) {
       // Ignore
     }
@@ -87,34 +124,51 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FEFCE8" />
 
-      {/* Top Medieval Stats Header */}
+      {/* Top Medieval Stats Header (Vector Icons - Strictly No Emojis) */}
       <View style={styles.topStatsBar}>
         {/* Streak Flame */}
         <View style={styles.statPill}>
-          <Text style={styles.statEmoji}>🔥</Text>
+          <Flame size={16} color="#DC2626" />
           <Text style={styles.statValue}>{stats.streakDays}</Text>
         </View>
 
         {/* Due Cards Shield */}
         <View style={styles.statPill}>
-          <Text style={styles.statEmoji}>🛡️</Text>
-          <Text style={styles.statValue}>{stats.dueCards} Due</Text>
+          <Shield size={16} color="#0D9488" />
+          <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
         </View>
 
         {/* Valor Points XP */}
         <View style={styles.statPill}>
-          <Text style={styles.statEmoji}>⭐</Text>
-          <Text style={styles.statValue}>{stats.xpPoints} XP</Text>
+          <Award size={16} color="#D97706" />
+          <Text style={styles.statValue}>{stats.xpPoints} {t('stats.xp')}</Text>
         </View>
 
-        {/* Crown Guild Pass Button */}
+        {/* Language Selector Pill */}
         <TouchableOpacity
-          style={[styles.statPill, isPro ? styles.proPillActive : styles.proPill]}
-          onPress={() => setPaywallOpen(true)}
+          style={styles.statPill}
+          onPress={() => setLanguageModalOpen(true)}
+          activeOpacity={0.8}
         >
-          <Text style={styles.statEmoji}>👑</Text>
-          <Text style={[styles.statValue, isPro ? styles.proTextActive : styles.proText]}>
-            {isPro ? 'ROYAL' : 'PASS'}
+          <Globe size={16} color="#78350F" />
+          <Text style={styles.statValue}>
+            {(i18n.language || 'en').toUpperCase().slice(0, 2)}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Ad-Free Status / Upgrade Pill */}
+        <TouchableOpacity
+          style={[styles.statPill, isAdFree ? styles.adFreePillActive : styles.adFreePillFree]}
+          onPress={() => setAdFreeModalOpen(true)}
+          activeOpacity={0.8}
+        >
+          {isAdFree ? (
+            <ShieldCheck size={16} color="#047857" />
+          ) : (
+            <Sparkles size={16} color="#B45309" />
+          )}
+          <Text style={[styles.statValue, isAdFree ? styles.adFreeTextActive : styles.adFreeTextFree]}>
+            {isAdFree ? t('ad_free.status_active') : t('ad_free.go_ad_free')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -123,20 +177,40 @@ export default function App() {
       <View style={styles.contentArea}>
         {activeTab === 'pipeline' && (
           <ReviewSession
-            onSessionComplete={refreshStats}
+            onSessionComplete={() => {
+              refreshStats();
+              if (!isAdFree && adManager.shouldShowAdOnSessionComplete()) {
+                setFullScreenAdOpen(true);
+                adManager.resetCounter();
+              }
+            }}
+            onCardReviewed={() => {
+              if (!isAdFree && adManager.recordCardReview()) {
+                setFullScreenAdOpen(true);
+                adManager.resetCounter();
+              }
+            }}
             onExploreArchives={() => setActiveTab('archives')}
+            deckFilter={deckFilter}
+            onClearDeckFilter={() => setDeckFilter(null)}
           />
         )}
         {activeTab === 'archives' && (
-          <DomainBrowser
-            onOpenPaywall={() => setPaywallOpen(true)}
-            onStartTraining={() => {
+          <DecksRoadmap
+            onStudyDeck={(deckId, deckName) => {
+              setDeckFilter({ id: deckId, name: deckName });
+              refreshStats();
+              setActiveTab('pipeline');
+            }}
+            onStartReview={() => {
+              setDeckFilter(null);
               refreshStats();
               setActiveTab('pipeline');
             }}
           />
         )}
         {activeTab === 'search' && <FastSearch />}
+        {activeTab === 'chronicles' && <ProgressScreen />}
         {activeTab === 'treasury' && (
           <View style={styles.treasuryTabContainer}>
             <SquireMascot mood="victorious" size={120} />
@@ -162,7 +236,7 @@ export default function App() {
               </View>
               <View style={styles.statRow}>
                 <Text style={styles.statLabel}>Spaced Repetition Algorithm:</Text>
-                <Text style={styles.statHighlight}>ts-fsrs v4.2</Text>
+                <Text style={styles.statHighlight}>{srsManager.getActiveAlgorithm().meta.shortName}</Text>
               </View>
               <View style={styles.statRow}>
                 <Text style={styles.statLabel}>Cloud Infrastructure Cost:</Text>
@@ -170,12 +244,58 @@ export default function App() {
               </View>
             </View>
 
+            {/* SRS Algorithm Selector Card in Treasury */}
+            <TouchableOpacity
+              style={styles.treasuryAlgoBtn}
+              onPress={() => setAlgorithmModalOpen(true)}
+              activeOpacity={0.85}
+            >
+              <Zap size={20} color="#B45309" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.treasuryAlgoTitle}>
+                  SRS ENGINE: {srsManager.getActiveAlgorithm().meta.shortName.toUpperCase()}
+                </Text>
+                <Text style={styles.treasuryAlgoSub} numberOfLines={1}>
+                  {srsManager.getActiveAlgorithm().meta.tagline}
+                </Text>
+              </View>
+              <View style={styles.treasuryAlgoBadge}>
+                <Text style={styles.treasuryAlgoActionText}>CHANGE</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Ad-Free Status in Treasury */}
+            {isAdFree ? (
+              <View style={styles.treasuryAdFreeCard}>
+                <ShieldCheck size={22} color="#047857" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.treasuryAdFreeTitle}>
+                    {t('ad_free.purchased_badge')}
+                  </Text>
+                  <Text style={styles.treasuryAdFreeSub}>
+                    {t('ad_free.benefit_1_sub')}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.treasuryUpgradeBtn}
+                onPress={() => setAdFreeModalOpen(true)}
+                activeOpacity={0.85}
+              >
+                <Sparkles size={18} color="#FFFFFF" />
+                <Text style={styles.treasuryUpgradeText}>
+                  {t('ad_free.modal_title')} • {t('ad_free.go_ad_free')}
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               style={styles.treasuryActionBtn}
-              onPress={() => setPaywallOpen(true)}
+              onPress={() => setLanguageModalOpen(true)}
             >
               <Text style={styles.treasuryActionText}>
-                {isPro ? '👑 ROYAL GUILD PRIVILEGES ACTIVE' : '🗝️ VIEW GUILD PASS OPTIONS'}
+                CHANGE LANGUAGE REALM (50 IDIOMAS)
               </Text>
             </TouchableOpacity>
           </View>
@@ -192,9 +312,9 @@ export default function App() {
           }}
           style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
         >
-          <Text style={styles.navEmoji}>⚔️</Text>
+          <Swords size={20} color={activeTab === 'pipeline' ? '#B45309' : '#64748B'} />
           <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
-            Training
+            {t('nav.training')}
           </Text>
         </TouchableOpacity>
 
@@ -206,9 +326,9 @@ export default function App() {
           }}
           style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
         >
-          <Text style={styles.navEmoji}>🏰</Text>
+          <Library size={20} color={activeTab === 'archives' ? '#B45309' : '#64748B'} />
           <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
-            Archives
+            {t('nav.decks')}
           </Text>
         </TouchableOpacity>
 
@@ -220,9 +340,23 @@ export default function App() {
           }}
           style={[styles.navItem, activeTab === 'search' && styles.navItemActive]}
         >
-          <Text style={styles.navEmoji}>📜</Text>
+          <SearchIcon size={20} color={activeTab === 'search' ? '#B45309' : '#64748B'} />
           <Text style={[styles.navLabel, activeTab === 'search' && styles.navLabelActive]}>
-            Search
+            {t('nav.search')}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            refreshStats();
+            setActiveTab('chronicles');
+          }}
+          style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
+        >
+          <Activity size={20} color={activeTab === 'chronicles' ? '#B45309' : '#64748B'} />
+          <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
+            {t('nav.chronicles')}
           </Text>
         </TouchableOpacity>
 
@@ -234,19 +368,40 @@ export default function App() {
           }}
           style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
         >
-          <Text style={styles.navEmoji}>🪙</Text>
+          <Coins size={20} color={activeTab === 'treasury' ? '#B45309' : '#64748B'} />
           <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
-            Treasury
+            {t('nav.treasury')}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Royal Paywall Modal */}
-      <PaywallModal
-        visible={paywallOpen}
-        onClose={() => setPaywallOpen(false)}
-        onSuccess={() => {
-          setIsPro(true);
+      {/* Language Selector Modal (50 Languages) */}
+      <LanguageSelectorModal
+        visible={languageModalOpen}
+        onClose={() => setLanguageModalOpen(false)}
+      />
+
+      {/* Ad-Free Upgrade Modal (In-App Purchases) */}
+      <AdFreeModal
+        visible={adFreeModalOpen}
+        onClose={() => setAdFreeModalOpen(false)}
+        isAdFree={isAdFree}
+        onStatusChanged={(status) => setIsAdFree(status)}
+      />
+
+      {/* Full-Screen Interstitial Ad Modal (Only for Free Tier) */}
+      <FullScreenAdModal
+        visible={fullScreenAdOpen && !isAdFree}
+        onClose={() => setFullScreenAdOpen(false)}
+        onOpenAdFreeModal={() => setAdFreeModalOpen(true)}
+      />
+
+      {/* Modular Spaced Repetition Algorithm Selector Modal */}
+      <AlgorithmSelectorModal
+        visible={algorithmModalOpen}
+        onClose={() => setAlgorithmModalOpen(false)}
+        onAlgorithmChanged={() => {
+          setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
           refreshStats();
         }}
       />
@@ -432,6 +587,99 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     color: '#B45309',
+    letterSpacing: 0.5,
+  },
+  adFreePillFree: {
+    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
+  },
+  adFreePillActive: {
+    borderColor: '#10B981',
+    backgroundColor: '#ECFDF5',
+  },
+  adFreeTextFree: {
+    color: '#B45309',
+  },
+  adFreeTextActive: {
+    color: '#047857',
+  },
+  treasuryAdFreeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    padding: 14,
+    marginTop: 18,
+    width: '100%',
+    gap: 12,
+  },
+  treasuryAdFreeTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#047857',
+    letterSpacing: 0.5,
+  },
+  treasuryAdFreeSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#065F46',
+    marginTop: 2,
+  },
+  treasuryUpgradeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D97706',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginTop: 18,
+    width: '100%',
+    gap: 8,
+    borderBottomWidth: 3,
+    borderBottomColor: '#B45309',
+  },
+  treasuryUpgradeText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  treasuryAlgoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    padding: 14,
+    marginTop: 14,
+    width: '100%',
+    gap: 12,
+  },
+  treasuryAlgoTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#78350F',
+    letterSpacing: 0.5,
+  },
+  treasuryAlgoSub: {
+    fontSize: 11,
+    color: '#92400E',
+    marginTop: 2,
+  },
+  treasuryAlgoBadge: {
+    backgroundColor: '#D97706',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  treasuryAlgoActionText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
 });
