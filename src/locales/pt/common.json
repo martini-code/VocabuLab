@@ -106,7 +106,7 @@
   "language": {
     "title": "REINO DE IDIOMAS",
     "select_language": "Selecionar Idioma",
-    "search_placeholder": "Pesquisar entre 50 idiomas...",
+    "search_placeholder": "Pesquisar entre 123 idiomas...",
     "current_language": "Atual: {{name}}"
   },
   "ad_free": {
@@ -117,7 +117,7 @@
     "modal_title": "PASSE REAL SEM ANÚNCIOS",
     "modal_subtitle": "Bana todos os banners de mercadores e treine em paz",
     "benefit_1": "Zero Anúncios de Mercadores",
-    "benefit_1_sub": "Revisão contínua em todos os 50 reinos linguísticos",
+    "benefit_1_sub": "Revisão contínua em todos os 123 reinos linguísticos",
     "benefit_2": "Puro Foco Medieval",
     "benefit_2_sub": "Sessões de treino mais rápidas sem distrações comerciais",
     "benefit_3": "Direito 100% Offline Garantido",
@@ -138,7 +138,7 @@
     "status_active": "SEM ANÚNCIOS",
     "interstitial_title": "ALIANÇA DA GUILDA DOS MERCADORES",
     "interstitial_subtitle": "Expanda teu reino do conhecimento",
-    "interstitial_desc": "Esta sessão de treino gratuita é proporcionada por nossos patrocinadores. Defende tua sequência e domina 50 idiomas offline!",
+    "interstitial_desc": "Esta sessão de treino gratuita é proporcionada por nossos patrocinadores. Defende tua sequência e domina 123 idiomas offline!",
     "interstitial_skip_countdown": "Pular em {{count}}s",
     "interstitial_skip_ready": "RETOMAR MISSÃO",
     "interstitial_upgrade_cta": "Não queres mais assistir a anúncios em tela cheia?"

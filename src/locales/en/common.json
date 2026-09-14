@@ -106,7 +106,7 @@
   "language": {
     "title": "LANGUAGE REALM",
     "select_language": "Select Language",
-    "search_placeholder": "Search from 50 languages...",
+    "search_placeholder": "Search from 123 languages...",
     "current_language": "Current: {{name}}"
   },
   "ad_free": {
@@ -117,7 +117,7 @@
     "modal_title": "AD-FREE KINGDOM PASS",
     "modal_subtitle": "Banish all merchant banners and train in peace",
     "benefit_1": "Zero Merchant Advertisements",
-    "benefit_1_sub": "Uninterrupted flashcard review in all 50 language realms",
+    "benefit_1_sub": "Uninterrupted flashcard review in all 123 language realms",
     "benefit_2": "Pure Medieval Focus",
     "benefit_2_sub": "Faster training sessions without commercial distractions",
     "benefit_3": "100% Offline Entitlement",
@@ -138,7 +138,7 @@
     "status_active": "AD-FREE",
     "interstitial_title": "THE MERCHANT GUILD ALLIANCE",
     "interstitial_subtitle": "Expand Your Realm of Knowledge",
-    "interstitial_desc": "This free training session is made possible by our Kingdom Sponsors. Defend your fortress streak and master 50 global languages offline!",
+    "interstitial_desc": "This free training session is made possible by our Kingdom Sponsors. Defend your fortress streak and master 123 global languages offline!",
     "interstitial_skip_countdown": "Skip in {{count}}s",
     "interstitial_skip_ready": "RESUME QUEST",
     "interstitial_upgrade_cta": "Never want to watch full-screen scrolls again?"

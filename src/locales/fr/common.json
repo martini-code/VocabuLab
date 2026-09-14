@@ -106,7 +106,7 @@
   "language": {
     "title": "ROYAUME LINGUISTIQUE",
     "select_language": "Sélectionner la langue",
-    "search_placeholder": "Rechercher parmi 50 langues...",
+    "search_placeholder": "Rechercher parmi 123 langues...",
     "current_language": "Actuelle : {{name}}"
   },
   "ad_free": {
@@ -117,7 +117,7 @@
     "modal_title": "PASSE ROYAL SANS PUBLICITÉ",
     "modal_subtitle": "Bannissez toutes les bannières et entraînez-vous en paix",
     "benefit_1": "Zéro Annonce Marchande",
-    "benefit_1_sub": "Révision ininterrompue dans les 50 royaumes linguistiques",
+    "benefit_1_sub": "Révision ininterrompue dans les 123 royaumes linguistiques",
     "benefit_2": "Pure Concentration Médiévale",
     "benefit_2_sub": "Sessions d'entraînement plus rapides sans distractions",
     "benefit_3": "Accès 100% Hors-ligne Garanti",
@@ -138,7 +138,7 @@
     "status_active": "SANS PUB",
     "interstitial_title": "ALLIANCE DE LA GUILDE DES MARCHANDS",
     "interstitial_subtitle": "Élargissez votre royaume de savoir",
-    "interstitial_desc": "Cette session gratuite est rendue possible grâce à nos mécènes. Défendez votre série et maîtrisez 50 langues hors-ligne !",
+    "interstitial_desc": "Cette session gratuite est rendue possible grâce à nos mécènes. Défendez votre série et maîtrisez 123 langues hors-ligne !",
     "interstitial_skip_countdown": "Passer dans {{count}}s",
     "interstitial_skip_ready": "REPRENDRE LA QUÊTE",
     "interstitial_upgrade_cta": "Vous ne voulez plus voir d'annonces plein écran ?"

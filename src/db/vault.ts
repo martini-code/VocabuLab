@@ -23,42 +23,58 @@ import {
 let staticDbInstance: SQLite.SQLiteDatabase | null = null;
 let userDbInstance: SQLite.SQLiteDatabase | null = null;
 
+import { SUPPORTED_LANGUAGES } from '../locales/languages';
+
 const STATIC_DB_NAME = 'lexicon_v1.0.0.db';
 const USER_DB_NAME = 'user_vault.sqlite';
 
 /**
- * Maps ISO language codes and common aliases to the exact lang_name strings
- * used in the static lexicon database (card_translations table).
+ * Fast lookup map matching ISO codes, regional tags, and case-insensitive names
+ * to the exact lang_name string in lexicon_v1.0.0.db (all 123 languages).
  */
-const ISO_TO_LANG: Record<string, string> = {
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  it: 'Italian',
-  pt: 'Portuguese (Brazil)',
-  'pt-br': 'Portuguese (Brazil)',
-  'pt-pt': 'Portuguese (Portugal)',
-  ja: 'Japanese',
-  ru: 'Russian',
-  zh: 'Chinese (Simplified)',
-  'zh-cn': 'Chinese (Simplified)',
-  'zh-tw': 'Chinese (Traditional)',
-  en: 'English',
-  ar: 'Arabic',
-  hi: 'Hindi',
-  ko: 'Korean',
-  nl: 'Dutch',
-  pl: 'Polish',
-  tr: 'Turkish',
-  uk: 'Ukrainian',
-  vi: 'Vietnamese',
-};
+const LANGUAGE_LOOKUP = new Map<string, string>();
+
+// Initialize lookup map from all 123 supported languages
+for (const lang of SUPPORTED_LANGUAGES) {
+  LANGUAGE_LOOKUP.set(lang.name.toLowerCase(), lang.name);
+  LANGUAGE_LOOKUP.set(lang.code.toLowerCase(), lang.name);
+  if (lang.code.includes('-')) {
+    const base = lang.code.split('-')[0].toLowerCase();
+    if (!LANGUAGE_LOOKUP.has(base)) {
+      LANGUAGE_LOOKUP.set(base, lang.name);
+    }
+  }
+}
+
+// Common aliases and fallbacks
+LANGUAGE_LOOKUP.set('zh', 'Chinese (Simplified)');
+LANGUAGE_LOOKUP.set('zh-hans', 'Chinese (Simplified)');
+LANGUAGE_LOOKUP.set('zh-hant', 'Chinese (Traditional)');
+LANGUAGE_LOOKUP.set('pt', 'Portuguese (Brazil)');
+LANGUAGE_LOOKUP.set('pt-br', 'Portuguese (Brazil)');
+LANGUAGE_LOOKUP.set('pt-pt', 'Portuguese (Portugal)');
+LANGUAGE_LOOKUP.set('fr-ca', 'French (Canada)');
+LANGUAGE_LOOKUP.set('no', 'Norwegian (Bokmål)');
+LANGUAGE_LOOKUP.set('nb', 'Norwegian (Bokmål)');
+LANGUAGE_LOOKUP.set('ku', 'Kurdish (Kurmanji)');
+LANGUAGE_LOOKUP.set('kurmanji', 'Kurdish (Kurmanji)');
+LANGUAGE_LOOKUP.set('ckb', 'Kurdish (Sorani)');
+LANGUAGE_LOOKUP.set('sorani', 'Kurdish (Sorani)');
 
 export function resolveLanguageName(codeOrName: string): string {
   if (!codeOrName) return 'Spanish';
   const trimmed = codeOrName.trim();
   const lower = trimmed.toLowerCase();
-  if (ISO_TO_LANG[lower]) return ISO_TO_LANG[lower];
+  const direct = LANGUAGE_LOOKUP.get(lower);
+  if (direct) return direct;
+
+  // Search by prefix / contains
+  for (const lang of SUPPORTED_LANGUAGES) {
+    if (lang.name.toLowerCase().startsWith(lower) || lower.startsWith(lang.name.toLowerCase())) {
+      return lang.name;
+    }
+  }
+
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 

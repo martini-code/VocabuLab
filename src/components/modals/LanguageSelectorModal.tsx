@@ -69,7 +69,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               <View>
                 <Text style={styles.title}>{t('language.title')}</Text>
                 <Text style={styles.subtitle}>
-                  Select from 50 global languages
+                  Select from 123 global languages
                 </Text>
               </View>
             </View>
