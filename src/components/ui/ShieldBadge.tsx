@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Shield } from 'lucide-react-native';
 
 interface ShieldBadgeProps {
   level: string;
@@ -21,6 +22,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
 
   const isSmall = size === 'sm';
   const isLarge = size === 'lg';
+  const iconSize = isSmall ? 10 : isLarge ? 14 : 12;
 
   return (
     <View
@@ -35,6 +37,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
         },
       ]}
     >
+      <Shield size={iconSize} color={theme.text} style={{ marginRight: 4 }} />
       <Text
         style={[
           styles.text,
@@ -44,7 +47,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
           },
         ]}
       >
-        🛡️ {normalized}
+        {normalized}
       </Text>
     </View>
   );

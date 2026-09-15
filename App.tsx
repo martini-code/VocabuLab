@@ -34,7 +34,6 @@ import {
   Flame,
   Shield,
   ShieldCheck,
-  Award,
   Globe,
   Sparkles,
   Zap,
@@ -62,7 +61,6 @@ export default function App() {
     newCards: 0,
     masteredCards: 0,
     streakDays: 4,
-    xpPoints: 240,
   });
   const [deckFilter, setDeckFilter] = useState<{ id: string; name: string } | null>(null);
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
@@ -154,12 +152,6 @@ export default function App() {
         <View style={styles.statPill}>
           <Shield size={16} color="#0D9488" />
           <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
-        </View>
-
-        {/* Valor Points XP */}
-        <View style={styles.statPill}>
-          <Award size={16} color="#D97706" />
-          <Text style={styles.statValue}>{stats.xpPoints} {t('stats.xp')}</Text>
         </View>
 
         {/* Language Selector Pill */}

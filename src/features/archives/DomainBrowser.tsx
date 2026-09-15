@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
+import { Castle, Scroll, Volume2, Check, Plus, Shield, TreePine, Swords, Coins, Key } from 'lucide-react-native';
 import { Domain, Lexeme, CEFRLevel } from '../../types';
 import { getDomainsHierarchy, getLexemesByDomain, garrisonCard } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
@@ -79,7 +80,10 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     <View style={styles.container}>
       {/* Top Realm Selector Tabs */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🏰 KINGDOM ARCHIVES</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Castle size={20} color="#78350F" style={{ marginRight: 8 }} />
+          <Text style={styles.headerTitle}>KINGDOM ARCHIVES</Text>
+        </View>
         <Text style={styles.headerSubtitle}>Select a territory to explore its ancient tongue</Text>
       </View>
 
@@ -91,6 +95,16 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         {domains.map((d) => {
           const isSelected = selectedDomain?.id === d.id;
 
+          const renderTabIcon = () => {
+            const iconColor = isSelected ? '#78350F' : '#94A3B8';
+            if (d.id.includes('castle')) return <Castle size={18} color={iconColor} />;
+            if (d.id.includes('academy')) return <Scroll size={18} color={iconColor} />;
+            if (d.id.includes('wilderness')) return <TreePine size={18} color={iconColor} />;
+            if (d.id.includes('armory')) return <Swords size={18} color={iconColor} />;
+            if (d.id.includes('market')) return <Coins size={18} color={iconColor} />;
+            return <Key size={18} color={iconColor} />;
+          };
+
           return (
             <TouchableOpacity
               key={d.id}
@@ -101,19 +115,9 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 isSelected && styles.domainTabSelected,
               ]}
             >
-              <Text style={styles.domainEmoji}>
-                {d.id.includes('castle')
-                  ? '🏰'
-                  : d.id.includes('academy')
-                  ? '📜'
-                  : d.id.includes('wilderness')
-                  ? '🌲'
-                  : d.id.includes('armory')
-                  ? '⚔️'
-                  : d.id.includes('market')
-                  ? '🪙'
-                  : '🗝️'}
-              </Text>
+              <View style={{ marginBottom: 4 }}>
+                {renderTabIcon()}
+              </View>
               <Text
                 style={[
                   styles.domainName,
@@ -139,9 +143,12 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 onPress={() => setSelectedCefr(level)}
                 style={[styles.cefrChip, isSelected && styles.cefrChipSelected]}
               >
-                <Text style={[styles.cefrChipText, isSelected && styles.cefrChipTextSelected]}>
-                  {level === 'ALL' ? '🛡️ ALL' : `${level}`}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {level === 'ALL' && <Shield size={12} color={isSelected ? '#78350F' : '#64748B'} style={{ marginRight: 4 }} />}
+                  <Text style={[styles.cefrChipText, isSelected && styles.cefrChipTextSelected]}>
+                    {level === 'ALL' ? 'ALL' : `${level}`}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -155,7 +162,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>📜</Text>
+            <Scroll size={40} color="#D97706" style={{ marginBottom: 10 }} />
             <Text style={styles.emptyTitle}>No scrolls inscribed yet</Text>
             <Text style={styles.emptySubtitle}>Try selecting a different CEFR shield rank above.</Text>
           </View>
@@ -181,7 +188,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                   style={styles.audioButton}
                   onPress={() => speakWord(item.term, item.language)}
                 >
-                  <Text style={styles.audioIcon}>📯</Text>
+                  <Volume2 size={16} color="#78350F" style={{ marginRight: 4 }} />
                   <Text style={styles.audioText}>Listen</Text>
                 </TouchableOpacity>
 
@@ -194,14 +201,21 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                   ]}
                   onPress={() => handleGarrison(item.id)}
                 >
-                  <Text
-                    style={[
-                      styles.garrisonButtonText,
-                      isGarrisoned && styles.garrisonButtonTextDone,
-                    ]}
-                  >
-                    {isGarrisoned ? '✓ Garrisoned' : '+ Garrison Card'}
-                  </Text>
+                  {isGarrisoned ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Check size={14} color="#166534" style={{ marginRight: 4 }} />
+                      <Text style={[styles.garrisonButtonText, styles.garrisonButtonTextDone]}>
+                        Garrisoned
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.garrisonButtonText}>
+                        Garrison Card
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </ParchmentCard>

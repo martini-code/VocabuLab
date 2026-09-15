@@ -32,7 +32,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "sync:locales": "python3 scripts/sync_locales_from_db.py"
   },
   "private": true
 }

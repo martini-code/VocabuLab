@@ -19,7 +19,6 @@
   "stats": {
     "streak": "Sequência",
     "due": "Pendentes",
-    "xp": "XP",
     "royal_pass": "PASSE REAL",
     "royal_active": "REAL"
   },
@@ -29,7 +28,6 @@
     "quest_completed_sub": "Você revisou todos os pergaminhos de hoje. Os portões da fortaleza continuam firmes!",
     "deck_completed": "BARALHO CONCLUÍDO!",
     "deck_completed_sub": "Você revisou todos os pergaminhos deste baralho. Os portões continuam firmes!",
-    "valor_gained": "VALOR GANHO HOJE",
     "train_all_decks": "TREINAR TODOS OS BARALHOS",
     "train_all_decks_sub": "Voltar para a fila geral de treino",
     "explore_archives": "EXPLORAR OS ARQUIVOS",
@@ -201,5 +199,231 @@
     "active_algorithm": "Algoritmo atual: {{name}}",
     "change_algorithm": "ALTERAR ALGORITMO",
     "seamless_switch": "Todos os cartões e históricos de revisão são preservados. O novo algoritmo agendará todos os intervalos futuros."
+  },
+  "db_decks": {
+    "1": {
+      "theme": "Família",
+      "name": "Membros"
+    },
+    "2": {
+      "theme": "Animals",
+      "name": "Domestic Animals"
+    },
+    "3": {
+      "theme": "Animals",
+      "name": "Insects"
+    },
+    "4": {
+      "theme": "Animals",
+      "name": "Farm Animals"
+    },
+    "5": {
+      "theme": "Basics",
+      "name": "Formal Greetings"
+    },
+    "6": {
+      "theme": "Vehicles",
+      "name": "Air Vehicles"
+    },
+    "7": {
+      "theme": "Basics",
+      "name": "Casual Greetings"
+    },
+    "8": {
+      "theme": "Vehicles",
+      "name": "Land Vehicles"
+    },
+    "9": {
+      "theme": "Vehicles",
+      "name": "Water Vehicles"
+    },
+    "10": {
+      "theme": "Electronics",
+      "name": "Engineering"
+    },
+    "11": {
+      "theme": "Electronics",
+      "name": "House Appliances"
+    },
+    "12": {
+      "theme": "Basics",
+      "name": "Formal Farewells"
+    },
+    "13": {
+      "theme": "Biology",
+      "name": "Cell Cycle"
+    },
+    "14": {
+      "theme": "Basics",
+      "name": "Casual Farewells"
+    },
+    "15": {
+      "theme": "Math",
+      "name": "Basic Math Operations"
+    },
+    "16": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (0-10)"
+    },
+    "17": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (11-19)"
+    },
+    "18": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (20-29)"
+    },
+    "19": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (30-90)"
+    },
+    "20": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (100+)"
+    },
+    "21": {
+      "theme": "Home",
+      "name": "Home Spaces"
+    },
+    "22": {
+      "theme": "Home",
+      "name": "Furniture"
+    },
+    "23": {
+      "theme": "Construction",
+      "name": "Hand Tools"
+    },
+    "24": {
+      "theme": "Math",
+      "name": "Number Properties"
+    }
+  },
+  "db_cards": {
+    "1": "mãe",
+    "2": "irmã",
+    "3": "pai",
+    "4": "irmão",
+    "5": "filho",
+    "6": "filha",
+    "7": "tio",
+    "8": "tia",
+    "9": "primo",
+    "10": "avô",
+    "11": "avó",
+    "12": "neto",
+    "13": "neta",
+    "14": "sobrinho",
+    "15": "sobrinha",
+    "16": "marido",
+    "17": "sogro",
+    "18": "sogra",
+    "19": "cachorro",
+    "20": "gato",
+    "21": "papagaio",
+    "22": "hamster",
+    "23": "chinchila",
+    "24": "peixinho dourado",
+    "25": "peixe betta",
+    "26": "lagartixa",
+    "27": "coelho",
+    "28": "furão",
+    "29": "calopsita",
+    "30": "ant",
+    "31": "beetle",
+    "32": "bee",
+    "33": "butterfly",
+    "34": "wasp",
+    "35": "moth",
+    "36": "firefly",
+    "37": "cicada",
+    "38": "cow",
+    "39": "pig",
+    "40": "bull",
+    "41": "hello",
+    "42": "good morning",
+    "43": "good afternoon",
+    "44": "good evening",
+    "45": "airplane",
+    "46": "hey",
+    "47": "what's up?",
+    "48": "how's it going?",
+    "49": "helicopter",
+    "50": "jet",
+    "51": "car",
+    "52": "truck",
+    "53": "boat",
+    "54": "jet ski",
+    "55": "capacitor",
+    "56": "resistor",
+    "57": "washing machine",
+    "58": "dryer",
+    "59": "refrigerator",
+    "60": "microwave",
+    "61": "goodbye",
+    "62": "mitosis",
+    "63": "meiosis",
+    "64": "bye",
+    "65": "see you later",
+    "66": "adição",
+    "67": "subtração",
+    "68": "multiplicação",
+    "69": "divisão",
+    "70": "zero",
+    "71": "um",
+    "72": "dois",
+    "73": "três",
+    "74": "quatro",
+    "75": "cinco",
+    "76": "seis",
+    "77": "sete",
+    "78": "oito",
+    "79": "nove",
+    "80": "dez",
+    "81": "onze",
+    "82": "doze",
+    "83": "treze",
+    "84": "catorze",
+    "85": "quinze",
+    "86": "dezesseis",
+    "87": "dezessete",
+    "88": "dezoito",
+    "89": "dezenove",
+    "90": "vinte",
+    "91": "twenty-one",
+    "92": "twenty-two",
+    "93": "twenty-three",
+    "94": "twenty-four",
+    "95": "twenty-five",
+    "96": "twenty-six",
+    "97": "twenty-seven",
+    "98": "twenty-eight",
+    "99": "twenty-nine",
+    "100": "thirty",
+    "101": "forty",
+    "102": "fifty",
+    "103": "sixty",
+    "104": "seventy",
+    "105": "eighty",
+    "106": "ninety",
+    "107": "one hundred",
+    "108": "one thousand",
+    "109": "one hundred thousand",
+    "110": "one million",
+    "111": "one billion",
+    "112": "one trillion",
+    "113": "cinco",
+    "114": "bathroom",
+    "115": "kitchen",
+    "116": "hallway",
+    "117": "garden",
+    "118": "bed",
+    "119": "table",
+    "120": "chair",
+    "121": "desk",
+    "122": "sofa",
+    "123": "wardrobe",
+    "124": "hammer",
+    "125": "odd",
+    "126": "even"
   }
 }

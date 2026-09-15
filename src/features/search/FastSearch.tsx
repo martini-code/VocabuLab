@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
+import { Search, Sparkles, Volume2, Check, Plus, X } from 'lucide-react-native';
 import { searchLexemesFTS, garrisonCard } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
 import { WizardOwlMascot } from '../../components/mascot/Mascots';
@@ -29,7 +30,7 @@ export const FastSearch: React.FC = () => {
   };
 
   const handleGarrison = async (item: any) => {
-    await garrisonCard(item.id, 1);
+    await garrisonCard(item.id, item.id);
     setGarrisonedSet((prev) => new Set(prev).add(item.id));
   };
 
@@ -48,7 +49,7 @@ export const FastSearch: React.FC = () => {
 
       {/* Spell Scroll Search Input */}
       <View style={styles.searchBarContainer}>
-        <Text style={styles.scrollIcon}>🔍</Text>
+        <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.input}
           value={query}
@@ -60,7 +61,7 @@ export const FastSearch: React.FC = () => {
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={() => handleSearch('')} style={styles.clearBtn}>
-            <Text style={styles.clearText}>✕</Text>
+            <X size={16} color="#78350F" />
           </TouchableOpacity>
         )}
       </View>
@@ -72,14 +73,14 @@ export const FastSearch: React.FC = () => {
         contentContainerStyle={styles.resultsList}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🔮</Text>
+            <Sparkles size={44} color="#D97706" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>
               {query ? 'No matching runes found' : 'The enchanted archives await thy query'}
             </Text>
             <Text style={styles.emptySubtitle}>
               {query
                 ? 'Try inquiring with another word stem or CEFR term.'
-                : 'Search any word across Spanish, English, French, or German.'}
+                : 'Search any word across supported languages.'}
             </Text>
           </View>
         }
@@ -105,7 +106,7 @@ export const FastSearch: React.FC = () => {
                   style={styles.audioBtn}
                   onPress={() => speakWord(item.term, item.language)}
                 >
-                  <Text style={styles.audioEmoji}>📯</Text>
+                  <Volume2 size={16} color="#78350F" style={{ marginRight: 6 }} />
                   <Text style={styles.audioText}>Hear Sound</Text>
                 </TouchableOpacity>
 
@@ -114,9 +115,17 @@ export const FastSearch: React.FC = () => {
                   style={[styles.garrisonBtn, isGarrisoned && styles.garrisonBtnDone]}
                   onPress={() => handleGarrison(item)}
                 >
-                  <Text style={styles.garrisonBtnText}>
-                    {isGarrisoned ? '✓ In Fortress Deck' : '+ Garrison Card'}
-                  </Text>
+                  {isGarrisoned ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Check size={14} color="#166534" style={{ marginRight: 4 }} />
+                      <Text style={styles.garrisonBtnText}>In Fortress Deck</Text>
+                    </View>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.garrisonBtnText}>Garrison Card</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </ParchmentCard>

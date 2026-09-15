@@ -44,7 +44,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [loading, setLoading] = useState(true);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
-  const [sessionXP, setSessionXP] = useState(0);
 
   const activeAlgorithm = srsManager.getActiveAlgorithm();
 
@@ -91,12 +90,10 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       setMascotQuote("Grit and steel! It is holding in memory.");
     } else if (rating === Rating.Good) {
       setMascotMood('happy');
-      setMascotQuote("Well struck, brave knight! +15 XP");
-      setSessionXP((prev) => prev + 15);
+      setMascotQuote("Well struck, brave knight!");
     } else if (rating === Rating.Easy) {
       setMascotMood('cheering');
-      setMascotQuote("Huzzah! Pure mastery! +25 XP");
-      setSessionXP((prev) => prev + 25);
+      setMascotQuote("Huzzah! Pure mastery!");
     }
 
     const updatePayload = gradeCardFSRS(currentCard, rating);
@@ -142,11 +139,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               ? `Thou hast reviewed all scrolls in "${deckFilter.name}". The fortress gates remain steadfast!`
               : 'Thou hast reviewed all scheduled scrolls for today. The fortress gates remain steadfast!'}
           </Text>
-
-          <View style={styles.xpBox}>
-            <Text style={styles.xpNumber}>+{sessionXP > 0 ? sessionXP : 80} XP</Text>
-            <Text style={styles.xpLabel}>VALOR GAINED TODAY</Text>
-          </View>
 
           {deckFilter && onClearDeckFilter && (
             <ChunkyButton
@@ -628,27 +620,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
-  },
-  xpBox: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B',
-    borderWidth: 2,
-    borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    marginTop: 18,
-    alignItems: 'center',
-  },
-  xpNumber: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#B45309',
-  },
-  xpLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#92400E',
-    marginTop: 2,
-    letterSpacing: 0.5,
   },
 });

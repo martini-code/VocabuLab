@@ -19,7 +19,6 @@
   "stats": {
     "streak": "Streak",
     "due": "Due",
-    "xp": "XP",
     "royal_pass": "ROYAL PASS",
     "royal_active": "ROYAL"
   },
@@ -29,7 +28,6 @@
     "quest_completed_sub": "Thou hast reviewed all scheduled scrolls for today. The fortress gates remain steadfast!",
     "deck_completed": "DECK COMPLETED!",
     "deck_completed_sub": "Thou hast reviewed all scrolls in this deck. The fortress gates remain steadfast!",
-    "valor_gained": "VALOR GAINED TODAY",
     "train_all_decks": "TRAIN ALL KINGDOM DECKS",
     "train_all_decks_sub": "Return to general training queue",
     "explore_archives": "EXPLORE THE ARCHIVES",
@@ -201,5 +199,231 @@
     "active_algorithm": "Current Algorithm: {{name}}",
     "change_algorithm": "CHANGE ALGORITHM",
     "seamless_switch": "All cards and past review logs are preserved. The new algorithm will schedule all future intervals."
+  },
+  "db_decks": {
+    "1": {
+      "theme": "Family",
+      "name": "Members"
+    },
+    "2": {
+      "theme": "Animals",
+      "name": "Domestic Animals"
+    },
+    "3": {
+      "theme": "Animals",
+      "name": "Insects"
+    },
+    "4": {
+      "theme": "Animals",
+      "name": "Farm Animals"
+    },
+    "5": {
+      "theme": "Basics",
+      "name": "Formal Greetings"
+    },
+    "6": {
+      "theme": "Vehicles",
+      "name": "Air Vehicles"
+    },
+    "7": {
+      "theme": "Basics",
+      "name": "Casual Greetings"
+    },
+    "8": {
+      "theme": "Vehicles",
+      "name": "Land Vehicles"
+    },
+    "9": {
+      "theme": "Vehicles",
+      "name": "Water Vehicles"
+    },
+    "10": {
+      "theme": "Electronics",
+      "name": "Engineering"
+    },
+    "11": {
+      "theme": "Electronics",
+      "name": "House Appliances"
+    },
+    "12": {
+      "theme": "Basics",
+      "name": "Formal Farewells"
+    },
+    "13": {
+      "theme": "Biology",
+      "name": "Cell Cycle"
+    },
+    "14": {
+      "theme": "Basics",
+      "name": "Casual Farewells"
+    },
+    "15": {
+      "theme": "Math",
+      "name": "Basic Math Operations"
+    },
+    "16": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (0-10)"
+    },
+    "17": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (11-19)"
+    },
+    "18": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (20-29)"
+    },
+    "19": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (30-90)"
+    },
+    "20": {
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (100+)"
+    },
+    "21": {
+      "theme": "Home",
+      "name": "Home Spaces"
+    },
+    "22": {
+      "theme": "Home",
+      "name": "Furniture"
+    },
+    "23": {
+      "theme": "Construction",
+      "name": "Hand Tools"
+    },
+    "24": {
+      "theme": "Math",
+      "name": "Number Properties"
+    }
+  },
+  "db_cards": {
+    "1": "mother",
+    "2": "sister",
+    "3": "father",
+    "4": "brother",
+    "5": "son",
+    "6": "daughter",
+    "7": "uncle",
+    "8": "aunt",
+    "9": "cousin",
+    "10": "grandfather",
+    "11": "grandmother",
+    "12": "grandson",
+    "13": "granddaughter",
+    "14": "nephew",
+    "15": "niece",
+    "16": "husband",
+    "17": "father-in-law",
+    "18": "mother-in-law",
+    "19": "dog",
+    "20": "cat",
+    "21": "parrot",
+    "22": "hamster",
+    "23": "chinchilla",
+    "24": "goldfish",
+    "25": "betta fish",
+    "26": "gecko",
+    "27": "rabbit",
+    "28": "ferret",
+    "29": "cockatiel",
+    "30": "ant",
+    "31": "beetle",
+    "32": "bee",
+    "33": "butterfly",
+    "34": "wasp",
+    "35": "moth",
+    "36": "firefly",
+    "37": "cicada",
+    "38": "cow",
+    "39": "pig",
+    "40": "bull",
+    "41": "hello",
+    "42": "good morning",
+    "43": "good afternoon",
+    "44": "good evening",
+    "45": "airplane",
+    "46": "hey",
+    "47": "what's up?",
+    "48": "how's it going?",
+    "49": "helicopter",
+    "50": "jet",
+    "51": "car",
+    "52": "truck",
+    "53": "boat",
+    "54": "jet ski",
+    "55": "capacitor",
+    "56": "resistor",
+    "57": "washing machine",
+    "58": "dryer",
+    "59": "refrigerator",
+    "60": "microwave",
+    "61": "goodbye",
+    "62": "mitosis",
+    "63": "meiosis",
+    "64": "bye",
+    "65": "see you later",
+    "66": "addition",
+    "67": "subtraction",
+    "68": "multiplication",
+    "69": "division",
+    "70": "zero",
+    "71": "one",
+    "72": "two",
+    "73": "three",
+    "74": "four",
+    "75": "five",
+    "76": "six",
+    "77": "seven",
+    "78": "eight",
+    "79": "nine",
+    "80": "ten",
+    "81": "eleven",
+    "82": "twelve",
+    "83": "thirteen",
+    "84": "fourteen",
+    "85": "fifteen",
+    "86": "sixteen",
+    "87": "seventeen",
+    "88": "eighteen",
+    "89": "nineteen",
+    "90": "twenty",
+    "91": "twenty-one",
+    "92": "twenty-two",
+    "93": "twenty-three",
+    "94": "twenty-four",
+    "95": "twenty-five",
+    "96": "twenty-six",
+    "97": "twenty-seven",
+    "98": "twenty-eight",
+    "99": "twenty-nine",
+    "100": "thirty",
+    "101": "forty",
+    "102": "fifty",
+    "103": "sixty",
+    "104": "seventy",
+    "105": "eighty",
+    "106": "ninety",
+    "107": "one hundred",
+    "108": "one thousand",
+    "109": "one hundred thousand",
+    "110": "one million",
+    "111": "one billion",
+    "112": "one trillion",
+    "113": "living room",
+    "114": "bathroom",
+    "115": "kitchen",
+    "116": "hallway",
+    "117": "garden",
+    "118": "bed",
+    "119": "table",
+    "120": "chair",
+    "121": "desk",
+    "122": "sofa",
+    "123": "wardrobe",
+    "124": "hammer",
+    "125": "odd",
+    "126": "even"
   }
 }

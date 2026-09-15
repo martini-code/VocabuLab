@@ -64,6 +64,11 @@ LANGUAGE_LOOKUP.set('kurmanji', 'Kurdish (Kurmanji)');
 LANGUAGE_LOOKUP.set('ckb', 'Kurdish (Sorani)');
 LANGUAGE_LOOKUP.set('sorani', 'Kurdish (Sorani)');
 
+LANGUAGE_LOOKUP.set('portuguese', 'Portuguese (Brazil)');
+LANGUAGE_LOOKUP.set('arabic', 'Arabic');
+LANGUAGE_LOOKUP.set('english', 'English');
+LANGUAGE_LOOKUP.set('spanish', 'Spanish');
+
 export function resolveLanguageName(codeOrName: string): string {
   if (!codeOrName) return 'Spanish';
   const trimmed = codeOrName.trim();
@@ -79,6 +84,77 @@ export function resolveLanguageName(codeOrName: string): string {
   }
 
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+/**
+ * Returns all potential candidate name/code variations for matching in database tables
+ * (Downloaded_Card_Translations and static card_translations).
+ * Handles language families like Portuguese, Kurdish, Chinese, Norwegian, French.
+ */
+export function getCandidateLanguageNames(codeOrName: string): string[] {
+  if (!codeOrName) return ['Spanish', 'es'];
+  const trimmed = codeOrName.trim();
+  const lower = trimmed.toLowerCase();
+  const resolved = resolveLanguageName(trimmed);
+
+  const candidates = new Set<string>();
+  candidates.add(trimmed);
+  candidates.add(lower);
+  candidates.add(resolved);
+  candidates.add(resolved.toLowerCase());
+
+  if (lower.includes('-')) {
+    const base = lower.split('-')[0];
+    candidates.add(base);
+    const baseResolved = resolveLanguageName(base);
+    candidates.add(baseResolved);
+    candidates.add(baseResolved.toLowerCase());
+  }
+
+  // Handle special language families / regional variants in lexicon DB
+  if (lower.startsWith('pt') || lower.includes('portug')) {
+    candidates.add('Portuguese (Brazil)');
+    candidates.add('Portuguese (Portugal)');
+    candidates.add('Portuguese');
+    candidates.add('português');
+    candidates.add('português (brasil)');
+    candidates.add('português (portugal)');
+    candidates.add('pt');
+    candidates.add('pt-br');
+    candidates.add('pt-pt');
+  } else if (lower.startsWith('zh') || lower.includes('chin')) {
+    candidates.add('Chinese (Simplified)');
+    candidates.add('Chinese (Traditional)');
+    candidates.add('Chinese');
+    candidates.add('zh');
+    candidates.add('zh-cn');
+    candidates.add('zh-tw');
+  } else if (lower.startsWith('fr') || lower.includes('french')) {
+    candidates.add('French');
+    candidates.add('French (Canada)');
+    candidates.add('fr');
+    candidates.add('fr-ca');
+  } else if (lower.startsWith('no') || lower.startsWith('nb') || lower.includes('norweg')) {
+    candidates.add('Norwegian (Bokmål)');
+    candidates.add('Norwegian');
+    candidates.add('no');
+    candidates.add('nb');
+  } else if (lower.startsWith('ku') || lower.startsWith('ckb') || lower.includes('kurd')) {
+    candidates.add('Kurdish (Kurmanji)');
+    candidates.add('Kurdish (Sorani)');
+    candidates.add('Kurdish');
+  } else if (lower.startsWith('en') || lower.includes('engl')) {
+    candidates.add('English');
+    candidates.add('en');
+  } else if (lower.startsWith('ar') || lower.includes('arab')) {
+    candidates.add('Arabic');
+    candidates.add('ar');
+  } else if (lower.startsWith('es') || lower.includes('span')) {
+    candidates.add('Spanish');
+    candidates.add('es');
+  }
+
+  return Array.from(candidates);
 }
 
 export function difficultyToCefr(difficulty: number): CEFRLevel {
@@ -128,7 +204,7 @@ export async function getStaticDb(): Promise<SQLite.SQLiteDatabase> {
     try {
       await importDatabaseFromAssetAsync(STATIC_DB_NAME, {
         assetId: require('../../assets/lexicon_v1.0.0.db'),
-        forceOverwrite: false,
+        forceOverwrite: true,
       });
     } catch (err) {
       console.warn('[Vault] Notice during static asset DB import:', err);
@@ -252,8 +328,8 @@ export async function isLanguageDownloaded(codeOrName: string): Promise<boolean>
  */
 export async function loadCardTranslationsForPair(
   cardIds: number[],
-  destLangName: string,
-  origLangName: string
+  destLangParam: string,
+  origLangParam: string
 ): Promise<{
   destMap: Map<number, string>;
   origMap: Map<number, string>;
@@ -268,43 +344,63 @@ export async function loadCardTranslationsForPair(
 
   if (cardIds.length === 0) return { destMap, origMap, defMap };
 
-  const placeholders = cardIds.map(() => '?').join(',');
+  const destCandidates = getCandidateLanguageNames(destLangParam);
+  const origCandidates = getCandidateLanguageNames(origLangParam);
+  const allLangs = Array.from(new Set([...destCandidates, ...origCandidates]));
 
-  // 1. Query user_vault.sqlite downloaded translations
-  const downloadedTranslations = await userDb.getAllAsync<{
-    card_id: number;
-    lang_name: string;
-    translation: string;
-  }>(
-    `SELECT card_id, lang_name, translation FROM Downloaded_Card_Translations 
-     WHERE (lang_name = ? OR lang_name = ?) AND card_id IN (${placeholders});`,
-    [destLangName, origLangName, ...cardIds]
-  );
+  const destLowerSet = new Set(destCandidates.map((c) => c.toLowerCase()));
+  const origLowerSet = new Set(origCandidates.map((c) => c.toLowerCase()));
 
-  for (const row of downloadedTranslations) {
-    if (row.lang_name === destLangName) {
-      destMap.set(row.card_id, row.translation);
+  const cardPlaceholders = cardIds.map(() => '?').join(',');
+  const langPlaceholders = allLangs.map(() => '?').join(',');
+
+  // 1. Query user_vault.sqlite downloaded translations first
+  try {
+    const downloadedTranslations = await userDb.getAllAsync<{
+      card_id: number;
+      lang_name: string;
+      translation: string;
+    }>(
+      `SELECT card_id, lang_name, translation FROM Downloaded_Card_Translations 
+       WHERE lang_name IN (${langPlaceholders}) AND card_id IN (${cardPlaceholders});`,
+      [...allLangs, ...cardIds]
+    );
+
+    for (const row of downloadedTranslations) {
+      const rowLang = row.lang_name.toLowerCase();
+      if (destLowerSet.has(rowLang) && !destMap.has(row.card_id)) {
+        destMap.set(row.card_id, row.translation);
+      }
+      if (origLowerSet.has(rowLang) && !origMap.has(row.card_id)) {
+        origMap.set(row.card_id, row.translation);
+      }
     }
-    if (row.lang_name === origLangName) {
-      origMap.set(row.card_id, row.translation);
-    }
+  } catch (e) {
+    console.warn('[Vault] Notice querying Downloaded_Card_Translations:', e);
   }
 
   // 2. Query downloaded definitions
-  const downloadedDefs = await userDb.getAllAsync<{
-    card_id: number;
-    lang_name: string;
-    definition: string;
-  }>(
-    `SELECT card_id, lang_name, definition FROM Downloaded_Card_Definitions 
-     WHERE (lang_name = ? OR lang_name = ?) AND card_id IN (${placeholders});`,
-    [origLangName, destLangName, ...cardIds]
-  );
+  try {
+    const downloadedDefs = await userDb.getAllAsync<{
+      card_id: number;
+      lang_name: string;
+      definition: string;
+    }>(
+      `SELECT card_id, lang_name, definition FROM Downloaded_Card_Definitions 
+       WHERE lang_name IN (${langPlaceholders}) AND card_id IN (${cardPlaceholders});`,
+      [...allLangs, ...cardIds]
+    );
 
-  for (const row of downloadedDefs) {
-    if (!defMap.has(row.card_id) || row.lang_name === origLangName) {
-      defMap.set(row.card_id, row.definition);
+    for (const row of downloadedDefs) {
+      const rowLang = row.lang_name.toLowerCase();
+      if (origLowerSet.has(rowLang)) {
+        defMap.set(row.card_id, row.definition);
+      } else if (destLowerSet.has(rowLang) && !defMap.has(row.card_id)) {
+        defMap.set(row.card_id, row.definition);
+      }
     }
+  } catch (e) {
+    console.warn('[Vault] Notice querying Downloaded_Card_Definitions:', e);
   }
 
   // 3. Fallback to staticDb if missing
@@ -312,27 +408,133 @@ export async function loadCardTranslationsForPair(
   const missingOrig = cardIds.filter((id) => !origMap.has(id));
 
   if (missingDest.length > 0 || missingOrig.length > 0) {
-    const staticTrans = await staticDb.getAllAsync<{
-      card_id: number;
-      lang_name: string;
-      translation: string;
-    }>(
-      `SELECT card_id, lang_name, translation FROM card_translations 
-       WHERE (lang_name = ? OR lang_name = ?) AND card_id IN (${placeholders});`,
-      [destLangName, origLangName, ...cardIds]
-    );
+    try {
+      const staticTrans = await staticDb.getAllAsync<{
+        card_id: number;
+        lang_name: string;
+        translation: string;
+      }>(
+        `SELECT card_id, lang_name, translation FROM card_translations 
+         WHERE lang_name IN (${langPlaceholders}) AND card_id IN (${cardPlaceholders});`,
+        [...allLangs, ...cardIds]
+      );
 
-    for (const row of staticTrans) {
-      if (row.lang_name === destLangName && !destMap.has(row.card_id)) {
-        destMap.set(row.card_id, row.translation);
+      for (const row of staticTrans) {
+        const rowLang = row.lang_name.toLowerCase();
+        if (destLowerSet.has(rowLang) && !destMap.has(row.card_id)) {
+          destMap.set(row.card_id, row.translation);
+        }
+        if (origLowerSet.has(rowLang) && !origMap.has(row.card_id)) {
+          origMap.set(row.card_id, row.translation);
+        }
       }
-      if (row.lang_name === origLangName && !origMap.has(row.card_id)) {
-        origMap.set(row.card_id, row.translation);
+    } catch (e) {
+      console.warn('[Vault] Notice querying static card_translations:', e);
+    }
+  }
+
+  // Fallback definitions from staticDb if defMap is missing
+  const missingDefs = cardIds.filter((id) => !defMap.has(id));
+  if (missingDefs.length > 0) {
+    try {
+      const staticDefs = await staticDb.getAllAsync<{
+        card_id: number;
+        lang_name: string;
+        definition: string;
+      }>(
+        `SELECT card_id, lang_name, definition FROM card_definitions 
+         WHERE lang_name IN (${langPlaceholders}) AND card_id IN (${cardPlaceholders});`,
+        [...allLangs, ...cardIds]
+      );
+      for (const row of staticDefs) {
+        const rowLang = row.lang_name.toLowerCase();
+        if (origLowerSet.has(rowLang)) {
+          defMap.set(row.card_id, row.definition);
+        } else if (destLowerSet.has(rowLang) && !defMap.has(row.card_id)) {
+          defMap.set(row.card_id, row.definition);
+        }
       }
+    } catch (e) {
+      console.warn('[Vault] Notice querying static card_definitions:', e);
     }
   }
 
   return { destMap, origMap, defMap };
+}
+
+/**
+ * Loads translated deck and category names for a list of deck IDs.
+ * Checks Downloaded_Deck_Translations in user_vault.sqlite, then falls back to staticDb.
+ */
+export async function loadDeckTranslationsForDecks(
+  deckIds: number[],
+  langParam: string
+): Promise<Map<number, { category_translation: string; subcategory_translation: string }>> {
+  const result = new Map<number, { category_translation: string; subcategory_translation: string }>();
+  if (deckIds.length === 0) return result;
+
+  const userDb = await getUserDb();
+  const staticDb = await getStaticDb();
+
+  const candidates = getCandidateLanguageNames(langParam);
+  const candPlaceholders = candidates.map(() => '?').join(',');
+  const deckPlaceholders = deckIds.map(() => '?').join(',');
+
+  // 1. Query Downloaded_Deck_Translations in userDb
+  try {
+    const downloaded = await userDb.getAllAsync<{
+      deck_id: number;
+      lang_name: string;
+      category_translation: string;
+      subcategory_translation: string;
+    }>(
+      `SELECT deck_id, lang_name, category_translation, subcategory_translation 
+       FROM Downloaded_Deck_Translations 
+       WHERE lang_name IN (${candPlaceholders}) AND deck_id IN (${deckPlaceholders});`,
+      [...candidates, ...deckIds]
+    );
+    for (const row of downloaded) {
+      if (!result.has(row.deck_id)) {
+        result.set(row.deck_id, {
+          category_translation: capitalizeTitle(row.category_translation),
+          subcategory_translation: capitalizeTitle(row.subcategory_translation),
+        });
+      }
+    }
+  } catch (e) {
+    // Downloaded_Deck_Translations may be empty initially
+  }
+
+  // 2. Query staticDb deck_translations for any missing decks
+  const missingDecks = deckIds.filter((id) => !result.has(id));
+  if (missingDecks.length > 0) {
+    const missingPlaceholders = missingDecks.map(() => '?').join(',');
+    try {
+      const staticRows = await staticDb.getAllAsync<{
+        deck_id: number;
+        lang_name: string;
+        category_translation: string;
+        subcategory_translation: string;
+      }>(
+        `SELECT deck_id, lang_name, category_translation, subcategory_translation 
+         FROM deck_translations 
+         WHERE lang_name IN (${candPlaceholders}) AND deck_id IN (${missingPlaceholders});`,
+        [...candidates, ...missingDecks]
+      );
+      for (const row of staticRows) {
+        if (!result.has(row.deck_id)) {
+          result.set(row.deck_id, {
+            category_translation: capitalizeTitle(row.category_translation),
+            subcategory_translation: capitalizeTitle(row.subcategory_translation),
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[Vault] Notice querying deck_translations:', e);
+    }
+  }
+
+  return result;
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -364,7 +566,8 @@ export function capitalizeTitle(text: string): string {
  * Returns the real thematic decks from lexicon_v1.0.0.db grouped by category.
  */
 export async function getThemesWithProgressiveDecks(
-  targetLang = 'es'
+  targetLang = 'es',
+  originLang?: string
 ): Promise<ThemeGroup[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
@@ -393,7 +596,7 @@ export async function getThemesWithProgressiveDecks(
     state: number;
     stability: number;
     reps: number;
-  }>('SELECT card_id, state, stability, reps FROM User_Cards WHERE target_lang = ?;', [langName]);
+  }>('SELECT card_id, state, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);', [langName, targetLang]);
 
   const userProgressMap = new Map<
     number,
@@ -435,6 +638,10 @@ export async function getThemesWithProgressiveDecks(
   );
   const unlockedSet = new Set(unlockedRows.map((r) => r.deck_id));
 
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  const allDeckIds = decksRows.map((d) => d.deck_id);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+
   // Group decks by category
   const categoriesMap = new Map<string, DeckWithProgress[]>();
 
@@ -450,12 +657,16 @@ export async function getThemesWithProgressiveDecks(
       unlockedSet.has(String(d.deck_id)) ||
       unlockedSet.has(d.category);
 
+    const dt = deckTransMap.get(d.deck_id);
+    const themeName = dt?.category_translation || capitalizeTitle(d.category);
+    const deckName = dt?.subcategory_translation || capitalizeTitle(d.subcategory);
+
     const deckObj: DeckWithProgress = {
       id: String(d.deck_id),
       real_deck_id: d.deck_id,
       theme_id: d.category,
-      theme_name: capitalizeTitle(d.category),
-      name: capitalizeTitle(d.subcategory),
+      theme_name: themeName,
+      name: deckName,
       description: '',
       difficulty_level: d.difficulty,
       difficulty_label: cefr,
@@ -491,9 +702,11 @@ export async function getThemesWithProgressiveDecks(
     const decks = categoriesMap.get(catKey);
     if (!decks || decks.length === 0) continue;
 
+    const themeName = decks[0]?.theme_name || capitalizeTitle(catKey);
+
     themeGroups.push({
       id: `theme_${catKey}`,
-      name: capitalizeTitle(catKey),
+      name: themeName,
       description: '',
       icon_name: CATEGORY_ICONS[catKey] || 'book',
       is_pro: false,
@@ -504,9 +717,10 @@ export async function getThemesWithProgressiveDecks(
   // Include any extra categories not in categoryOrder
   for (const [catKey, decks] of categoriesMap.entries()) {
     if (!categoryOrder.includes(catKey)) {
+      const themeName = decks[0]?.theme_name || capitalizeTitle(catKey);
       themeGroups.push({
         id: `theme_${catKey}`,
-        name: capitalizeTitle(catKey),
+        name: themeName,
         description: '',
         icon_name: CATEGORY_ICONS[catKey] || 'book',
         is_pro: false,
@@ -525,11 +739,13 @@ export async function getThemesWithProgressiveDecks(
  * Shows only the cards of that difficulty tier.
  */
 export async function getAllDecksOrderedByDifficulty(
-  targetLang = 'es'
+  targetLang = 'es',
+  originLang?: string
 ): Promise<DeckWithProgress[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
 
   // Group cards by (deck_id, difficulty)
   const sliceRows = await staticDb.getAllAsync<{
@@ -551,39 +767,49 @@ export async function getAllDecksOrderedByDifficulty(
     ORDER BY c.difficulty ASC, d.deck_id ASC;
   `);
 
+  const allDeckIds = Array.from(new Set(sliceRows.map((s) => s.deck_id)));
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+
   // Fetch all user cards for this language
   const userCards = await userDb.getAllAsync<{
     card_id: number;
     stability: number;
     reps: number;
-  }>('SELECT card_id, stability, reps FROM User_Cards WHERE target_lang = ?;', [langName]);
+  }>(
+    'SELECT card_id, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);',
+    [langName, targetLang]
+  );
 
-  const userCardMap = new Map<number, { stability: number; reps: number }>();
-  userCards.forEach((uc) => userCardMap.set(uc.card_id, { stability: uc.stability, reps: uc.reps }));
+  const cardMap = new Map<number, { stability: number; reps: number }>();
+  userCards.forEach((c) =>
+    cardMap.set(c.card_id, { stability: c.stability, reps: c.reps })
+  );
 
-  // Map each card to its (deck_id, difficulty)
-  const cardSliceRows = await staticDb.getAllAsync<{
+  // Fetch card (deck_id, difficulty) mapping
+  const allCards = await staticDb.getAllAsync<{
     card_id: number;
     deck_id: number;
     difficulty: number;
   }>('SELECT card_id, deck_id, difficulty FROM cards;');
 
-  const cardToSliceMap = new Map<number, string>();
-  cardSliceRows.forEach((r) => {
-    cardToSliceMap.set(r.card_id, `${r.deck_id}_${r.difficulty}`);
-  });
-
-  // Tally user progress per slice
   const sliceGarrisonCount = new Map<string, number>();
   const sliceMasteredCount = new Map<string, number>();
 
-  for (const [cardId, uc] of userCardMap.entries()) {
-    const key = cardToSliceMap.get(cardId);
-    if (key) {
-      sliceGarrisonCount.set(key, (sliceGarrisonCount.get(key) || 0) + 1);
-      if (uc.stability >= 21 || uc.reps >= 3) {
-        sliceMasteredCount.set(key, (sliceMasteredCount.get(key) || 0) + 1);
-      }
+  for (const c of allCards) {
+    const uc = cardMap.get(c.card_id);
+    if (!uc) continue;
+
+    const sliceKey = `${c.deck_id}_${c.difficulty}`;
+    sliceGarrisonCount.set(
+      sliceKey,
+      (sliceGarrisonCount.get(sliceKey) || 0) + 1
+    );
+
+    if (uc.stability >= 21 || uc.reps >= 3) {
+      sliceMasteredCount.set(
+        sliceKey,
+        (sliceMasteredCount.get(sliceKey) || 0) + 1
+      );
     }
   }
 
@@ -597,14 +823,16 @@ export async function getAllDecksOrderedByDifficulty(
     const garrisoned = sliceGarrisonCount.get(sliceKey) || 0;
     const mastered = sliceMasteredCount.get(sliceKey) || 0;
 
-    const name = capitalizeTitle(s.subcategory);
+    const dt = deckTransMap.get(s.deck_id);
+    const themeName = dt?.category_translation || capitalizeTitle(s.category);
+    const name = dt?.subcategory_translation || capitalizeTitle(s.subcategory);
 
     result.push({
       id: `diff_${s.deck_id}_${s.difficulty}`,
       real_deck_id: s.deck_id,
       difficulty_slice: s.difficulty,
       theme_id: s.category,
-      theme_name: capitalizeTitle(s.category),
+      theme_name: themeName,
       name,
       description: '',
       difficulty_level: s.difficulty,
@@ -703,8 +931,8 @@ export async function getCardsByDeck(
     stability: number;
     reps: number;
   }>(
-    `SELECT id, card_id, stability, reps FROM User_Cards WHERE target_lang = ? AND card_id IN (${placeholders});`,
-    [destLangName, ...cardIds]
+    `SELECT id, card_id, stability, reps FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND card_id IN (${placeholders});`,
+    [destLangName, targetLang, ...cardIds]
   );
 
   const userMap = new Map<number, { id: string; stability: number; reps: number }>();
@@ -844,11 +1072,24 @@ export async function getDueCards(
     lapses: number;
     updated_at: string;
   }>(
-    'SELECT * FROM User_Cards WHERE target_lang = ? AND due_date <= ? ORDER BY due_date ASC;',
-    [langName, now]
+    'SELECT * FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ? ORDER BY due_date ASC;',
+    [langName, targetLang, now]
   );
 
-  if (userCards.length === 0) return [];
+  if (userCards.length === 0) {
+    if (!filterDeckId) {
+      const totalEnrolled = await userDb.getFirstAsync<{ count: number }>(
+        'SELECT count(*) as count FROM User_Cards WHERE target_lang IN (?, ?);',
+        [langName, targetLang]
+      );
+      if (!totalEnrolled || totalEnrolled.count === 0) {
+        // Auto-garrison introductory cards (Deck 1: members) which has full translations in all 123 languages
+        await garrisonEntireDeck('1', targetLang, undefined, originLang);
+        return getDueCards(undefined, targetLang, originLang);
+      }
+    }
+    return [];
+  }
 
   // 2. Fetch static card info
   const cardIds = userCards.map((uc) => uc.card_id);
@@ -895,8 +1136,19 @@ export async function getDueCards(
     }
 
     const cefr = difficultyToCefr(sCard.difficulty);
-    const frontTerm = destMap.get(sCard.card_id) || sCard.primary_term;
-    const backTerm = origMap.get(sCard.card_id) || sCard.primary_term;
+    const destCandidateList = getCandidateLanguageNames(targetLang);
+    const origCandidateList = getCandidateLanguageNames(effectiveOrigin);
+    const isDestEnglish = destCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+    const isOrigEnglish = origCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+
+    const frontTerm = destMap.get(sCard.card_id);
+    const backTerm = origMap.get(sCard.card_id);
+
+    if (!isDestEnglish && !frontTerm) continue;
+    if (!isOrigEnglish && !backTerm) continue;
+
+    const effectiveFront = frontTerm || sCard.primary_term;
+    const effectiveBack = backTerm || sCard.primary_term;
     const definition = defMap.get(sCard.card_id) || sCard.definition || '';
 
     result.push({
@@ -912,11 +1164,11 @@ export async function getDueCards(
       reps: uc.reps,
       lapses: uc.lapses,
       updated_at: uc.updated_at,
-      front_term: frontTerm,
+      front_term: effectiveFront,
       front_lang: targetLang,
       front_pos: sCard.pos || null,
       front_cefr: cefr,
-      back_term: backTerm,
+      back_term: effectiveBack,
       back_lang: effectiveOrigin,
       back_pos: sCard.pos || null,
       back_cefr: cefr,
@@ -989,8 +1241,8 @@ export async function getDeckCardsForReview(
     lapses: number;
     updated_at: string;
   }>(
-    `SELECT * FROM User_Cards WHERE target_lang = ? AND card_id IN (${placeholders});`,
-    [langName, ...cardIds]
+    `SELECT * FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND card_id IN (${placeholders});`,
+    [langName, targetLang, ...cardIds]
   );
 
   // If no user cards exist in this deck yet, auto-garrison them so the user can immediately practice!
@@ -1012,8 +1264,19 @@ export async function getDeckCardsForReview(
     if (!sCard) continue;
 
     const cefr = difficultyToCefr(sCard.difficulty);
-    const frontTerm = destMap.get(sCard.card_id) || sCard.primary_term;
-    const backTerm = origMap.get(sCard.card_id) || sCard.primary_term;
+    const destCandidateList = getCandidateLanguageNames(targetLang);
+    const origCandidateList = getCandidateLanguageNames(effectiveOrigin);
+    const isDestEnglish = destCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+    const isOrigEnglish = origCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+
+    const frontTerm = destMap.get(sCard.card_id);
+    const backTerm = origMap.get(sCard.card_id);
+
+    if (!isDestEnglish && !frontTerm) continue;
+    if (!isOrigEnglish && !backTerm) continue;
+
+    const effectiveFront = frontTerm || sCard.primary_term;
+    const effectiveBack = backTerm || sCard.primary_term;
     const definition = defMap.get(sCard.card_id) || sCard.definition || '';
 
     result.push({
@@ -1029,11 +1292,11 @@ export async function getDeckCardsForReview(
       reps: uc.reps,
       lapses: uc.lapses,
       updated_at: uc.updated_at,
-      front_term: frontTerm,
+      front_term: effectiveFront,
       front_lang: targetLang,
       front_pos: sCard.pos || null,
       front_cefr: cefr,
-      back_term: backTerm,
+      back_term: effectiveBack,
       back_lang: effectiveOrigin,
       back_pos: sCard.pos || null,
       back_cefr: cefr,
@@ -1102,8 +1365,8 @@ export async function getWordsByDifficulty(
     lapses: number;
     due_date: string;
   }>(
-    `SELECT id, card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE target_lang = ? AND card_id IN (${placeholders});`,
-    [langName, ...cardIds]
+    `SELECT id, card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND card_id IN (${placeholders});`,
+    [langName, targetLang, ...cardIds]
   );
 
   const ucMap = new Map<number, (typeof userCards)[0]>();
@@ -1112,12 +1375,19 @@ export async function getWordsByDifficulty(
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
 
+  const allDeckIds = Array.from(new Set(rows.map((r) => r.deck_id)));
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+
   return rows.map((r) => {
     const uc = ucMap.get(r.card_id);
     const cefrLevel = difficultyToCefr(r.difficulty);
     const frontTerm = destMap.get(r.card_id) || r.primary_term;
     const backTerm = origMap.get(r.card_id) || r.primary_term;
     const definition = defMap.get(r.card_id) || r.definition || '';
+
+    const dt = deckTransMap.get(r.deck_id);
+    const deckName = dt?.subcategory_translation || capitalizeTitle(r.subcategory);
+    const themeName = dt?.category_translation || capitalizeTitle(r.category);
 
     return {
       concept_id: r.cili_id || `c_${r.card_id}`,
@@ -1130,8 +1400,8 @@ export async function getWordsByDifficulty(
       back_lexeme_id: r.card_id,
       back_term: backTerm,
       back_lang: effectiveOrigin,
-      deck_name: capitalizeTitle(r.subcategory),
-      theme_name: capitalizeTitle(r.category),
+      deck_name: deckName,
+      theme_name: themeName,
       frequency_rank: null,
       is_queued: !!uc,
       user_card_id: uc ? uc.id : undefined,
@@ -1165,8 +1435,8 @@ export async function getDifficultyStats(
     difficulty: number;
     count: number;
   }>(
-    `SELECT difficulty, count(id) as count FROM User_Cards WHERE target_lang = ? GROUP BY difficulty;`,
-    [langName]
+    `SELECT difficulty, count(id) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) GROUP BY difficulty;`,
+    [langName, targetLang]
   );
 
   // Mastered cards (stability >= 21 or reps >= 3) per tier
@@ -1174,8 +1444,8 @@ export async function getDifficultyStats(
     difficulty: number;
     count: number;
   }>(
-    `SELECT difficulty, count(id) as count FROM User_Cards WHERE target_lang = ? AND (stability >= 21 OR reps >= 3) GROUP BY difficulty;`,
-    [langName]
+    `SELECT difficulty, count(id) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (stability >= 21 OR reps >= 3) GROUP BY difficulty;`,
+    [langName, targetLang]
   );
 
   const totalMap = new Map<number, number>();
@@ -1266,7 +1536,7 @@ export async function getMasterySummary(
     reps: number;
     lapses: number;
     due_date: string;
-  }>('SELECT card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE target_lang = ?;', [langName]);
+  }>('SELECT card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);', [langName, targetLang]);
 
   let slipping = 0;
   let learning = 0;
@@ -1348,7 +1618,7 @@ export async function getMasteryWords(
     reps: number;
     lapses: number;
     due_date: string;
-  }>('SELECT id, card_id, state, stability, scheduled_days, reps, lapses, due_date FROM User_Cards WHERE target_lang = ?;', [langName]);
+  }>('SELECT id, card_id, state, stability, scheduled_days, reps, lapses, due_date FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);', [langName, targetLang]);
 
   const userMap = new Map<number, (typeof userCards)[0]>();
   userCards.forEach((uc) => userMap.set(uc.card_id, uc));
@@ -1356,6 +1626,9 @@ export async function getMasteryWords(
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const cardIds = allCards.map((c) => c.card_id);
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+
+  const allDeckIds = Array.from(new Set(allCards.map((c) => c.deck_id)));
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
 
   const items: MasteryWordItem[] = [];
 
@@ -1381,6 +1654,10 @@ export async function getMasteryWords(
     const backTerm = origMap.get(c.card_id) || c.primary_term;
     const definition = defMap.get(c.card_id) || c.definition || '';
 
+    const dt = deckTransMap.get(c.deck_id);
+    const deckName = dt?.subcategory_translation || capitalizeTitle(c.subcategory);
+    const themeName = dt?.category_translation || capitalizeTitle(c.category);
+
     items.push({
       concept_id: c.cili_id || `c_${c.card_id}`,
       concept_desc: definition,
@@ -1392,8 +1669,8 @@ export async function getMasteryWords(
       back_lexeme_id: c.card_id,
       back_term: backTerm,
       back_lang: effectiveOrigin,
-      deck_name: capitalizeTitle(c.subcategory),
-      theme_name: capitalizeTitle(c.category),
+      deck_name: deckName,
+      theme_name: themeName,
       is_queued: !!uc,
       user_card_id: uc ? uc.id : undefined,
       stage: cardStage,
@@ -1489,12 +1766,14 @@ export async function updateCardFSRS(
  */
 export async function searchLexicon(
   searchTerm: string,
-  targetLang = 'es'
+  targetLang?: string
 ): Promise<(Lexeme & { concept_desc: string; concept_id: string })[]> {
   if (!searchTerm.trim()) return [];
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
-  const langName = resolveLanguageName(targetLang);
+  const activeLang = targetLang || (await getLanguagePairSettings()).destination_lang;
+  const candidates = getCandidateLanguageNames(activeLang);
+  const candPlaceholders = candidates.map(() => '?').join(',');
   const pattern = `%${searchTerm.trim()}%`;
 
   const rows = await staticDb.getAllAsync<{
@@ -1515,10 +1794,10 @@ export async function searchLexicon(
       c.difficulty,
       ct.translation as translation
     FROM cards c
-    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name = ?
+    LEFT JOIN card_translations ct ON ct.card_id = c.card_id AND ct.lang_name IN (${candPlaceholders})
     WHERE c.primary_term LIKE ? OR ct.translation LIKE ? OR c.definition LIKE ?
     LIMIT 30;`,
-    [langName, pattern, pattern, pattern]
+    [...candidates, pattern, pattern, pattern]
   );
 
   // Also check Downloaded_Card_Translations
@@ -1526,8 +1805,8 @@ export async function searchLexicon(
     card_id: number;
     translation: string;
   }>(
-    `SELECT card_id, translation FROM Downloaded_Card_Translations WHERE lang_name = ? AND translation LIKE ? LIMIT 30;`,
-    [langName, pattern]
+    `SELECT card_id, translation FROM Downloaded_Card_Translations WHERE lang_name IN (${candPlaceholders}) AND translation LIKE ? LIMIT 30;`,
+    [...candidates, pattern]
   );
 
   const downloadedMap = new Map<number, string>();
@@ -1563,7 +1842,7 @@ export async function searchLexicon(
     const translation = downloadedMap.get(r.card_id) || r.translation || r.primary_term;
     return {
       id: r.card_id,
-      language: targetLang,
+      language: activeLang,
       term: translation,
       pos: r.pos || null,
       cefr_level: difficultyToCefr(r.difficulty),
@@ -1579,8 +1858,10 @@ export const searchLexemesFTS = searchLexicon;
 /**
  * Returns domains hierarchy for DomainBrowser.
  */
-export async function getDomainsHierarchy(): Promise<Domain[]> {
+export async function getDomainsHierarchy(originLang?: string): Promise<Domain[]> {
   const staticDb = await getStaticDb();
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+
   const rows = await staticDb.getAllAsync<{
     deck_id: number;
     category: string;
@@ -1589,14 +1870,21 @@ export async function getDomainsHierarchy(): Promise<Domain[]> {
     description: string;
   }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
 
+  const allDeckIds = rows.map((r) => r.deck_id);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+
   const categories = Array.from(new Set(rows.map((r) => r.category)));
   const domains: Domain[] = [];
 
   for (const cat of categories) {
+    const firstDeck = rows.find((r) => r.category === cat);
+    const dt = firstDeck ? deckTransMap.get(firstDeck.deck_id) : undefined;
+    const catName = dt?.category_translation || capitalizeTitle(cat);
+
     domains.push({
       id: `domain_${cat}`,
       parent_id: null,
-      name: capitalizeTitle(cat),
+      name: catName,
       description: '',
       difficulty_level: 1,
       icon_name: CATEGORY_ICONS[cat] || 'book',
@@ -1605,10 +1893,13 @@ export async function getDomainsHierarchy(): Promise<Domain[]> {
   }
 
   for (const r of rows) {
+    const dt = deckTransMap.get(r.deck_id);
+    const subName = dt?.subcategory_translation || capitalizeTitle(r.subcategory);
+
     domains.push({
       id: `sub_${r.deck_id}`,
       parent_id: `domain_${r.category}`,
-      name: capitalizeTitle(r.subcategory),
+      name: subName,
       description: '',
       difficulty_level: r.difficulty,
       icon_name: CATEGORY_ICONS[r.category] || 'book',
@@ -1900,26 +2191,26 @@ export async function getVaultStats(targetLang = 'es'): Promise<VaultStats> {
   const now = new Date().toISOString();
 
   const totalRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ?;',
-    [langName]
+    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);',
+    [langName, targetLang]
   );
   const totalCards = totalRow?.count || 0;
 
   const dueRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ? AND due_date <= ?;',
-    [langName, now]
+    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ?;',
+    [langName, targetLang, now]
   );
   const dueCards = dueRow?.count || 0;
 
   const newRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ? AND (reps = 0 OR state = 0);',
-    [langName]
+    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (reps = 0 OR state = 0);',
+    [langName, targetLang]
   );
   const newCards = newRow?.count || 0;
 
   const masteredRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE target_lang = ? AND (stability >= 21 OR reps >= 3);',
-    [langName]
+    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (stability >= 21 OR reps >= 3);',
+    [langName, targetLang]
   );
   const masteredCards = masteredRow?.count || 0;
 
@@ -1950,15 +2241,12 @@ export async function getVaultStats(targetLang = 'es'): Promise<VaultStats> {
     }
   }
 
-  const xpPoints = (logs.length || 0) * 15;
-
   return {
     totalCards,
     dueCards,
     newCards,
     masteredCards,
     streakDays,
-    xpPoints,
   };
 }
 

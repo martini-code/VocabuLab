@@ -106,7 +106,6 @@ export interface VaultStats {
   newCards: number;
   masteredCards: number;
   streakDays: number;
-  xpPoints: number;
 }
 
 export type MascotMood = 'idle' | 'happy' | 'cheering' | 'thinking' | 'confused' | 'victorious';

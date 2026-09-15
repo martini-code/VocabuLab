@@ -70,6 +70,16 @@ CREATE TABLE IF NOT EXISTS Downloaded_Card_Definitions (
     PRIMARY KEY (card_id, lang_name)
 );
 
+-- Downloaded Deck Translations (Deck and Category Names per Language)
+CREATE TABLE IF NOT EXISTS Downloaded_Deck_Translations (
+    deck_id INTEGER NOT NULL,
+    lang_name TEXT NOT NULL,
+    category_translation TEXT NOT NULL,
+    subcategory_translation TEXT NOT NULL,
+    source TEXT,
+    PRIMARY KEY (deck_id, lang_name)
+);
+
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_user_cards_due ON User_Cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_user_cards_card_id ON User_Cards(card_id);
@@ -77,6 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_user_cards_lang ON User_Cards(target_lang);
 CREATE INDEX IF NOT EXISTS idx_review_logs_reviewed_at ON Review_Logs(reviewed_at);
 CREATE INDEX IF NOT EXISTS idx_dl_trans_lang ON Downloaded_Card_Translations(lang_name);
 CREATE INDEX IF NOT EXISTS idx_dl_defs_lang ON Downloaded_Card_Definitions(lang_name);
+CREATE INDEX IF NOT EXISTS idx_dl_deck_trans_lang ON Downloaded_Deck_Translations(lang_name);
 `;
 
 export const SCHEMA_SQL = `
