@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { initVault, getVaultStats } from './src/db/vault';
-import { syncDatabaseFromR2 } from './src/db/downloader';
-import { VaultStats } from './src/types';
+import { initVault, getVaultStats, getLanguagePairSettings } from './src/db/vault';
+import { syncDatabaseFromR2, ensureDefaultLanguagePairInstalled } from './src/db/downloader';
+import { VaultStats, LanguagePairSettings } from './src/types';
 import { ReviewSession } from './src/features/pipeline/ReviewSession';
 import { DecksRoadmap } from './src/features/decks/DecksRoadmap';
 import { FastSearch } from './src/features/search/FastSearch';
@@ -18,6 +18,7 @@ import { ProgressScreen } from './src/features/progress/ProgressScreen';
 import { SquireMascot } from './src/components/mascot/Mascots';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
+import { getDeviceLanguage, changeAppLanguage } from './src/locales';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
 import { FullScreenAdModal } from './src/components/ads/FullScreenAdModal';
@@ -47,6 +48,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [isVaultReady, setIsVaultReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Opening the fortress gates...');
+  const [languageModalMode, setLanguageModalMode] = useState<'origin' | 'destination'>('origin');
+  const [languagePair, setLanguagePair] = useState<LanguagePairSettings>(() => {
+    const dev = getDeviceLanguage();
+    return {
+      origin_lang: dev,
+      destination_lang: dev === 'en' ? 'es' : 'en',
+    };
+  });
   const [stats, setStats] = useState<VaultStats>({
     totalCards: 0,
     dueCards: 0,
@@ -88,7 +97,14 @@ export default function App() {
       await srsManager.init();
       setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
 
-      const currentStats = await getVaultStats();
+      setStatusMessage('Detecting kingdom language & scrolls...');
+      const deviceLang = getDeviceLanguage();
+      await ensureDefaultLanguagePairInstalled(deviceLang);
+      const currentPair = await getLanguagePairSettings();
+      setLanguagePair(currentPair);
+      await changeAppLanguage(currentPair.origin_lang);
+
+      const currentStats = await getVaultStats(currentPair.destination_lang);
       setStats(currentStats);
 
       setIsVaultReady(true);
@@ -100,7 +116,7 @@ export default function App() {
 
   const refreshStats = async () => {
     try {
-      const currentStats = await getVaultStats();
+      const currentStats = await getVaultStats(languagePair.destination_lang);
       setStats(currentStats);
     } catch (error) {
       // Ignore
@@ -149,12 +165,15 @@ export default function App() {
         {/* Language Selector Pill */}
         <TouchableOpacity
           style={styles.statPill}
-          onPress={() => setLanguageModalOpen(true)}
+          onPress={() => {
+            setLanguageModalMode('origin');
+            setLanguageModalOpen(true);
+          }}
           activeOpacity={0.8}
         >
           <Globe size={16} color="#78350F" />
           <Text style={styles.statValue}>
-            {(i18n.language || 'en').toUpperCase().slice(0, 2)}
+            {languagePair.origin_lang.toUpperCase().slice(0, 2)} ➔ {languagePair.destination_lang.toUpperCase().slice(0, 2)}
           </Text>
         </TouchableOpacity>
 
@@ -195,6 +214,8 @@ export default function App() {
             onExploreArchives={() => setActiveTab('archives')}
             deckFilter={deckFilter}
             onClearDeckFilter={() => setDeckFilter(null)}
+            targetLang={languagePair.destination_lang}
+            originLang={languagePair.origin_lang}
           />
         )}
         {activeTab === 'archives' && (
@@ -209,6 +230,8 @@ export default function App() {
               refreshStats();
               setActiveTab('pipeline');
             }}
+            targetLang={languagePair.destination_lang}
+            originLang={languagePair.origin_lang}
           />
         )}
         {activeTab === 'search' && <FastSearch />}
@@ -289,14 +312,31 @@ export default function App() {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              style={styles.treasuryActionBtn}
-              onPress={() => setLanguageModalOpen(true)}
-            >
-              <Text style={styles.treasuryActionText}>
-                CHANGE LANGUAGE REALM (50 IDIOMAS)
-              </Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+              <TouchableOpacity
+                style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0, backgroundColor: '#EFF6FF', borderColor: '#93C5FD' }]}
+                onPress={() => {
+                  setLanguageModalMode('origin');
+                  setLanguageModalOpen(true);
+                }}
+              >
+                <Text style={[styles.treasuryActionText, { color: '#1D4ED8' }]}>
+                  APP ORIGIN: {languagePair.origin_lang.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0 }]}
+                onPress={() => {
+                  setLanguageModalMode('destination');
+                  setLanguageModalOpen(true);
+                }}
+              >
+                <Text style={styles.treasuryActionText}>
+                  STUDY TARGET: {languagePair.destination_lang.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </View>
@@ -374,10 +414,15 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* Language Selector Modal (50 Languages) */}
+      {/* Language Selector Modal (123 Languages & Offline Packs) */}
       <LanguageSelectorModal
         visible={languageModalOpen}
         onClose={() => setLanguageModalOpen(false)}
+        initialMode={languageModalMode}
+        onPairChanged={async (newPair) => {
+          setLanguagePair(newPair);
+          await refreshStats();
+        }}
       />
 
       {/* Ad-Free Upgrade Modal (In-App Purchases) */}

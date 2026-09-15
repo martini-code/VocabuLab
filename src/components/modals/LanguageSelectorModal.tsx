@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,48 +7,230 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { Globe, Search, Check, X } from 'lucide-react-native';
+import {
+  Globe,
+  Search,
+  Check,
+  X,
+  Download,
+  Trash2,
+  ArrowLeftRight,
+  Languages,
+  HardDrive,
+} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import {
   SUPPORTED_LANGUAGES,
   LanguageOption,
+  getLanguageByCode,
+  getLanguageByName,
 } from '../../locales/languages';
-import { changeAppLanguage } from '../../locales';
+import { changeAppLanguage, getDeviceLanguage } from '../../locales';
+import {
+  getLanguagePairSettings,
+  setLanguagePairSettings,
+  getDownloadedLanguages,
+} from '../../db/vault';
+import {
+  downloadLanguagePack,
+  deleteLanguagePack,
+} from '../../db/downloader';
+import { DownloadedLanguage, LanguagePairSettings } from '../../types';
 
 interface LanguageSelectorModalProps {
   visible: boolean;
   onClose: () => void;
-  onLanguageChanged?: (code: string) => void;
+  onPairChanged?: (settings: LanguagePairSettings) => void;
+  initialMode?: 'origin' | 'destination';
 }
+
+type SelectionMode = 'origin' | 'destination';
+type FilterTab = 'all' | 'downloaded';
 
 export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
   visible,
   onClose,
-  onLanguageChanged,
+  onPairChanged,
+  initialMode = 'destination',
 }) => {
   const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [mode, setMode] = useState<SelectionMode>(initialMode);
+  const [filterTab, setFilterTab] = useState<FilterTab>('all');
+  const [pair, setPair] = useState<LanguagePairSettings>(() => {
+    const dev = getDeviceLanguage();
+    return {
+      origin_lang: dev,
+      destination_lang: dev === 'en' ? 'es' : 'en',
+    };
+  });
+  const [downloadedLangs, setDownloadedLangs] = useState<DownloadedLanguage[]>([]);
+  const [downloadingCode, setDownloadingCode] = useState<string | null>(null);
+  const [deletingCode, setDeletingCode] = useState<string | null>(null);
 
-  const currentLang = i18n.language || 'en';
+  // Load language settings & downloaded list when modal opens
+  useEffect(() => {
+    if (visible) {
+      if (initialMode) {
+        setMode(initialMode);
+      }
+      loadSettings();
+    }
+  }, [visible, initialMode]);
+
+  const loadSettings = async () => {
+    try {
+      const currentPair = await getLanguagePairSettings();
+      setPair(currentPair);
+      const list = await getDownloadedLanguages();
+      setDownloadedLangs(list);
+    } catch (error) {
+      console.warn('[LanguageModal] Error loading settings:', error);
+    }
+  };
+
+  const downloadedCodesSet = useMemo(() => {
+    const set = new Set<string>();
+    downloadedLangs.forEach((dl) => {
+      set.add(dl.code.toLowerCase());
+      const opt = getLanguageByName(dl.lang_name);
+      if (opt) set.add(opt.code.toLowerCase());
+    });
+    // English is always available via the core lexicon cards
+    set.add('en');
+    return set;
+  }, [downloadedLangs]);
 
   const filteredLanguages = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return SUPPORTED_LANGUAGES;
-    return SUPPORTED_LANGUAGES.filter(
+    let list = SUPPORTED_LANGUAGES;
+
+    if (filterTab === 'downloaded') {
+      list = list.filter((lang) => downloadedCodesSet.has(lang.code.toLowerCase()));
+    }
+
+    if (!q) return list;
+
+    return list.filter(
       (lang) =>
         lang.name.toLowerCase().includes(q) ||
         lang.nativeName.toLowerCase().includes(q) ||
         lang.code.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, filterTab, downloadedCodesSet]);
 
-  const handleSelectLanguage = async (code: string) => {
-    await changeAppLanguage(code);
-    if (onLanguageChanged) {
-      onLanguageChanged(code);
+  const handleDownload = async (lang: LanguageOption) => {
+    try {
+      setDownloadingCode(lang.code);
+      await downloadLanguagePack(lang.code);
+      const updated = await getDownloadedLanguages();
+      setDownloadedLangs(updated);
+    } catch (error) {
+      Alert.alert(
+        t('language.download_error', 'Download Failed'),
+        `Could not download language pack for ${lang.name}.`
+      );
+    } finally {
+      setDownloadingCode(null);
     }
-    onClose();
+  };
+
+  const handleDelete = async (lang: LanguageOption) => {
+    if (lang.code === 'en') {
+      Alert.alert(
+        t('language.cannot_delete', 'Protected Language'),
+        'English is the base lexicon and cannot be deleted.'
+      );
+      return;
+    }
+
+    if (lang.code === pair.origin_lang || lang.code === pair.destination_lang) {
+      Alert.alert(
+        t('language.cannot_delete', 'In-Use Language'),
+        `Cannot delete ${lang.name} because it is currently selected as your active ${
+          lang.code === pair.origin_lang ? 'Origin' : 'Study'
+        } language.`
+      );
+      return;
+    }
+
+    try {
+      setDeletingCode(lang.code);
+      await deleteLanguagePack(lang.code);
+      const updated = await getDownloadedLanguages();
+      setDownloadedLangs(updated);
+    } catch (error) {
+      Alert.alert(
+        t('language.delete_error', 'Delete Failed'),
+        `Could not delete ${lang.name}.`
+      );
+    } finally {
+      setDeletingCode(null);
+    }
+  };
+
+  const handleSelectLanguage = async (lang: LanguageOption) => {
+    // 1. Ensure downloaded
+    if (!downloadedCodesSet.has(lang.code.toLowerCase())) {
+      try {
+        setDownloadingCode(lang.code);
+        await downloadLanguagePack(lang.code);
+        const updated = await getDownloadedLanguages();
+        setDownloadedLangs(updated);
+      } catch (e) {
+        Alert.alert(
+          t('language.download_error', 'Download Failed'),
+          `Could not download ${lang.name}.`
+        );
+        setDownloadingCode(null);
+        return;
+      } finally {
+        setDownloadingCode(null);
+      }
+    }
+
+    // 2. Apply selection
+    let updatedPair: LanguagePairSettings;
+    if (mode === 'origin') {
+      updatedPair = { ...pair, origin_lang: lang.code };
+      await changeAppLanguage(lang.code);
+    } else {
+      updatedPair = { ...pair, destination_lang: lang.code };
+    }
+
+    setPair(updatedPair);
+    await setLanguagePairSettings(updatedPair);
+
+    if (onPairChanged) {
+      onPairChanged(updatedPair);
+    }
+  };
+
+  const handleSwapPair = async () => {
+    const swapped: LanguagePairSettings = {
+      origin_lang: pair.destination_lang,
+      destination_lang: pair.origin_lang,
+    };
+    setPair(swapped);
+    await changeAppLanguage(swapped.origin_lang);
+    await setLanguagePairSettings(swapped);
+    if (onPairChanged) {
+      onPairChanged(swapped);
+    }
+  };
+
+  const originOption = getLanguageByCode(pair.origin_lang) || {
+    code: pair.origin_lang,
+    name: 'English',
+    nativeName: 'English',
+  };
+  const destinationOption = getLanguageByCode(pair.destination_lang) || {
+    code: pair.destination_lang,
+    name: 'Spanish',
+    nativeName: 'Español',
   };
 
   return (
@@ -67,9 +249,11 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                 <Globe size={20} color="#78350F" />
               </View>
               <View>
-                <Text style={styles.title}>{t('language.title')}</Text>
+                <Text style={styles.title}>
+                  {t('language.title', 'Language Fortress')}
+                </Text>
                 <Text style={styles.subtitle}>
-                  Select from 123 global languages
+                  123 Global Languages • On-Demand Packs (~25 KB)
                 </Text>
               </View>
             </View>
@@ -79,12 +263,109 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* Active Pair Banner */}
+          <View style={styles.pairBanner}>
+            <TouchableOpacity
+              style={[
+                styles.pairHalf,
+                mode === 'origin' && styles.pairHalfActive,
+              ]}
+              onPress={() => setMode('origin')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.pairHalfLabel}>
+                {t('language.origin_label', 'APP (ORIGIN)')}
+              </Text>
+              <Text style={styles.pairHalfName} numberOfLines={1}>
+                {originOption.nativeName}
+              </Text>
+              <Text style={styles.pairHalfCode}>
+                {originOption.name} ({originOption.code.toUpperCase()})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.swapBtn}
+              onPress={handleSwapPair}
+              activeOpacity={0.7}
+            >
+              <ArrowLeftRight size={16} color="#78350F" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.pairHalf,
+                mode === 'destination' && styles.pairHalfActive,
+              ]}
+              onPress={() => setMode('destination')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.pairHalfLabel}>
+                {t('language.destination_label', 'STUDY (TARGET)')}
+              </Text>
+              <Text style={styles.pairHalfName} numberOfLines={1}>
+                {destinationOption.nativeName}
+              </Text>
+              <Text style={styles.pairHalfCode}>
+                {destinationOption.name} ({destinationOption.code.toUpperCase()})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Mode Selector Notice */}
+          <View style={styles.modeNoticeBar}>
+            <Languages size={14} color="#B45309" />
+            <Text style={styles.modeNoticeText}>
+              {mode === 'origin'
+                ? t('language.selecting_origin', 'Configuring: App Interface & Explanation Language (Prefilled from device locale)')
+                : t('language.selecting_dest', 'Configuring: Study Target Language (Front of flashcards)')}
+            </Text>
+          </View>
+
+          {/* Filter Tabs: All vs Downloaded */}
+          <View style={styles.filterTabBar}>
+            <TouchableOpacity
+              style={[
+                styles.filterTab,
+                filterTab === 'all' && styles.filterTabActive,
+              ]}
+              onPress={() => setFilterTab('all')}
+            >
+              <Text
+                style={[
+                  styles.filterTabText,
+                  filterTab === 'all' && styles.filterTabTextActive,
+                ]}
+              >
+                All Languages (123)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.filterTab,
+                filterTab === 'downloaded' && styles.filterTabActive,
+              ]}
+              onPress={() => setFilterTab('downloaded')}
+            >
+              <HardDrive size={13} color={filterTab === 'downloaded' ? '#78350F' : '#64748B'} />
+              <Text
+                style={[
+                  styles.filterTabText,
+                  filterTab === 'downloaded' && styles.filterTabTextActive,
+                ]}
+              >
+                Downloaded ({downloadedCodesSet.size})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Search Filter Box */}
           <View style={styles.searchBox}>
             <Search size={18} color="#94A3B8" />
             <TextInput
               style={styles.searchInput}
-              placeholder={t('language.search_placeholder')}
+              placeholder={t('language.search_placeholder', 'Search by language, native name or code...')}
               placeholderTextColor="#94A3B8"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -97,45 +378,98 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             )}
           </View>
 
-          {/* 50 Languages List */}
+          {/* 123 Languages List */}
           <FlatList
             data={filteredLanguages}
             keyExtractor={(item) => item.code}
             contentContainerStyle={styles.listContent}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => {
-              const isSelected =
-                currentLang === item.code ||
-                currentLang.startsWith(`${item.code}-`);
+              const isDownloaded = downloadedCodesSet.has(item.code.toLowerCase());
+              const isOrigin = pair.origin_lang === item.code;
+              const isDest = pair.destination_lang === item.code;
+              const isSelectedInCurrentMode =
+                (mode === 'origin' && isOrigin) ||
+                (mode === 'destination' && isDest);
+              const isDownloading = downloadingCode === item.code;
+              const isDeleting = deletingCode === item.code;
 
               return (
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => handleSelectLanguage(item.code)}
+                  onPress={() => handleSelectLanguage(item)}
                   style={[
                     styles.langRow,
-                    isSelected && styles.langRowSelected,
+                    isSelectedInCurrentMode && styles.langRowSelected,
                   ]}
                 >
                   <View style={styles.langNames}>
-                    <Text
-                      style={[
-                        styles.nativeName,
-                        isSelected && styles.nativeNameSelected,
-                      ]}
-                    >
-                      {item.nativeName}
-                    </Text>
+                    <View style={styles.nameRow}>
+                      <Text
+                        style={[
+                          styles.nativeName,
+                          isSelectedInCurrentMode && styles.nativeNameSelected,
+                        ]}
+                      >
+                        {item.nativeName}
+                      </Text>
+
+                      {isOrigin && (
+                        <View style={styles.originTag}>
+                          <Text style={styles.originTagText}>App (Origin)</Text>
+                        </View>
+                      )}
+                      {isDest && (
+                        <View style={styles.destTag}>
+                          <Text style={styles.destTagText}>Study Target</Text>
+                        </View>
+                      )}
+                    </View>
+
                     <Text style={styles.englishName}>
-                      {item.name} ({item.code.toUpperCase()})
+                      {item.name} ({item.code.toUpperCase()}) • ~25 KB
                     </Text>
                   </View>
 
-                  {isSelected ? (
-                    <View style={styles.checkCircle}>
-                      <Check size={14} color="#FFFFFF" />
-                    </View>
-                  ) : null}
+                  {/* Actions / Status */}
+                  <View style={styles.rowActions}>
+                    {isDownloading ? (
+                      <ActivityIndicator size="small" color="#D97706" />
+                    ) : isDeleting ? (
+                      <ActivityIndicator size="small" color="#DC2626" />
+                    ) : isDownloaded ? (
+                      <View style={styles.downloadedGroup}>
+                        <View style={styles.downloadedBadge}>
+                          <Check size={12} color="#059669" />
+                          <Text style={styles.downloadedBadgeText}>Saved</Text>
+                        </View>
+
+                        {!isOrigin && !isDest && item.code !== 'en' && (
+                          <TouchableOpacity
+                            style={styles.deleteBtn}
+                            onPress={() => handleDelete(item)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Trash2 size={15} color="#94A3B8" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.downloadBtn}
+                        onPress={() => handleDownload(item)}
+                      >
+                        <Download size={13} color="#78350F" />
+                        <Text style={styles.downloadBtnText}>Get</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {isSelectedInCurrentMode && (
+                      <View style={styles.checkCircle}>
+                        <Check size={13} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </View>
                 </TouchableOpacity>
               );
             }}
@@ -159,8 +493,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#D97706',
     borderBottomWidth: 0,
-    maxHeight: '80%',
-    minHeight: '60%',
+    maxHeight: '88%',
+    minHeight: '65%',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
@@ -208,6 +542,98 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  pairBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    padding: 8,
+    marginTop: 12,
+    gap: 6,
+  },
+  pairHalf: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  pairHalfActive: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#D97706',
+  },
+  pairHalfLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#92400E',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  pairHalfName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  pairHalfCode: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  swapBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#D97706',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modeNoticeBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  modeNoticeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  filterTabBar: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 8,
+  },
+  filterTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 5,
+  },
+  filterTabActive: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#D97706',
+  },
+  filterTabText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  filterTabTextActive: {
+    color: '#78350F',
+    fontWeight: '800',
+  },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -216,8 +642,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     paddingHorizontal: 12,
-    height: 42,
-    marginTop: 12,
+    height: 40,
+    marginTop: 10,
     marginBottom: 8,
     gap: 8,
   },
@@ -227,7 +653,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   listContent: {
-    paddingVertical: 6,
+    paddingVertical: 4,
     gap: 6,
   },
   langRow: {
@@ -238,36 +664,113 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   langRowSelected: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
+    borderColor: '#D97706',
     borderWidth: 1.5,
   },
   langNames: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   nativeName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: '#1E293B',
   },
   nativeNameSelected: {
     color: '#78350F',
   },
+  originTag: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  originTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#2563EB',
+  },
+  destTag: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  destTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#059669',
+  },
   englishName: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#64748B',
     marginTop: 2,
   },
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  downloadedGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  downloadedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  downloadedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  deleteBtn: {
+    padding: 4,
+  },
+  downloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#D97706',
+  },
+  downloadBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#78350F',
+  },
   checkCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#059669',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#D97706',
     justifyContent: 'center',
     alignItems: 'center',
   },
 });
+

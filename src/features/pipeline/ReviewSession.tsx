@@ -25,6 +25,8 @@ interface ReviewSessionProps {
   deckFilter?: { id: string; name: string } | null;
   onClearDeckFilter?: () => void;
   onCardReviewed?: () => void;
+  targetLang?: string;
+  originLang?: string;
 }
 
 export const ReviewSession: React.FC<ReviewSessionProps> = ({
@@ -33,6 +35,8 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   deckFilter,
   onClearDeckFilter,
   onCardReviewed,
+  targetLang,
+  originLang,
 }) => {
   const [cards, setCards] = useState<CardWithDetails[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -46,18 +50,18 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
   useEffect(() => {
     loadCards();
-  }, [deckFilter?.id]);
+  }, [deckFilter?.id, targetLang, originLang]);
 
   const loadCards = async () => {
     setLoading(true);
     let due: CardWithDetails[] = [];
     if (deckFilter) {
-      due = await getDueCards(deckFilter.id);
+      due = await getDueCards(deckFilter.id, targetLang, originLang);
       if (due.length === 0) {
-        due = await getDeckCardsForReview(deckFilter.id);
+        due = await getDeckCardsForReview(deckFilter.id, targetLang, originLang);
       }
     } else {
-      due = await getDueCards();
+      due = await getDueCards(undefined, targetLang, originLang);
     }
     setCards(due);
     setCurrentIndex(0);

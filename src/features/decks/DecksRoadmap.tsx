@@ -78,6 +78,8 @@ import { useTranslation } from 'react-i18next';
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
   onStartReview?: () => void;
+  targetLang?: string;
+  originLang?: string;
 }
 
 type MainTab = 'decks' | 'difficulty' | 'mastery';
@@ -155,9 +157,12 @@ function getCefrBadgeColors(cefr: string) {
 export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   onStudyDeck,
   onStartReview,
+  targetLang: propTargetLang,
+  originLang: propOriginLang,
 }) => {
   const { t, i18n } = useTranslation();
-  const targetLang = i18n.language || 'es';
+  const targetLang = propTargetLang || 'es';
+  const originLang = propOriginLang || i18n.language || 'en';
 
   // Active Main Tab
   const [activeTab, setActiveTab] = useState<MainTab>('decks');
@@ -186,7 +191,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   // Initial Load
   useEffect(() => {
     loadAllData();
-  }, [targetLang]);
+  }, [targetLang, originLang]);
 
   const loadAllData = async () => {
     await Promise.all([
@@ -222,7 +227,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     try {
       const [summary, words] = await Promise.all([
         getMasterySummary(targetLang),
-        getMasteryWords(stage, targetLang),
+        getMasteryWords(stage, targetLang, originLang),
       ]);
       setMasterySummary(summary);
       setMasteryWords(words);
@@ -238,7 +243,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     setSelectedDeck(deck);
     setLoadingDeckCards(true);
     try {
-      const cards = await getCardsByDeck(deck.id, targetLang, deck.difficulty_slice);
+      const cards = await getCardsByDeck(deck.id, targetLang, deck.difficulty_slice, originLang);
       setDeckCards(cards);
     } catch (e) {
       console.warn('[Explore] Error loading deck cards:', e);
@@ -256,7 +261,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     // Instant UI update
     setLocallyQueuedWordIds((prev) => new Set(prev).add(frontLexemeId));
     try {
-      await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang);
+      await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang, originLang);
       // Refresh background stats without blocking
       getMasterySummary(targetLang).then(setMasterySummary);
       getThemesWithProgressiveDecks(targetLang).then(setThemes);
@@ -271,8 +276,8 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     if (!selectedDeck) return;
     setAddingAllDeck(true);
     try {
-      await garrisonEntireDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice);
-      const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice);
+      await garrisonEntireDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
+      const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
       setDeckCards(updatedCards);
       await loadDecksData();
       await loadDifficultyData();

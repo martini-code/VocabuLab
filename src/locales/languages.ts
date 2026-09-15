@@ -135,3 +135,16 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
 ];
 
 export const DEFAULT_LANGUAGE_CODE = 'en';
+
+export function getLanguageByCode(code: string): LanguageOption | undefined {
+  const normalized = code.toLowerCase();
+  return (
+    SUPPORTED_LANGUAGES.find((l) => l.code.toLowerCase() === normalized) ||
+    SUPPORTED_LANGUAGES.find((l) => l.code.toLowerCase().startsWith(normalized.split('-')[0]))
+  );
+}
+
+export function getLanguageByName(name: string): LanguageOption | undefined {
+  const normalized = name.toLowerCase();
+  return SUPPORTED_LANGUAGES.find((l) => l.name.toLowerCase() === normalized);
+}

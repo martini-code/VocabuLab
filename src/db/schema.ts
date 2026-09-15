@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS User_Cards (
     id TEXT PRIMARY KEY,
     card_id INTEGER NOT NULL,
     target_lang TEXT NOT NULL,
+    origin_lang TEXT DEFAULT 'en',
     due_date DATETIME NOT NULL,
     state INTEGER NOT NULL,
     stability REAL NOT NULL,
@@ -41,11 +42,41 @@ CREATE TABLE IF NOT EXISTS Settings (
     updated_at DATETIME NOT NULL
 );
 
+-- Downloaded Language Packages Registry (Disk Optimization)
+CREATE TABLE IF NOT EXISTS Downloaded_Languages (
+    code TEXT PRIMARY KEY,
+    lang_name TEXT NOT NULL,
+    downloaded_at DATETIME NOT NULL,
+    card_count INTEGER DEFAULT 0,
+    size_bytes INTEGER DEFAULT 0
+);
+
+-- Downloaded Dictionary Translations (Isolated from User Study Data)
+CREATE TABLE IF NOT EXISTS Downloaded_Card_Translations (
+    card_id INTEGER NOT NULL,
+    lang_name TEXT NOT NULL,
+    translation TEXT NOT NULL,
+    source TEXT,
+    role TEXT,
+    PRIMARY KEY (card_id, lang_name)
+);
+
+-- Downloaded Dictionary Definitions (Isolated from User Study Data)
+CREATE TABLE IF NOT EXISTS Downloaded_Card_Definitions (
+    card_id INTEGER NOT NULL,
+    lang_name TEXT NOT NULL,
+    definition TEXT NOT NULL,
+    source TEXT,
+    PRIMARY KEY (card_id, lang_name)
+);
+
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_user_cards_due ON User_Cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_user_cards_card_id ON User_Cards(card_id);
 CREATE INDEX IF NOT EXISTS idx_user_cards_lang ON User_Cards(target_lang);
 CREATE INDEX IF NOT EXISTS idx_review_logs_reviewed_at ON Review_Logs(reviewed_at);
+CREATE INDEX IF NOT EXISTS idx_dl_trans_lang ON Downloaded_Card_Translations(lang_name);
+CREATE INDEX IF NOT EXISTS idx_dl_defs_lang ON Downloaded_Card_Definitions(lang_name);
 `;
 
 export const SCHEMA_SQL = `

@@ -200,3 +200,17 @@ export interface MasterySummary {
   available_count: number;
   total_library_count: number;
 }
+
+export interface DownloadedLanguage {
+  code: string;
+  lang_name: string;
+  downloaded_at: string;
+  card_count: number;
+  size_bytes: number;
+}
+
+export interface LanguagePairSettings {
+  origin_lang: string; // e.g. 'es' (App UI & Back of card)
+  destination_lang: string; // e.g. 'en' (Target study language on front of card)
+}
+
