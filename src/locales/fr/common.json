@@ -206,96 +206,96 @@
       "name": "Membres"
     },
     "2": {
-      "theme": "Animals",
-      "name": "Domestic Animals"
+      "theme": "Animaux",
+      "name": "Animaux Domestiques"
     },
     "3": {
-      "theme": "Animals",
-      "name": "Insects"
+      "theme": "Animaux",
+      "name": "Insectes"
     },
     "4": {
-      "theme": "Animals",
-      "name": "Farm Animals"
+      "theme": "Animaux",
+      "name": "Animaux De La Ferme"
     },
     "5": {
-      "theme": "Basics",
-      "name": "Formal Greetings"
+      "theme": "Bases",
+      "name": "Salutations Formelles"
     },
     "6": {
-      "theme": "Vehicles",
-      "name": "Air Vehicles"
+      "theme": "Véhicules",
+      "name": "Véhicules Aériens"
     },
     "7": {
-      "theme": "Basics",
-      "name": "Casual Greetings"
+      "theme": "Bases",
+      "name": "Salutations Informelles"
     },
     "8": {
-      "theme": "Vehicles",
-      "name": "Land Vehicles"
+      "theme": "Véhicules",
+      "name": "Véhicules Terrestres"
     },
     "9": {
-      "theme": "Vehicles",
-      "name": "Water Vehicles"
+      "theme": "Véhicules",
+      "name": "Véhicules Aquatiques"
     },
     "10": {
-      "theme": "Electronics",
-      "name": "Engineering"
+      "theme": "Électronique",
+      "name": "Ingénierie"
     },
     "11": {
-      "theme": "Electronics",
-      "name": "House Appliances"
+      "theme": "Électronique",
+      "name": "Appareils Électroménagers"
     },
     "12": {
-      "theme": "Basics",
-      "name": "Formal Farewells"
+      "theme": "Bases",
+      "name": "Adieux Formels"
     },
     "13": {
-      "theme": "Biology",
-      "name": "Cell Cycle"
+      "theme": "Biologie",
+      "name": "Cycle Cellulaire"
     },
     "14": {
-      "theme": "Basics",
-      "name": "Casual Farewells"
+      "theme": "Bases",
+      "name": "Adieux Informels"
     },
     "15": {
-      "theme": "Math",
-      "name": "Basic Math Operations"
+      "theme": "Mathématiques",
+      "name": "Opérations Mathématiques De Base"
     },
     "16": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (0-10)"
+      "theme": "Nombres",
+      "name": "Nombres Cardinaux (0-10)"
     },
     "17": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (11-19)"
+      "theme": "Nombres",
+      "name": "Nombres Cardinaux (11-19)"
     },
     "18": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (20-29)"
+      "theme": "Nombres",
+      "name": "Nombres Cardinaux (20-29)"
     },
     "19": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (30-90)"
+      "theme": "Nombres",
+      "name": "Nombres Cardinaux (30-90)"
     },
     "20": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (100+)"
+      "theme": "Nombres",
+      "name": "Nombres Cardinaux (100+)"
     },
     "21": {
-      "theme": "Home",
-      "name": "Home Spaces"
+      "theme": "Maison",
+      "name": "Espaces De La Maison"
     },
     "22": {
-      "theme": "Home",
-      "name": "Furniture"
+      "theme": "Maison",
+      "name": "Meubles"
     },
     "23": {
       "theme": "Construction",
-      "name": "Hand Tools"
+      "name": "Outils Manuels"
     },
     "24": {
-      "theme": "Math",
-      "name": "Number Properties"
+      "theme": "Mathématiques",
+      "name": "Propriétés Des Nombres"
     }
   },
   "db_cards": {

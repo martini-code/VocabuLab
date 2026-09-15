@@ -638,9 +638,8 @@ export async function getThemesWithProgressiveDecks(
   );
   const unlockedSet = new Set(unlockedRows.map((r) => r.deck_id));
 
-  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const allDeckIds = decksRows.map((d) => d.deck_id);
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
 
   // Group decks by category
   const categoriesMap = new Map<string, DeckWithProgress[]>();
@@ -768,7 +767,7 @@ export async function getAllDecksOrderedByDifficulty(
   `);
 
   const allDeckIds = Array.from(new Set(sliceRows.map((s) => s.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
 
   // Fetch all user cards for this language
   const userCards = await userDb.getAllAsync<{
@@ -1376,7 +1375,7 @@ export async function getWordsByDifficulty(
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
 
   const allDeckIds = Array.from(new Set(rows.map((r) => r.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
 
   return rows.map((r) => {
     const uc = ucMap.get(r.card_id);
@@ -1628,7 +1627,7 @@ export async function getMasteryWords(
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
 
   const allDeckIds = Array.from(new Set(allCards.map((c) => c.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
 
   const items: MasteryWordItem[] = [];
 
@@ -1858,9 +1857,9 @@ export const searchLexemesFTS = searchLexicon;
 /**
  * Returns domains hierarchy for DomainBrowser.
  */
-export async function getDomainsHierarchy(originLang?: string): Promise<Domain[]> {
+export async function getDomainsHierarchy(targetLang?: string): Promise<Domain[]> {
   const staticDb = await getStaticDb();
-  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  const effectiveTarget = targetLang || (await getLanguagePairSettings()).destination_lang;
 
   const rows = await staticDb.getAllAsync<{
     deck_id: number;
@@ -1871,7 +1870,7 @@ export async function getDomainsHierarchy(originLang?: string): Promise<Domain[]
   }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
 
   const allDeckIds = rows.map((r) => r.deck_id);
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveOrigin);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveTarget);
 
   const categories = Array.from(new Set(rows.map((r) => r.category)));
   const domains: Domain[] = [];

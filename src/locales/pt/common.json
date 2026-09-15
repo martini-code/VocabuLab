@@ -206,96 +206,96 @@
       "name": "Membros"
     },
     "2": {
-      "theme": "Animals",
-      "name": "Domestic Animals"
+      "theme": "Animais",
+      "name": "Animais Domésticos"
     },
     "3": {
-      "theme": "Animals",
-      "name": "Insects"
+      "theme": "Animais",
+      "name": "Insetos"
     },
     "4": {
-      "theme": "Animals",
-      "name": "Farm Animals"
+      "theme": "Animais",
+      "name": "Animais De Fazenda"
     },
     "5": {
-      "theme": "Basics",
-      "name": "Formal Greetings"
+      "theme": "Conceitos Básicos",
+      "name": "Saudações Formais"
     },
     "6": {
-      "theme": "Vehicles",
-      "name": "Air Vehicles"
+      "theme": "Veículos",
+      "name": "Veículos Aéreos"
     },
     "7": {
-      "theme": "Basics",
-      "name": "Casual Greetings"
+      "theme": "Conceitos Básicos",
+      "name": "Saudações Informais"
     },
     "8": {
-      "theme": "Vehicles",
-      "name": "Land Vehicles"
+      "theme": "Veículos",
+      "name": "Veículos Terrestres"
     },
     "9": {
-      "theme": "Vehicles",
-      "name": "Water Vehicles"
+      "theme": "Veículos",
+      "name": "Veículos Aquáticos"
     },
     "10": {
-      "theme": "Electronics",
-      "name": "Engineering"
+      "theme": "Eletrônica",
+      "name": "Engenharia"
     },
     "11": {
-      "theme": "Electronics",
-      "name": "House Appliances"
+      "theme": "Eletrônica",
+      "name": "Eletrodomésticos"
     },
     "12": {
-      "theme": "Basics",
-      "name": "Formal Farewells"
+      "theme": "Conceitos Básicos",
+      "name": "Despedidas Formais"
     },
     "13": {
-      "theme": "Biology",
-      "name": "Cell Cycle"
+      "theme": "Biologia",
+      "name": "Ciclo Celular"
     },
     "14": {
-      "theme": "Basics",
-      "name": "Casual Farewells"
+      "theme": "Conceitos Básicos",
+      "name": "Despedidas Informais"
     },
     "15": {
-      "theme": "Math",
-      "name": "Basic Math Operations"
+      "theme": "Matemática",
+      "name": "Operações Matemáticas Básicas"
     },
     "16": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (0-10)"
+      "theme": "Números",
+      "name": "Números Cardinais (0-10)"
     },
     "17": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (11-19)"
+      "theme": "Números",
+      "name": "Números Cardinais (11-19)"
     },
     "18": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (20-29)"
+      "theme": "Números",
+      "name": "Números Cardinais (20-29)"
     },
     "19": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (30-90)"
+      "theme": "Números",
+      "name": "Números Cardinais (30-90)"
     },
     "20": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (100+)"
+      "theme": "Números",
+      "name": "Números Cardinais (100+)"
     },
     "21": {
-      "theme": "Home",
-      "name": "Home Spaces"
+      "theme": "Casa",
+      "name": "Cômodos"
     },
     "22": {
-      "theme": "Home",
-      "name": "Furniture"
+      "theme": "Casa",
+      "name": "Móveis"
     },
     "23": {
-      "theme": "Construction",
-      "name": "Hand Tools"
+      "theme": "Construção",
+      "name": "Ferramentas Manuais"
     },
     "24": {
-      "theme": "Math",
-      "name": "Number Properties"
+      "theme": "Matemática",
+      "name": "Propriedades Numéricas"
     }
   },
   "db_cards": {
