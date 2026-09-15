@@ -74,12 +74,14 @@ import {
 import { DifficultyProgressionMap } from './DifficultyProgressionMap';
 import { speakWord } from '../../utils/tts';
 import { useTranslation } from 'react-i18next';
+import { tokenWallet } from '../../services/tokenWallet';
 
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
   onStartReview?: () => void;
   targetLang?: string;
   originLang?: string;
+  onInsufficientTokens?: (requiredWords: number) => void;
 }
 
 type MainTab = 'decks' | 'difficulty' | 'mastery';
@@ -159,6 +161,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   onStartReview,
   targetLang: propTargetLang,
   originLang: propOriginLang,
+  onInsufficientTokens,
 }) => {
   const { t, i18n } = useTranslation();
   const targetLang = propTargetLang || 'es';
@@ -258,6 +261,13 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     backLexemeId: number,
     conceptId: string
   ) => {
+    const canLearn = await tokenWallet.canLearnWords(1);
+    if (!canLearn) {
+      onInsufficientTokens?.(1);
+      return;
+    }
+    await tokenWallet.consumeWordAllowance(1);
+
     // Instant UI update
     setLocallyQueuedWordIds((prev) => new Set(prev).add(frontLexemeId));
     try {
@@ -274,8 +284,20 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   // Add all unqueued words in current deck
   const handleAddAllDeck = async () => {
     if (!selectedDeck) return;
+    const unqueuedCards = deckCards.filter(
+      (c) => !c.is_garrisoned && !locallyQueuedWordIds.has(c.front_lexeme_id)
+    ).length;
+    if (unqueuedCards === 0) return;
+
+    const canLearn = await tokenWallet.canLearnWords(unqueuedCards);
+    if (!canLearn) {
+      onInsufficientTokens?.(unqueuedCards);
+      return;
+    }
+
     setAddingAllDeck(true);
     try {
+      await tokenWallet.consumeWordAllowance(unqueuedCards);
       await garrisonEntireDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
       const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
       setDeckCards(updatedCards);
@@ -291,8 +313,15 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   // Adopt available words from mastery tab
   const handleAdoptAvailable = async (limit = 10) => {
+    const canLearn = await tokenWallet.canLearnWords(limit);
+    if (!canLearn) {
+      onInsufficientTokens?.(limit);
+      return;
+    }
+
     setAdoptingAvailable(true);
     try {
+      await tokenWallet.consumeWordAllowance(limit);
       await addAvailableWordsToQueue(limit, targetLang);
       await loadMasteryData('available');
       await loadDecksData();
@@ -632,7 +661,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   <>
                     <PlusCircle size={16} color="#FFFFFF" />
                     <Text style={styles.adoptAvailableBtnText}>
-                      Adopt Next 10 Words into Queue
+                      {t('explore.learn_next_words', { count: 10, defaultValue: 'Learn Next 10 Words' })}
                     </Text>
                   </>
                 )}

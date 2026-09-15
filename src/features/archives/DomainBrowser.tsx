@@ -15,15 +15,18 @@ import { speakWord } from '../../utils/tts';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { tokenWallet } from '../../services/tokenWallet';
 
 const CEFR_LEVELS: (CEFRLevel | 'ALL')[] = ['ALL', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 interface DomainBrowserProps {
   onStartTraining: () => void;
+  onInsufficientTokens?: (requiredWords: number) => void;
 }
 
 export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   onStartTraining,
+  onInsufficientTokens,
 }) => {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
@@ -62,6 +65,12 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   };
 
   const handleGarrison = async (lexemeId: number) => {
+    const canLearn = await tokenWallet.canLearnWords(1);
+    if (!canLearn) {
+      onInsufficientTokens?.(1);
+      return;
+    }
+    await tokenWallet.consumeWordAllowance(1);
     // Pair with English counterpart (mock/demo pair for immediate deck addition)
     await garrisonCard(lexemeId, 1);
     setGarrisonedIds((prev) => new Set(prev).add(lexemeId));
@@ -192,7 +201,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                   <Text style={styles.audioText}>Listen</Text>
                 </TouchableOpacity>
 
-                {/* Garrison Button */}
+                {/* Learn Button */}
                 <TouchableOpacity
                   disabled={isGarrisoned}
                   style={[
@@ -205,14 +214,14 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Check size={14} color="#166534" style={{ marginRight: 4 }} />
                       <Text style={[styles.garrisonButtonText, styles.garrisonButtonTextDone]}>
-                        Garrisoned
+                        Learned
                       </Text>
                     </View>
                   ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
                       <Text style={styles.garrisonButtonText}>
-                        Garrison Card
+                        Learn Word
                       </Text>
                     </View>
                   )}

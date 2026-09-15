@@ -11,16 +11,40 @@
 // -------------------------------------------------------------------
 
 import { Platform } from 'react-native';
+import * as NativeSecureStore from 'expo-secure-store';
 
-// Expo SecureStore – works on iOS/Android, web fallback uses AsyncStorage
-let SecureStore: any;
-if (Platform.OS === 'web') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  SecureStore = require('@react-native-async-storage/async-storage');
-} else {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  SecureStore = require('expo-secure-store');
-}
+const inMemoryStorage: Record<string, string> = {};
+
+const SecureStore = {
+  getItemAsync: async (key: string): Promise<string | null> => {
+    try {
+      if (Platform.OS === 'web') {
+        if (typeof localStorage !== 'undefined') {
+          return localStorage.getItem(key);
+        }
+        return inMemoryStorage[key] ?? null;
+      }
+      return await NativeSecureStore.getItemAsync(key);
+    } catch {
+      return inMemoryStorage[key] ?? null;
+    }
+  },
+  setItemAsync: async (key: string, val: string): Promise<void> => {
+    try {
+      if (Platform.OS === 'web') {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(key, val);
+        } else {
+          inMemoryStorage[key] = val;
+        }
+        return;
+      }
+      await NativeSecureStore.setItemAsync(key, val);
+    } catch {
+      inMemoryStorage[key] = val;
+    }
+  },
+};
 
 /**
  * Keys used in SecureStore / AsyncStorage.

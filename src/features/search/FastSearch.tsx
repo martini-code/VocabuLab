@@ -13,8 +13,13 @@ import { speakWord } from '../../utils/tts';
 import { WizardOwlMascot } from '../../components/mascot/Mascots';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { tokenWallet } from '../../services/tokenWallet';
 
-export const FastSearch: React.FC = () => {
+interface FastSearchProps {
+  onInsufficientTokens?: (requiredWords: number) => void;
+}
+
+export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [garrisonedSet, setGarrisonedSet] = useState<Set<number>>(new Set());
@@ -29,7 +34,13 @@ export const FastSearch: React.FC = () => {
     setResults(res);
   };
 
-  const handleGarrison = async (item: any) => {
+  const handleLearn = async (item: any) => {
+    const canLearn = await tokenWallet.canLearnWords(1);
+    if (!canLearn) {
+      onInsufficientTokens?.(1);
+      return;
+    }
+    await tokenWallet.consumeWordAllowance(1);
     await garrisonCard(item.id, item.id);
     setGarrisonedSet((prev) => new Set(prev).add(item.id));
   };
@@ -113,17 +124,17 @@ export const FastSearch: React.FC = () => {
                 <TouchableOpacity
                   disabled={isGarrisoned}
                   style={[styles.garrisonBtn, isGarrisoned && styles.garrisonBtnDone]}
-                  onPress={() => handleGarrison(item)}
+                  onPress={() => handleLearn(item)}
                 >
                   {isGarrisoned ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Check size={14} color="#166534" style={{ marginRight: 4 }} />
-                      <Text style={styles.garrisonBtnText}>In Fortress Deck</Text>
+                      <Text style={styles.garrisonBtnText}>Learned</Text>
                     </View>
                   ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                      <Text style={styles.garrisonBtnText}>Garrison Card</Text>
+                      <Text style={styles.garrisonBtnText}>Learn Word</Text>
                     </View>
                   )}
                 </TouchableOpacity>

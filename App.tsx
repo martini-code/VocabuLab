@@ -22,6 +22,11 @@ import { getDeviceLanguage, changeAppLanguage } from './src/locales';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
 import { FullScreenAdModal } from './src/components/ads/FullScreenAdModal';
+import { TokenWalletModal } from './src/components/tokens/TokenWalletModal';
+import { InsufficientTokensModal } from './src/components/tokens/InsufficientTokensModal';
+import { RewardedAdModal } from './src/components/ads/RewardedAdModal';
+import { tokenWallet, TokenWalletState } from './src/services/tokenWallet';
+import { adMobService } from './src/services/adMobService';
 import { iapService } from './src/services/iapService';
 import { adManager } from './src/services/adManager';
 import { srsManager } from './src/srs';
@@ -68,6 +73,12 @@ export default function App() {
   const [fullScreenAdOpen, setFullScreenAdOpen] = useState(false);
   const [isAdFree, setIsAdFree] = useState(false);
   const [activeAlgoName, setActiveAlgoName] = useState(srsManager.getActiveAlgorithm().meta.name);
+  const [tokenWalletState, setTokenWalletState] = useState<TokenWalletState | null>(null);
+  const [tokenWalletModalOpen, setTokenWalletModalOpen] = useState(false);
+  const [insufficientModalOpen, setInsufficientModalOpen] = useState(false);
+  const [insufficientRequiredWords, setInsufficientRequiredWords] = useState(1);
+  const [rewardedAdModalOpen, setRewardedAdModalOpen] = useState(false);
+  const [rewardedAdOnComplete, setRewardedAdOnComplete] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     bootstrapKeep();
@@ -79,14 +90,29 @@ export default function App() {
       setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
     });
 
+    tokenWallet.initTokenWallet().then(() => {
+      tokenWallet.getWalletStatus().then(setTokenWalletState);
+    });
+    const unsubWallet = tokenWallet.subscribe((state) => {
+      setTokenWalletState(state);
+    });
+
+    adMobService.setFallbackModalHandler((onComplete) => {
+      setRewardedAdOnComplete(() => onComplete);
+      setRewardedAdModalOpen(true);
+    });
+
     return () => {
       iapService.disconnect();
       unsubSRS();
+      unsubWallet();
     };
   }, []);
 
   const bootstrapKeep = async () => {
     try {
+      // Preload AdMob rewarded ads in background immediately
+      adMobService.preload();
       setStatusMessage('Checking kingdom scrolls...');
       await syncDatabaseFromR2();
 
@@ -121,6 +147,11 @@ export default function App() {
     }
   };
 
+  const handleInsufficientTokens = (requiredWords: number) => {
+    setInsufficientRequiredWords(requiredWords);
+    setInsufficientModalOpen(true);
+  };
+
   if (!isVaultReady) {
     return (
       <SafeAreaProvider>
@@ -153,6 +184,18 @@ export default function App() {
           <Shield size={16} color="#0D9488" />
           <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
         </View>
+
+        {/* Token Allowance Pill (Tapping opens Token Treasury Modal) */}
+        <TouchableOpacity
+          style={[styles.statPill, styles.tokenPill]}
+          onPress={() => setTokenWalletModalOpen(true)}
+          activeOpacity={0.8}
+        >
+          <Coins size={16} color="#D97706" />
+          <Text style={styles.tokenPillText}>
+            {tokenWalletState ? tokenWalletState.totalWordsAllowance : 0}
+          </Text>
+        </TouchableOpacity>
 
         {/* Language Selector Pill */}
         <TouchableOpacity
@@ -224,9 +267,12 @@ export default function App() {
             }}
             targetLang={languagePair.destination_lang}
             originLang={languagePair.origin_lang}
+            onInsufficientTokens={handleInsufficientTokens}
           />
         )}
-        {activeTab === 'search' && <FastSearch />}
+        {activeTab === 'search' && (
+          <FastSearch onInsufficientTokens={handleInsufficientTokens} />
+        )}
         {activeTab === 'chronicles' && <ProgressScreen />}
         {activeTab === 'treasury' && (
           <View style={styles.treasuryTabContainer}>
@@ -431,6 +477,36 @@ export default function App() {
         onClose={() => setFullScreenAdOpen(false)}
         onOpenAdFreeModal={() => setAdFreeModalOpen(true)}
       />
+
+      {/* Royal Token Wallet Modal */}
+      <TokenWalletModal
+        visible={tokenWalletModalOpen}
+        onClose={() => setTokenWalletModalOpen(false)}
+        onOpenPlusModal={() => setAdFreeModalOpen(true)}
+      />
+
+      {/* Insufficient Tokens Warning / Ad CTA Modal */}
+      <InsufficientTokensModal
+        visible={insufficientModalOpen}
+        onClose={() => setInsufficientModalOpen(false)}
+        onOpenPlusModal={() => setAdFreeModalOpen(true)}
+        requiredWords={insufficientRequiredWords}
+        onSuccessLearn={() => {
+          refreshStats();
+        }}
+      />
+
+      {/* Rewarded Ad Modal (Fallback & Dev/Web Simulation) */}
+      <RewardedAdModal
+        visible={rewardedAdModalOpen}
+        onClose={() => setRewardedAdModalOpen(false)}
+        onReward={() => {
+          if (rewardedAdOnComplete) {
+            rewardedAdOnComplete();
+            setRewardedAdOnComplete(null);
+          }
+        }}
+      />
     </SafeAreaView>
   </SafeAreaProvider>
 );
@@ -485,6 +561,16 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
+  },
+  tokenPill: {
+    borderColor: '#FDE68A',
+    backgroundColor: '#FEF3C7',
+    gap: 4,
+  },
+  tokenPillText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#B45309',
   },
   proPill: {
     borderColor: '#F59E0B',
