@@ -853,11 +853,12 @@ export async function getAllDecksOrderedByDifficulty(
  * Parses deckId or sliceId (e.g. "diff_2_1" -> { realDeckId: 2, difficultySlice: 1 })
  */
 function parseDeckIdentifier(
-  deckIdOrSliceId: string,
+  deckIdOrSliceId: string | number,
   explicitDifficultySlice?: number
 ): { realDeckId: number; difficultySlice?: number } {
-  if (deckIdOrSliceId.startsWith('diff_')) {
-    const parts = deckIdOrSliceId.split('_');
+  const str = String(deckIdOrSliceId ?? '1');
+  if (str.startsWith('diff_')) {
+    const parts = str.split('_');
     const dId = parseInt(parts[1], 10);
     const diff = parseInt(parts[2], 10);
     return {
@@ -866,7 +867,7 @@ function parseDeckIdentifier(
     };
   }
   return {
-    realDeckId: parseInt(deckIdOrSliceId, 10),
+    realDeckId: parseInt(str, 10) || 1,
     difficultySlice: explicitDifficultySlice,
   };
 }
@@ -878,7 +879,7 @@ function parseDeckIdentifier(
  * Returns cards for a deck. If difficultySlice is present, filters strictly to that difficulty tier.
  */
 export async function getCardsByDeck(
-  deckIdOrSliceId: string,
+  deckIdOrSliceId: string | number,
   targetLang = 'es',
   difficultySlice?: number,
   originLang?: string
@@ -972,7 +973,7 @@ export async function getCardsByDeck(
  * Garrisons all unqueued cards in a deck (or difficulty slice) into User_Cards in user_vault.sqlite.
  */
 export async function garrisonEntireDeck(
-  deckIdOrSliceId: string,
+  deckIdOrSliceId: string | number,
   targetLang = 'es',
   difficultySlice?: number,
   originLang?: string
@@ -1044,7 +1045,7 @@ export async function removeWordFromQueue(cardId: string): Promise<void> {
  * Returns cards currently due for spaced repetition review.
  */
 export async function getDueCards(
-  filterDeckId?: string,
+  filterDeckId?: string | number,
   targetLang = 'es',
   originLang?: string
 ): Promise<CardWithDetails[]> {
@@ -1182,7 +1183,7 @@ export async function getDueCards(
  * Returns cards for review in a specific deck (even if not strictly due, for practice mode).
  */
 export async function getDeckCardsForReview(
-  deckIdOrSliceId: string,
+  deckIdOrSliceId: string | number,
   targetLang = 'es',
   originLang?: string
 ): Promise<CardWithDetails[]> {

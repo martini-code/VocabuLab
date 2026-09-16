@@ -41,6 +41,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [cards, setCards] = useState<CardWithDetails[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
@@ -53,56 +54,71 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
   const loadCards = async () => {
     setLoading(true);
-    let due: CardWithDetails[] = [];
-    if (deckFilter) {
-      due = await getDueCards(deckFilter.id, targetLang, originLang);
-      if (due.length === 0) {
-        due = await getDeckCardsForReview(deckFilter.id, targetLang, originLang);
+    try {
+      let due: CardWithDetails[] = [];
+      if (deckFilter) {
+        due = await getDueCards(deckFilter.id, targetLang, originLang);
+        if (due.length === 0) {
+          due = await getDeckCardsForReview(deckFilter.id, targetLang, originLang);
+        }
+      } else {
+        due = await getDueCards(undefined, targetLang, originLang);
       }
-    } else {
-      due = await getDueCards(undefined, targetLang, originLang);
+      setCards(due);
+    } catch (err) {
+      console.warn('[ReviewSession] Error loading cards:', err);
+      setCards([]);
+    } finally {
+      setCurrentIndex(0);
+      setIsFlipped(false);
+      setLoading(false);
     }
-    setCards(due);
-    setCurrentIndex(0);
-    setIsFlipped(false);
-    setLoading(false);
   };
 
   const currentCard = cards[currentIndex];
 
   const handleFlip = () => {
-    if (!isFlipped) {
-      setIsFlipped(true);
-      setMascotMood('thinking');
-      setMascotQuote("Inspect the ancient meaning and grade thy memory!");
-    }
+    setIsFlipped((prev) => {
+      const next = !prev;
+      if (next) {
+        setMascotMood('thinking');
+        setMascotQuote("Inspect the ancient meaning and grade thy memory!");
+      }
+      return next;
+    });
   };
 
   const handleGrade = async (rating: Grade) => {
-    if (!currentCard) return;
+    if (!currentCard || isGrading) return;
+    setIsGrading(true);
 
-    // React with Mascot
-    if (rating === Rating.Again) {
-      setMascotMood('confused');
-      setMascotQuote("A minor stumble! We shall reinforce this scroll soon.");
-    } else if (rating === Rating.Hard) {
-      setMascotMood('idle');
-      setMascotQuote("Grit and steel! It is holding in memory.");
-    } else if (rating === Rating.Good) {
-      setMascotMood('happy');
-      setMascotQuote("Well struck, brave knight!");
-    } else if (rating === Rating.Easy) {
-      setMascotMood('cheering');
-      setMascotQuote("Huzzah! Pure mastery!");
+    try {
+      // React with Mascot
+      if (rating === Rating.Again) {
+        setMascotMood('confused');
+        setMascotQuote("A minor stumble! We shall reinforce this scroll soon.");
+      } else if (rating === Rating.Hard) {
+        setMascotMood('idle');
+        setMascotQuote("Grit and steel! It is holding in memory.");
+      } else if (rating === Rating.Good) {
+        setMascotMood('happy');
+        setMascotQuote("Well struck, brave knight!");
+      } else if (rating === Rating.Easy) {
+        setMascotMood('cheering');
+        setMascotQuote("Huzzah! Pure mastery!");
+      }
+
+      const updatePayload = gradeCardFSRS(currentCard, rating);
+      await updateCardFSRS(currentCard.id, updatePayload);
+      await logReviewEvent(currentCard.id, rating);
+      if (onCardReviewed) onCardReviewed();
+    } catch (err) {
+      console.warn('[ReviewSession] Error grading card:', err);
     }
-
-    const updatePayload = gradeCardFSRS(currentCard, rating);
-    await updateCardFSRS(currentCard.id, updatePayload);
-    await logReviewEvent(currentCard.id, rating);
-    if (onCardReviewed) onCardReviewed();
 
     // Advance to next card
     setTimeout(() => {
+      setIsGrading(false);
       if (currentIndex + 1 < cards.length) {
         setCurrentIndex((prev) => prev + 1);
         setIsFlipped(false);
@@ -243,7 +259,10 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             {/* Offline TTS Horn Button */}
             <TouchableOpacity
               style={styles.ttsButton}
-              onPress={() => speakWord(currentCard.front_term, currentCard.front_lang)}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                speakWord(currentCard.front_term, currentCard.front_lang);
+              }}
             >
               <Volume2 size={16} color="#78350F" />
               <Text style={styles.ttsLabel}>Pronounce</Text>
@@ -275,6 +294,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="AGAIN"
               subtitle={reviewOptions[0]?.intervalText || '10m'}
               color="crimson"
+              disabled={isGrading}
               onPress={() => handleGrade(Rating.Again)}
               style={styles.gradeButton}
             />
@@ -284,6 +304,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="HARD"
               subtitle={reviewOptions[1]?.intervalText || '1d'}
               color="amber"
+              disabled={isGrading}
               onPress={() => handleGrade(Rating.Hard)}
               style={styles.gradeButton}
             />
@@ -293,6 +314,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="GOOD"
               subtitle={reviewOptions[2]?.intervalText || '4d'}
               color="green"
+              disabled={isGrading}
               onPress={() => handleGrade(Rating.Good)}
               style={styles.gradeButton}
             />
@@ -302,6 +324,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="EASY"
               subtitle={reviewOptions[3]?.intervalText || '12d'}
               color="blue"
+              disabled={isGrading}
               onPress={() => handleGrade(Rating.Easy)}
               style={styles.gradeButton}
             />

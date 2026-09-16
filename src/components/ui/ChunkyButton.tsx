@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
+import React from 'react';
+import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
 
 export type ButtonColor = 'green' | 'blue' | 'crimson' | 'amber' | 'wood' | 'slate';
 
@@ -66,29 +66,25 @@ export const ChunkyButton: React.FC<ChunkyButtonProps> = ({
   textStyle,
   icon,
 }) => {
-  const [pressed, setPressed] = useState(false);
   const palette = COLOR_MAP[color];
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
+    <Pressable
       disabled={disabled}
       onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
-      style={[
+      style={({ pressed }) => [
         styles.base,
         {
           backgroundColor: palette.bg,
           borderBottomColor: palette.border,
-          borderBottomWidth: pressed ? 1 : 5,
-          transform: [{ translateY: pressed ? 4 : 0 }],
+          borderBottomWidth: pressed ? 2 : 5,
+          transform: [{ translateY: pressed ? 3 : 0 }],
           opacity: disabled ? 0.5 : 1,
         },
         style,
       ]}
     >
-      <View style={styles.contentRow}>
+      <View style={styles.contentRow} pointerEvents="none">
         {icon ? <View style={styles.iconContainer}>{icon}</View> : null}
         <View style={styles.textColumn}>
           <Text style={[styles.title, { color: palette.text }, textStyle]}>{title}</Text>
@@ -97,7 +93,7 @@ export const ChunkyButton: React.FC<ChunkyButtonProps> = ({
           ) : null}
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

@@ -6,25 +6,32 @@ const f = fsrs({
   request_retention: 0.9, // 90% optimal target retention
 });
 
+function parseDateSafe(d?: string | Date | null): Date {
+  if (!d) return new Date();
+  const date = typeof d === 'string' ? new Date(d) : d;
+  return isNaN(date.getTime()) ? new Date() : date;
+}
+
 /**
  * Converts a SQLite UserCard entity to ts-fsrs internal Card model.
  */
 function toFSRSCard(card: UserCard): FSRSCard {
   return {
-    due: new Date(card.due_date),
-    stability: card.stability || 0,
-    difficulty: card.difficulty || 0,
+    due: parseDateSafe(card.due_date),
+    stability: typeof card.stability === 'number' && !isNaN(card.stability) ? card.stability : 0,
+    difficulty: typeof card.difficulty === 'number' && !isNaN(card.difficulty) ? card.difficulty : 0,
     elapsed_days: card.elapsed_days || 0,
     scheduled_days: card.scheduled_days || 0,
     learning_steps: 0,
     reps: card.reps || 0,
     lapses: card.lapses || 0,
     state: (card.state as State) ?? State.New,
-    last_review: new Date(card.updated_at),
+    last_review: parseDateSafe(card.updated_at),
   };
 }
 
 function formatInterval(due: Date, now: Date): string {
+  if (!due || isNaN(due.getTime())) return '10m';
   const diffMs = due.getTime() - now.getTime();
   const diffMinutes = Math.round(diffMs / (1000 * 60));
   const diffHours = Math.round(diffMs / (1000 * 60 * 60));
