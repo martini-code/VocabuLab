@@ -24,7 +24,8 @@ export interface DeckWithProgress {
   cefr_level: string;
   icon_name: string;
   card_count: number;
-  garrisoned_count: number;
+  queued_count: number;
+  garrisoned_count?: number;
   mastered_count: number;
   is_pro: boolean;
   is_locked?: boolean;
@@ -52,7 +53,8 @@ export interface DeckCardDetail {
   back_lexeme_id: number;
   back_term: string;
   back_lang: string;
-  is_garrisoned: boolean;
+  is_queued: boolean;
+  is_garrisoned?: boolean;
   user_card_id?: string;
   stability?: number;
   reps?: number;

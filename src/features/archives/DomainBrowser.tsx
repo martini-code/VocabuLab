@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Castle, Scroll, Volume2, Check, Plus, Shield, TreePine, Swords, Coins, Key } from 'lucide-react-native';
 import { Domain, Lexeme, CEFRLevel } from '../../types';
-import { getDomainsHierarchy, getLexemesByDomain, garrisonCard } from '../../db/vault';
+import { getDomainsHierarchy, getLexemesByDomain, addCardToQueue } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
@@ -33,7 +33,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   const [selectedCefr, setSelectedCefr] = useState<CEFRLevel | 'ALL'>('ALL');
   const [lexemes, setLexemes] = useState<Lexeme[]>([]);
   const [loading, setLoading] = useState(true);
-  const [garrisonedIds, setGarrisonedIds] = useState<Set<number>>(new Set());
+  const [queuedIds, setQueuedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadDomains();
@@ -64,7 +64,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     setSelectedDomain(domain);
   };
 
-  const handleGarrison = useCallback(async (lexemeId: number) => {
+  const handleQueueWord = useCallback(async (lexemeId: number) => {
     const canLearn = await tokenWallet.canLearnWords(1);
     if (!canLearn) {
       onInsufficientTokens?.(1);
@@ -72,8 +72,8 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     }
     await tokenWallet.consumeWordAllowance(1);
     // Pair with English counterpart (mock/demo pair for immediate deck addition)
-    await garrisonCard(lexemeId, 1);
-    setGarrisonedIds((prev) => new Set(prev).add(lexemeId));
+    await addCardToQueue(lexemeId, 1);
+    setQueuedIds((prev) => new Set(prev).add(lexemeId));
   }, [onInsufficientTokens]);
 
   const handleSpeak = useCallback((term: string, language: string) => {
@@ -91,17 +91,17 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
 
   const renderLexemeItem = useCallback(
     ({ item }: { item: Lexeme }) => {
-      const isGarrisoned = garrisonedIds.has(item.id);
+      const isQueued = queuedIds.has(item.id);
       return (
         <DomainLexemeCard
           item={item}
-          isGarrisoned={isGarrisoned}
-          onGarrison={handleGarrison}
+          isQueued={isQueued}
+          onQueueWord={handleQueueWord}
           onSpeak={handleSpeak}
         />
       );
     },
-    [garrisonedIds, handleGarrison, handleSpeak]
+    [queuedIds, handleQueueWord, handleSpeak]
   );
 
   const lexemeKeyExtractor = useCallback((item: Lexeme) => item.id.toString(), []);
@@ -221,15 +221,15 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
 
 interface DomainLexemeCardProps {
   item: Lexeme;
-  isGarrisoned: boolean;
-  onGarrison: (lexemeId: number) => void;
+  isQueued: boolean;
+  onQueueWord: (lexemeId: number) => void;
   onSpeak: (term: string, language: string) => void;
 }
 
 const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
   item,
-  isGarrisoned,
-  onGarrison,
+  isQueued,
+  onQueueWord,
   onSpeak,
 }) => {
   return (
@@ -256,24 +256,24 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
 
         {/* Learn Button */}
         <TouchableOpacity
-          disabled={isGarrisoned}
+          disabled={isQueued}
           style={[
-            styles.garrisonButton,
-            isGarrisoned && styles.garrisonButtonDone,
+            styles.queueButton,
+            isQueued && styles.queueButtonDone,
           ]}
-          onPress={() => onGarrison(item.id)}
+          onPress={() => onQueueWord(item.id)}
         >
-          {isGarrisoned ? (
+          {isQueued ? (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Check size={14} color="#166534" style={{ marginRight: 4 }} />
-              <Text style={[styles.garrisonButtonText, styles.garrisonButtonTextDone]}>
+              <Text style={[styles.queueButtonText, styles.queueButtonTextDone]}>
                 Learned
               </Text>
             </View>
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-              <Text style={styles.garrisonButtonText}>
+              <Text style={styles.queueButtonText}>
                 Learn Word
               </Text>
             </View>
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#B45309',
   },
-  garrisonButton: {
+  queueButton: {
     backgroundColor: '#10B981',
     paddingHorizontal: 14,
     paddingVertical: 7,
@@ -463,16 +463,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: '#047857',
   },
-  garrisonButtonDone: {
+  queueButtonDone: {
     backgroundColor: '#94A3B8',
     borderBottomColor: '#64748B',
   },
-  garrisonButtonText: {
+  queueButtonText: {
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 12,
   },
-  garrisonButtonTextDone: {
+  queueButtonTextDone: {
     color: '#F1F5F9',
   },
   emptyBox: {

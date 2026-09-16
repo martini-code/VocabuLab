@@ -3,7 +3,7 @@ export const USER_SCHEMA_SQL = `
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
--- User Cards (The Garrison / Local FSRS State)
+-- User Cards (Local FSRS State)
 CREATE TABLE IF NOT EXISTS User_Cards (
     id TEXT PRIMARY KEY,
     card_id INTEGER NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS Concept_Lexeme (
     FOREIGN KEY(lexeme_id) REFERENCES Lexemes(id)
 );
 
--- User Cards (The Garrison / Local FSRS State)
+-- User Cards (Local FSRS State)
 CREATE TABLE IF NOT EXISTS User_Cards (
     id TEXT PRIMARY KEY,
     front_lexeme_id INTEGER NOT NULL,

@@ -590,7 +590,7 @@ export async function getThemesWithProgressiveDecks(
   const cardCountMap = new Map<number, number>();
   countRows.forEach((r) => cardCountMap.set(r.deck_id, r.card_count));
 
-  // 3. Fetch user garrison & mastery progress from user_vault.sqlite
+  // 3. Fetch user queue & mastery progress from user_vault.sqlite
   const userProgressRows = await userDb.getAllAsync<{
     card_id: number;
     state: number;
@@ -619,13 +619,13 @@ export async function getThemesWithProgressiveDecks(
   cardDeckRows.forEach((r) => cardToDeckMap.set(r.card_id, r.deck_id));
 
   // Tally user progress per deck
-  const deckGarrisonCount = new Map<number, number>();
+  const deckQueuedCount = new Map<number, number>();
   const deckMasteredCount = new Map<number, number>();
 
   for (const [cardId, uCard] of userProgressMap.entries()) {
     const deckId = cardToDeckMap.get(cardId);
     if (deckId !== undefined) {
-      deckGarrisonCount.set(deckId, (deckGarrisonCount.get(deckId) || 0) + 1);
+      deckQueuedCount.set(deckId, (deckQueuedCount.get(deckId) || 0) + 1);
       if (uCard.stability >= 21 || uCard.reps >= 3) {
         deckMasteredCount.set(deckId, (deckMasteredCount.get(deckId) || 0) + 1);
       }
@@ -646,7 +646,7 @@ export async function getThemesWithProgressiveDecks(
 
   for (const d of decksRows) {
     const totalCards = cardCountMap.get(d.deck_id) || 0;
-    const garrisoned = deckGarrisonCount.get(d.deck_id) || 0;
+    const queued = deckQueuedCount.get(d.deck_id) || 0;
     const mastered = deckMasteredCount.get(d.deck_id) || 0;
     const cefr = difficultyToCefr(d.difficulty);
 
@@ -672,7 +672,8 @@ export async function getThemesWithProgressiveDecks(
       cefr_level: cefr,
       icon_name: CATEGORY_ICONS[d.category] || 'book',
       card_count: totalCards,
-      garrisoned_count: garrisoned,
+      queued_count: queued,
+      garrisoned_count: queued,
       mastered_count: mastered,
       is_pro: false,
       is_locked: !isUnlocked,
@@ -791,7 +792,7 @@ export async function getAllDecksOrderedByDifficulty(
     difficulty: number;
   }>('SELECT card_id, deck_id, difficulty FROM cards;');
 
-  const sliceGarrisonCount = new Map<string, number>();
+  const sliceQueuedCount = new Map<string, number>();
   const sliceMasteredCount = new Map<string, number>();
 
   for (const c of allCards) {
@@ -799,9 +800,9 @@ export async function getAllDecksOrderedByDifficulty(
     if (!uc) continue;
 
     const sliceKey = `${c.deck_id}_${c.difficulty}`;
-    sliceGarrisonCount.set(
+    sliceQueuedCount.set(
       sliceKey,
-      (sliceGarrisonCount.get(sliceKey) || 0) + 1
+      (sliceQueuedCount.get(sliceKey) || 0) + 1
     );
 
     if (uc.stability >= 21 || uc.reps >= 3) {
@@ -819,7 +820,7 @@ export async function getAllDecksOrderedByDifficulty(
     const sliceKey = `${s.deck_id}_${s.difficulty}`;
     const cefr = difficultyToCefr(s.difficulty);
     const iconName = CATEGORY_ICONS[s.category] || 'book';
-    const garrisoned = sliceGarrisonCount.get(sliceKey) || 0;
+    const queued = sliceQueuedCount.get(sliceKey) || 0;
     const mastered = sliceMasteredCount.get(sliceKey) || 0;
 
     const dt = deckTransMap.get(s.deck_id);
@@ -839,7 +840,8 @@ export async function getAllDecksOrderedByDifficulty(
       cefr_level: cefr,
       icon_name: iconName,
       card_count: s.card_count,
-      garrisoned_count: garrisoned,
+      queued_count: queued,
+      garrisoned_count: queued,
       mastered_count: mastered,
       is_pro: false,
       is_locked: false,
@@ -963,6 +965,7 @@ export async function getCardsByDeck(
       back_lexeme_id: c.card_id,
       back_term: backTerm,
       back_lang: effectiveOrigin,
+      is_queued: !!uc,
       is_garrisoned: !!uc,
       user_card_id: uc ? uc.id : undefined,
       stability: uc ? uc.stability : undefined,
@@ -972,16 +975,16 @@ export async function getCardsByDeck(
 }
 
 /**
- * Garrisons all unqueued cards in a deck (or difficulty slice) into User_Cards in user_vault.sqlite.
+ * Enqueues all unqueued cards in a deck (or difficulty slice) into User_Cards in user_vault.sqlite.
  */
-export async function garrisonEntireDeck(
+export async function addEntireDeckToQueue(
   deckIdOrSliceId: string | number,
   targetLang = 'es',
   difficultySlice?: number,
   originLang?: string
 ): Promise<number> {
   const cards = await getCardsByDeck(deckIdOrSliceId, targetLang, difficultySlice, originLang);
-  const unqueued = cards.filter((c) => !c.is_garrisoned);
+  const unqueued = cards.filter((c) => !c.is_queued);
   if (unqueued.length === 0) return 0;
 
   const userDb = await getUserDb();
@@ -1004,6 +1007,8 @@ export async function garrisonEntireDeck(
 
   return unqueued.length;
 }
+
+export const garrisonEntireDeck = addEntireDeckToQueue;
 
 /**
  * Adds a single card to User_Cards queue.
@@ -1088,8 +1093,8 @@ export async function getDueCards(
         [langName, targetLang]
       );
       if (!totalEnrolled || totalEnrolled.count === 0) {
-        // Auto-garrison introductory cards (Deck 1: members) which has full translations in all 123 languages
-        await garrisonEntireDeck('1', targetLang, undefined, originLang);
+        // Auto-enqueue introductory cards (Deck 1: members) which has full translations in all 123 languages
+        await addEntireDeckToQueue('1', targetLang, undefined, originLang);
         return getDueCards(undefined, targetLang, originLang);
       }
     }
@@ -1252,9 +1257,9 @@ export async function getDeckCardsForReview(
     [langName, targetLang, ...cardIds]
   );
 
-  // If no user cards exist in this deck yet, auto-garrison them so the user can immediately practice!
+  // If no user cards exist in this deck yet, auto-enqueue them so the user can immediately practice!
   if (userCards.length === 0) {
-    await garrisonEntireDeck(deckIdOrSliceId, targetLang, slice, originLang);
+    await addEntireDeckToQueue(deckIdOrSliceId, targetLang, slice, originLang);
     return getDeckCardsForReview(deckIdOrSliceId, targetLang, originLang);
   }
 
@@ -2134,15 +2139,17 @@ export async function getLexemesByDomain(
 }
 
 /**
- * Garrisons a single card for DomainBrowser or search.
+ * Adds a single card to the queue for DomainBrowser or search.
  */
-export async function garrisonCard(
+export async function addCardToQueue(
   frontLexemeId: number,
   backLexemeId: number,
   targetLang = 'es'
 ): Promise<string> {
   return addWordToQueue(frontLexemeId, backLexemeId, `c_${frontLexemeId}`, targetLang);
 }
+
+export const garrisonCard = addCardToQueue;
 
 /**
  * Logs a review attempt in Review_Logs for activity heatmap & streaks.

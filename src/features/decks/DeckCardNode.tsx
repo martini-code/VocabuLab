@@ -83,10 +83,11 @@ function renderDeckIcon(iconName: string, size = 18, color = '#78350F') {
 
 export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, index }) => {
   const isMastered = deck.card_count > 0 && deck.mastered_count >= deck.card_count;
-  const isQueued = deck.garrisoned_count > 0;
+  const queuedCount = deck.queued_count ?? deck.garrisoned_count ?? 0;
+  const isQueued = queuedCount > 0;
   const queuePercent =
     deck.card_count > 0
-      ? Math.min(100, Math.round((deck.garrisoned_count / deck.card_count) * 100))
+      ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100))
       : 0;
 
   return (
@@ -176,7 +177,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
             <View style={styles.statusBadgeQueued}>
               <Sparkles size={12} color="#92400E" />
               <Text style={styles.statusTextQueued}>
-                {deck.garrisoned_count}/{deck.card_count} IN QUEUE
+                {queuedCount}/{deck.card_count} IN QUEUE
               </Text>
             </View>
           ) : (

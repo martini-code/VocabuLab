@@ -120,7 +120,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       const next = prev + 1;
       if (next >= cards.length) {
         setMascotMood('victorious');
-        setMascotQuote("All garrisoned scrolls defended! Victory belongs to the Keep!");
+        setMascotQuote("All cards in review completed! Well done!");
         if (onSessionComplete) onSessionComplete();
       }
       return next;

@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Search, Sparkles, Volume2, Check, Plus, X } from 'lucide-react-native';
-import { searchLexemesFTS, garrisonCard } from '../../db/vault';
+import { searchLexemesFTS, addCardToQueue } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
 import { WizardOwlMascot } from '../../components/mascot/Mascots';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
@@ -21,13 +21,13 @@ interface FastSearchProps {
 
 interface SearchResultCardProps {
   item: any;
-  isGarrisoned: boolean;
+  isQueued: boolean;
   onLearn: (item: any) => void;
   onSpeak: (term: string, lang: string) => void;
 }
 
 const SearchResultCard = React.memo<SearchResultCardProps>(
-  ({ item, isGarrisoned, onLearn, onSpeak }) => {
+  ({ item, isQueued, onLearn, onSpeak }) => {
     return (
       <ParchmentCard style={styles.resultCard}>
         <View style={styles.cardHeader}>
@@ -50,19 +50,19 @@ const SearchResultCard = React.memo<SearchResultCardProps>(
           </TouchableOpacity>
 
           <TouchableOpacity
-            disabled={isGarrisoned}
-            style={[styles.garrisonBtn, isGarrisoned && styles.garrisonBtnDone]}
+            disabled={isQueued}
+            style={[styles.learnBtn, isQueued && styles.learnBtnDone]}
             onPress={() => onLearn(item)}
           >
-            {isGarrisoned ? (
+            {isQueued ? (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Check size={14} color="#166534" style={{ marginRight: 4 }} />
-                <Text style={styles.garrisonBtnText}>Learned</Text>
+                <Text style={styles.learnBtnText}>Learned</Text>
               </View>
             ) : (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                <Text style={styles.garrisonBtnText}>Learn Word</Text>
+                <Text style={styles.learnBtnText}>Learn Word</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -75,7 +75,7 @@ const SearchResultCard = React.memo<SearchResultCardProps>(
 export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
-  const [garrisonedSet, setGarrisonedSet] = useState<Set<number>>(new Set());
+  const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set());
 
   const handleSearch = async (text: string) => {
     setQuery(text);
@@ -95,8 +95,8 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         return;
       }
       await tokenWallet.consumeWordAllowance(1);
-      await garrisonCard(item.id, item.id);
-      setGarrisonedSet((prev) => new Set(prev).add(item.id));
+      await addCardToQueue(item.id, item.id);
+      setQueuedSet((prev) => new Set(prev).add(item.id));
     },
     [onInsufficientTokens]
   );
@@ -109,12 +109,12 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
     ({ item }: { item: any }) => (
       <SearchResultCard
         item={item}
-        isGarrisoned={garrisonedSet.has(item.id)}
+        isQueued={queuedSet.has(item.id)}
         onLearn={handleLearn}
         onSpeak={handleSpeak}
       />
     ),
-    [garrisonedSet, handleLearn, handleSpeak]
+    [queuedSet, handleLearn, handleSpeak]
   );
 
   const keyExtractor = React.useCallback((item: any) => item.id.toString(), []);
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#B45309',
   },
-  garrisonBtn: {
+  learnBtn: {
     backgroundColor: '#3B82F6',
     paddingHorizontal: 14,
     paddingVertical: 7,
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: '#1D4ED8',
   },
-  garrisonBtnDone: {
+  learnBtnDone: {
     backgroundColor: '#94A3B8',
     borderBottomColor: '#64748B',
   },
-  garrisonBtnText: {
+  learnBtnText: {
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 12,

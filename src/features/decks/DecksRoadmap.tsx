@@ -62,7 +62,7 @@ import {
   getThemesWithProgressiveDecks,
   getAllDecksOrderedByDifficulty,
   getCardsByDeck,
-  garrisonEntireDeck,
+  addEntireDeckToQueue,
   addWordToQueue,
   getWordsByDifficulty,
   getDifficultyStats,
@@ -365,10 +365,11 @@ interface ThemeDeckCardProps {
 
 const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
   const { t } = useTranslation();
-  const isFullyQueued = deck.card_count > 0 && deck.garrisoned_count >= deck.card_count;
+  const queuedCount = deck.queued_count ?? deck.garrisoned_count ?? 0;
+  const isFullyQueued = deck.card_count > 0 && queuedCount >= deck.card_count;
   const queuePercent =
     deck.card_count > 0
-      ? Math.min(100, Math.round((deck.garrisoned_count / deck.card_count) * 100))
+      ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100))
       : 0;
 
   return (
@@ -406,7 +407,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
           />
         </View>
         <Text style={styles.deckProgressText}>
-          {deck.garrisoned_count}/{deck.card_count} {t('common.all').toLowerCase()}
+          {queuedCount}/{deck.card_count} {t('common.all').toLowerCase()}
         </Text>
       </View>
     </TouchableOpacity>
@@ -611,7 +612,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const handleAddAllDeck = async () => {
     if (!selectedDeck) return;
     const unqueuedCards = deckCards.filter(
-      (c) => !c.is_garrisoned && !locallyQueuedWordIds.has(c.front_lexeme_id)
+      (c) => !(c.is_queued ?? c.is_garrisoned) && !locallyQueuedWordIds.has(c.front_lexeme_id)
     ).length;
     if (unqueuedCards === 0) return;
 
@@ -624,7 +625,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     setAddingAllDeck(true);
     try {
       await tokenWallet.consumeWordAllowance(unqueuedCards);
-      await garrisonEntireDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
+      await addEntireDeckToQueue(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
       const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
       setDeckCards(updatedCards);
       await loadDecksData();
@@ -687,7 +688,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const renderDeckCardDetail = useCallback(
     ({ item }: { item: DeckCardDetail }) => {
       const isQueued =
-        item.is_garrisoned || locallyQueuedWordIds.has(item.front_lexeme_id);
+        (item.is_queued ?? item.is_garrisoned) || locallyQueuedWordIds.has(item.front_lexeme_id);
       return (
         <DeckCardDetailItem
           item={item}
