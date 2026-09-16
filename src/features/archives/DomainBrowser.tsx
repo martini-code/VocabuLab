@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -64,7 +64,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     setSelectedDomain(domain);
   };
 
-  const handleGarrison = async (lexemeId: number) => {
+  const handleGarrison = useCallback(async (lexemeId: number) => {
     const canLearn = await tokenWallet.canLearnWords(1);
     if (!canLearn) {
       onInsufficientTokens?.(1);
@@ -74,7 +74,11 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     // Pair with English counterpart (mock/demo pair for immediate deck addition)
     await garrisonCard(lexemeId, 1);
     setGarrisonedIds((prev) => new Set(prev).add(lexemeId));
-  };
+  }, [onInsufficientTokens]);
+
+  const handleSpeak = useCallback((term: string, language: string) => {
+    speakWord(term, language);
+  }, []);
 
   if (loading) {
     return (
@@ -84,6 +88,23 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
       </View>
     );
   }
+
+  const renderLexemeItem = useCallback(
+    ({ item }: { item: Lexeme }) => {
+      const isGarrisoned = garrisonedIds.has(item.id);
+      return (
+        <DomainLexemeCard
+          item={item}
+          isGarrisoned={isGarrisoned}
+          onGarrison={handleGarrison}
+          onSpeak={handleSpeak}
+        />
+      );
+    },
+    [garrisonedIds, handleGarrison, handleSpeak]
+  );
+
+  const lexemeKeyExtractor = useCallback((item: Lexeme) => item.id.toString(), []);
 
   return (
     <View style={styles.container}>
@@ -167,8 +188,13 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
       {/* Lexemes List for selected Domain */}
       <FlatList
         data={lexemes}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={lexemeKeyExtractor}
         contentContainerStyle={styles.listContainer}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        windowSize={5}
+        removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Scroll size={40} color="#D97706" style={{ marginBottom: 10 }} />
@@ -176,60 +202,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
             <Text style={styles.emptySubtitle}>Try selecting a different CEFR shield rank above.</Text>
           </View>
         }
-        renderItem={({ item }) => {
-          const isGarrisoned = garrisonedIds.has(item.id);
-
-          return (
-            <ParchmentCard style={styles.lexemeCard}>
-              <View style={styles.cardTopRow}>
-                <View style={styles.wordInfo}>
-                  <Text style={styles.wordTerm}>{item.term}</Text>
-                  <Text style={styles.wordPos}>
-                    {item.language.toUpperCase()} • {item.pos || 'noun'}
-                  </Text>
-                </View>
-                <ShieldBadge level={item.cefr_level} size="sm" />
-              </View>
-
-              <View style={styles.cardActionsRow}>
-                {/* Pronounce Horn */}
-                <TouchableOpacity
-                  style={styles.audioButton}
-                  onPress={() => speakWord(item.term, item.language)}
-                >
-                  <Volume2 size={16} color="#78350F" style={{ marginRight: 4 }} />
-                  <Text style={styles.audioText}>Listen</Text>
-                </TouchableOpacity>
-
-                {/* Learn Button */}
-                <TouchableOpacity
-                  disabled={isGarrisoned}
-                  style={[
-                    styles.garrisonButton,
-                    isGarrisoned && styles.garrisonButtonDone,
-                  ]}
-                  onPress={() => handleGarrison(item.id)}
-                >
-                  {isGarrisoned ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Check size={14} color="#166534" style={{ marginRight: 4 }} />
-                      <Text style={[styles.garrisonButtonText, styles.garrisonButtonTextDone]}>
-                        Learned
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                      <Text style={styles.garrisonButtonText}>
-                        Learn Word
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </ParchmentCard>
-          );
-        }}
+        renderItem={renderLexemeItem}
       />
 
       {/* Bottom Embark on Quest Bar */}
@@ -245,6 +218,71 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     </View>
   );
 };
+
+interface DomainLexemeCardProps {
+  item: Lexeme;
+  isGarrisoned: boolean;
+  onGarrison: (lexemeId: number) => void;
+  onSpeak: (term: string, language: string) => void;
+}
+
+const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
+  item,
+  isGarrisoned,
+  onGarrison,
+  onSpeak,
+}) => {
+  return (
+    <ParchmentCard style={styles.lexemeCard}>
+      <View style={styles.cardTopRow}>
+        <View style={styles.wordInfo}>
+          <Text style={styles.wordTerm}>{item.term}</Text>
+          <Text style={styles.wordPos}>
+            {item.language.toUpperCase()} • {item.pos || 'noun'}
+          </Text>
+        </View>
+        <ShieldBadge level={item.cefr_level} size="sm" />
+      </View>
+
+      <View style={styles.cardActionsRow}>
+        {/* Pronounce Horn */}
+        <TouchableOpacity
+          style={styles.audioButton}
+          onPress={() => onSpeak(item.term, item.language)}
+        >
+          <Volume2 size={16} color="#78350F" style={{ marginRight: 4 }} />
+          <Text style={styles.audioText}>Listen</Text>
+        </TouchableOpacity>
+
+        {/* Learn Button */}
+        <TouchableOpacity
+          disabled={isGarrisoned}
+          style={[
+            styles.garrisonButton,
+            isGarrisoned && styles.garrisonButtonDone,
+          ]}
+          onPress={() => onGarrison(item.id)}
+        >
+          {isGarrisoned ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Check size={14} color="#166534" style={{ marginRight: 4 }} />
+              <Text style={[styles.garrisonButtonText, styles.garrisonButtonTextDone]}>
+                Learned
+              </Text>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+              <Text style={styles.garrisonButtonText}>
+                Learn Word
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ParchmentCard>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

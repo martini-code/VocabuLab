@@ -81,7 +81,7 @@ function renderDeckIcon(iconName: string, size = 18, color = '#78350F') {
   }
 }
 
-export const DeckCardNode: React.FC<DeckCardNodeProps> = ({ deck, onPress, index }) => {
+export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, index }) => {
   const isMastered = deck.card_count > 0 && deck.mastered_count >= deck.card_count;
   const isQueued = deck.garrisoned_count > 0;
   const queuePercent =
@@ -191,7 +191,7 @@ export const DeckCardNode: React.FC<DeckCardNodeProps> = ({ deck, onPress, index
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

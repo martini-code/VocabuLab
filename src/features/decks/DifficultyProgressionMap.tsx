@@ -2,7 +2,7 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
+  FlatList,
   ActivityIndicator,
 } from 'react-native';
 import { ArrowDown } from 'lucide-react-native';
@@ -61,6 +61,49 @@ const PathConnector: React.FC<{
   );
 };
 
+interface TrailNodeItemProps {
+  deck: DeckWithProgress;
+  index: number;
+  align: NodeAlignment;
+  nextAlign: NodeAlignment;
+  isLast: boolean;
+  onSelectDeck: (deck: DeckWithProgress) => void;
+}
+
+const TrailNodeItem = React.memo<TrailNodeItemProps>(
+  ({ deck, index, align, nextAlign, isLast, onSelectDeck }) => {
+    const isDeckCompleted =
+      deck.card_count > 0 && deck.mastered_count >= deck.card_count;
+
+    return (
+      <View style={styles.nodeWrapper}>
+        <View
+          style={[
+            styles.nodePositioner,
+            align === 'left' && styles.nodeAlignLeft,
+            align === 'center' && styles.nodeAlignCenter,
+            align === 'right' && styles.nodeAlignRight,
+          ]}
+        >
+          <DeckCardNode
+            deck={deck}
+            index={index}
+            onPress={() => onSelectDeck(deck)}
+          />
+        </View>
+
+        {!isLast && (
+          <PathConnector
+            fromAlign={align}
+            toAlign={nextAlign}
+            isCompleted={isDeckCompleted}
+          />
+        )}
+      </View>
+    );
+  }
+);
+
 export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> = ({
   decks,
   loading,
@@ -68,6 +111,31 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
 }) => {
   // Alignments sequence for a meandering natural map trail
   const alignmentPattern: NodeAlignment[] = ['left', 'center', 'right', 'center'];
+
+  const renderItem = React.useCallback(
+    ({ item, index }: { item: DeckWithProgress; index: number }) => {
+      const align = alignmentPattern[index % alignmentPattern.length];
+      const nextIndex = index + 1;
+      const nextAlign =
+        nextIndex < decks.length
+          ? alignmentPattern[nextIndex % alignmentPattern.length]
+          : 'center';
+
+      return (
+        <TrailNodeItem
+          deck={item}
+          index={index}
+          align={align}
+          nextAlign={nextAlign}
+          isLast={index === decks.length - 1}
+          onSelectDeck={onSelectDeck}
+        />
+      );
+    },
+    [decks.length, onSelectDeck]
+  );
+
+  const keyExtractor = React.useCallback((item: DeckWithProgress) => item.id, []);
 
   if (loading) {
     return (
@@ -78,54 +146,19 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
   }
 
   return (
-    <ScrollView
+    <FlatList
+      data={decks}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.mapTrailContainer}>
-        {decks.map((deck, index) => {
-          const align = alignmentPattern[index % alignmentPattern.length];
-          const nextIndex = index + 1;
-          const nextAlign =
-            nextIndex < decks.length
-              ? alignmentPattern[nextIndex % alignmentPattern.length]
-              : 'center';
-
-          const isDeckCompleted =
-            deck.card_count > 0 && deck.mastered_count >= deck.card_count;
-
-          return (
-            <View key={deck.id} style={styles.nodeWrapper}>
-              {/* Physical Deck of Cards UI Node */}
-              <View
-                style={[
-                  styles.nodePositioner,
-                  align === 'left' && styles.nodeAlignLeft,
-                  align === 'center' && styles.nodeAlignCenter,
-                  align === 'right' && styles.nodeAlignRight,
-                ]}
-              >
-                <DeckCardNode
-                  deck={deck}
-                  index={index}
-                  onPress={() => onSelectDeck(deck)}
-                />
-              </View>
-
-              {/* Winding Trail Stepping Stones to Next Deck */}
-              {index < decks.length - 1 && (
-                <PathConnector
-                  fromAlign={align}
-                  toAlign={nextAlign}
-                  isCompleted={isDeckCompleted}
-                />
-              )}
-            </View>
-          );
-        })}
-      </View>
-    </ScrollView>
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      updateCellsBatchingPeriod={50}
+      windowSize={5}
+      removeClippedSubviews={true}
+    />
   );
 };
 

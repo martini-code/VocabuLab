@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -155,6 +155,296 @@ function getCefrBadgeColors(cefr: string) {
       return { bg: '#F1F5F9', text: '#475569', border: '#CBD5E1' };
   }
 }
+function formatNextReview(dueDateStr?: string, t?: (key: string, options?: any) => string): string {
+  if (!dueDateStr) return 'New';
+  const due = new Date(dueDateStr);
+  const now = new Date();
+  const diffMs = due.getTime() - now.getTime();
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMs <= 0 || diffHours <= 0) {
+    return 'Due now';
+  }
+  if (diffHours < 24) {
+    return `In ${diffHours}h`;
+  }
+  if (diffDays === 1) {
+    return 'Tomorrow';
+  }
+  if (diffDays < 30) {
+    return `In ${diffDays}d`;
+  }
+  const months = Math.round(diffDays / 30);
+  return `In ${months}mo`;
+}
+
+interface MasteryWordCardProps {
+  item: MasteryWordItem;
+  isQueued: boolean;
+  onAddWord: (frontLexemeId: number, backLexemeId: number, conceptId: string) => void;
+  onSpeak: (term: string, lang: string) => void;
+}
+
+const MasteryWordCard = React.memo<MasteryWordCardProps>(
+  ({ item, isQueued, onAddWord, onSpeak }) => {
+    const { t } = useTranslation();
+    const cefrColors = getCefrBadgeColors(item.front_cefr);
+
+    return (
+      <View style={styles.wordItemCard}>
+        <View style={styles.wordItemHeader}>
+          <View style={styles.wordTermBox}>
+            <Text style={styles.wordFrontTerm}>{item.front_term}</Text>
+            <TouchableOpacity
+              style={styles.speakerBtn}
+              onPress={() => onSpeak(item.front_term, item.front_lang)}
+            >
+              <Volume2 size={16} color="#D97706" />
+            </TouchableOpacity>
+          </View>
+          <View
+            style={[
+              styles.cefrBadge,
+              { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
+            ]}
+          >
+            <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
+              {item.front_cefr}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.wordBackTerm}>{item.back_term}</Text>
+
+        {/* SRS Retention Diagnostics */}
+        {item.stage !== 'available' && (
+          <View style={styles.srsMetricsRow}>
+            {item.due_date ? (
+              <View style={styles.srsMetricBadge}>
+                <Text style={styles.srsMetricLabel}>Next Review:</Text>
+                <Text style={styles.srsMetricVal}>
+                  {formatNextReview(item.due_date)}
+                </Text>
+              </View>
+            ) : item.stability !== undefined ? (
+              <View style={styles.srsMetricBadge}>
+                <Text style={styles.srsMetricLabel}>Next Review:</Text>
+                <Text style={styles.srsMetricVal}>
+                  {item.stability < 1 ? 'Today' : `In ${Math.round(item.stability)}d`}
+                </Text>
+              </View>
+            ) : null}
+            {item.reps !== undefined && (
+              <View style={styles.srsMetricBadge}>
+                <Text style={styles.srsMetricLabel}>Reviews:</Text>
+                <Text style={styles.srsMetricVal}>{item.reps}</Text>
+              </View>
+            )}
+            {item.lapses !== undefined && item.lapses > 0 && (
+              <View style={[styles.srsMetricBadge, { backgroundColor: '#FEE2E2' }]}>
+                <Text style={[styles.srsMetricLabel, { color: '#DC2626' }]}>
+                  Lapses:
+                </Text>
+                <Text style={[styles.srsMetricVal, { color: '#DC2626' }]}>
+                  {item.lapses}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={styles.wordItemFooter}>
+          <Text style={styles.wordOriginText}>
+            {item.theme_name} • {item.deck_name}
+          </Text>
+
+          {!isQueued ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.addQueueBtn}
+              onPress={() =>
+                onAddWord(
+                  item.front_lexeme_id,
+                  item.back_lexeme_id,
+                  item.concept_id
+                )
+              }
+            >
+              <Plus size={14} color="#FFFFFF" />
+              <Text style={styles.addQueueBtnText}>
+                {t('explore.add_to_queue')}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.inQueueBadge}>
+              <Check size={14} color="#2563EB" />
+              <Text style={styles.inQueueBadgeText}>{t('explore.in_queue')}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }
+);
+
+interface DeckCardDetailItemProps {
+  item: DeckCardDetail;
+  isQueued: boolean;
+  onAddWord: (frontLexemeId: number, backLexemeId: number, conceptId: string) => void;
+  onSpeak: (term: string, lang: string) => void;
+}
+
+const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
+  ({ item, isQueued, onAddWord, onSpeak }) => {
+    const { t } = useTranslation();
+    const cefrColors = getCefrBadgeColors(item.front_cefr);
+
+    return (
+      <View style={styles.modalWordCard}>
+        <View style={styles.wordItemHeader}>
+          <View style={styles.wordTermBox}>
+            <Text style={styles.wordFrontTerm}>{item.front_term}</Text>
+            <TouchableOpacity
+              style={styles.speakerBtn}
+              onPress={() => onSpeak(item.front_term, item.front_lang)}
+            >
+              <Volume2 size={16} color="#D97706" />
+            </TouchableOpacity>
+          </View>
+          <View
+            style={[
+              styles.cefrBadge,
+              { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
+            ]}
+          >
+            <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
+              {item.front_cefr}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.wordBackTerm}>{item.back_term}</Text>
+
+        <View style={styles.modalWordCardFooter}>
+          {isQueued ? (
+            <View style={styles.inQueueBadge}>
+              <Check size={14} color="#059669" />
+              <Text style={[styles.inQueueBadgeText, { color: '#059669' }]}>
+                {t('explore.in_queue')}
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.addQueueBtn}
+              onPress={() =>
+                onAddWord(
+                  item.front_lexeme_id,
+                  item.back_lexeme_id,
+                  item.concept_id
+                )
+              }
+            >
+              <Plus size={14} color="#FFFFFF" />
+              <Text style={styles.addQueueBtnText}>
+                {t('explore.add_to_queue')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  }
+);
+
+interface ThemeDeckCardProps {
+  deck: DeckWithProgress;
+  onOpenDeck: (deck: DeckWithProgress) => void;
+}
+
+const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
+  const { t } = useTranslation();
+  const isFullyQueued = deck.card_count > 0 && deck.garrisoned_count >= deck.card_count;
+  const queuePercent =
+    deck.card_count > 0
+      ? Math.min(100, Math.round((deck.garrisoned_count / deck.card_count) * 100))
+      : 0;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      style={styles.deckCard}
+      onPress={() => onOpenDeck(deck)}
+    >
+      <View style={styles.deckCardMain}>
+        <View style={styles.deckIconBox}>
+          {renderDeckIcon(deck.icon_name, 20, '#B45309')}
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={styles.deckTitleRow}>
+            <Text style={styles.deckName}>{deck.name}</Text>
+            <View style={styles.tierPill}>
+              <Text style={styles.tierPillText}>
+                Tier {deck.difficulty_level} • {deck.cefr_level}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <ChevronRight size={18} color="#94A3B8" />
+      </View>
+
+      {/* Progress Bar & Word Counts */}
+      <View style={styles.deckProgressRow}>
+        <View style={styles.progressBarBg}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${queuePercent}%` },
+              isFullyQueued && { backgroundColor: '#10B981' },
+            ]}
+          />
+        </View>
+        <Text style={styles.deckProgressText}>
+          {deck.garrisoned_count}/{deck.card_count} {t('common.all').toLowerCase()}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+interface ThemeGroupSectionProps {
+  theme: ThemeGroup;
+  onOpenDeck: (deck: DeckWithProgress) => void;
+}
+
+const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDeck }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.themeGroup}>
+      {/* Theme Header */}
+      <View style={styles.themeHeader}>
+        <View style={styles.themeIconBox}>
+          {renderDeckIcon(theme.icon_name, 22, '#92400E')}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.themeTitle}>{theme.name}</Text>
+        </View>
+      </View>
+
+      {/* Decks under Theme */}
+      <View style={styles.decksList}>
+        {theme.decks.map((deck) => (
+          <ThemeDeckCard
+            key={deck.id}
+            deck={deck}
+            onOpenDeck={onOpenDeck}
+          />
+        ))}
+      </View>
+    </View>
+  );
+});
 
 export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   onStudyDeck,
@@ -242,44 +532,50 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   };
 
   // Open Deck Word Inspector
-  const handleOpenDeck = async (deck: DeckWithProgress) => {
-    setSelectedDeck(deck);
-    setLoadingDeckCards(true);
-    try {
-      const cards = await getCardsByDeck(deck.id, targetLang, deck.difficulty_slice, originLang);
-      setDeckCards(cards);
-    } catch (e) {
-      console.warn('[Explore] Error loading deck cards:', e);
-    } finally {
-      setLoadingDeckCards(false);
-    }
-  };
+  const handleOpenDeck = useCallback(
+    async (deck: DeckWithProgress) => {
+      setSelectedDeck(deck);
+      setLoadingDeckCards(true);
+      try {
+        const cards = await getCardsByDeck(deck.id, targetLang, deck.difficulty_slice, originLang);
+        setDeckCards(cards);
+      } catch (e) {
+        console.warn('[Explore] Error loading deck cards:', e);
+      } finally {
+        setLoadingDeckCards(false);
+      }
+    },
+    [targetLang, originLang]
+  );
 
   // Add single word to queue
-  const handleAddWord = async (
-    frontLexemeId: number,
-    backLexemeId: number,
-    conceptId: string
-  ) => {
-    const canLearn = await tokenWallet.canLearnWords(1);
-    if (!canLearn) {
-      onInsufficientTokens?.(1);
-      return;
-    }
-    await tokenWallet.consumeWordAllowance(1);
+  const handleAddWord = useCallback(
+    async (
+      frontLexemeId: number,
+      backLexemeId: number,
+      conceptId: string
+    ) => {
+      const canLearn = await tokenWallet.canLearnWords(1);
+      if (!canLearn) {
+        onInsufficientTokens?.(1);
+        return;
+      }
+      await tokenWallet.consumeWordAllowance(1);
 
-    // Instant UI update
-    setLocallyQueuedWordIds((prev) => new Set(prev).add(frontLexemeId));
-    try {
-      await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang, originLang);
-      // Refresh background stats without blocking
-      getMasterySummary(targetLang).then(setMasterySummary);
-      getThemesWithProgressiveDecks(targetLang).then(setThemes);
-      getAllDecksOrderedByDifficulty(targetLang).then(setMapDecks);
-    } catch (e) {
-      console.warn('[Explore] Error adding word:', e);
-    }
-  };
+      // Instant UI update
+      setLocallyQueuedWordIds((prev) => new Set(prev).add(frontLexemeId));
+      try {
+        await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang, originLang);
+        // Refresh background stats without blocking
+        getMasterySummary(targetLang).then(setMasterySummary);
+        getThemesWithProgressiveDecks(targetLang).then(setThemes);
+        getAllDecksOrderedByDifficulty(targetLang).then(setMapDecks);
+      } catch (e) {
+        console.warn('[Explore] Error adding word:', e);
+      }
+    },
+    [targetLang, originLang, onInsufficientTokens]
+  );
 
   // Add all unqueued words in current deck
   const handleAddAllDeck = async () => {
@@ -332,6 +628,64 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
       setAdoptingAvailable(false);
     }
   };
+
+  const handleSpeak = useCallback((term: string, lang: string) => {
+    speakWord(term, lang);
+  }, []);
+
+  const renderMasteryWord = useCallback(
+    ({ item }: { item: MasteryWordItem }) => {
+      const isQueued =
+        item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
+      return (
+        <MasteryWordCard
+          item={item}
+          isQueued={isQueued}
+          onAddWord={handleAddWord}
+          onSpeak={handleSpeak}
+        />
+      );
+    },
+    [locallyQueuedWordIds, handleAddWord, handleSpeak]
+  );
+
+  const masteryKeyExtractor = useCallback(
+    (item: MasteryWordItem) => `mastery_${item.front_lexeme_id}`,
+    []
+  );
+
+  const renderDeckCardDetail = useCallback(
+    ({ item }: { item: DeckCardDetail }) => {
+      const isQueued =
+        item.is_garrisoned || locallyQueuedWordIds.has(item.front_lexeme_id);
+      return (
+        <DeckCardDetailItem
+          item={item}
+          isQueued={isQueued}
+          onAddWord={handleAddWord}
+          onSpeak={handleSpeak}
+        />
+      );
+    },
+    [locallyQueuedWordIds, handleAddWord, handleSpeak]
+  );
+
+  const deckCardsKeyExtractor = useCallback(
+    (item: DeckCardDetail) => `deck_card_${item.front_lexeme_id}`,
+    []
+  );
+
+  const renderThemeGroup = useCallback(
+    ({ item }: { item: ThemeGroup }) => (
+      <ThemeGroupSection
+        theme={item}
+        onOpenDeck={handleOpenDeck}
+      />
+    ),
+    [handleOpenDeck]
+  );
+
+  const themeKeyExtractor = useCallback((item: ThemeGroup) => item.id, []);
 
   return (
     <View style={styles.container}>
@@ -417,79 +771,19 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
       {/* TAB 1: DECKS (THEMES) */}
       {activeTab === 'decks' && (
-        <ScrollView
+        <FlatList
+          data={themes}
+          keyExtractor={themeKeyExtractor}
+          renderItem={renderThemeGroup}
           style={styles.tabContent}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
-        >
-          {themes.map((theme) => (
-            <View key={theme.id} style={styles.themeGroup}>
-              {/* Theme Header */}
-              <View style={styles.themeHeader}>
-                <View style={styles.themeIconBox}>
-                  {renderDeckIcon(theme.icon_name, 22, '#92400E')}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.themeTitle}>{theme.name}</Text>
-                </View>
-              </View>
-
-              {/* Decks under Theme */}
-              <View style={styles.decksList}>
-                {theme.decks.map((deck) => {
-                  const isFullyQueued =
-                    deck.card_count > 0 && deck.garrisoned_count >= deck.card_count;
-                  const queuePercent =
-                    deck.card_count > 0
-                      ? Math.min(100, Math.round((deck.garrisoned_count / deck.card_count) * 100))
-                      : 0;
-
-                  return (
-                    <TouchableOpacity
-                      key={deck.id}
-                      activeOpacity={0.8}
-                      style={styles.deckCard}
-                      onPress={() => handleOpenDeck(deck)}
-                    >
-                      <View style={styles.deckCardMain}>
-                        <View style={styles.deckIconBox}>
-                          {renderDeckIcon(deck.icon_name, 20, '#B45309')}
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <View style={styles.deckTitleRow}>
-                            <Text style={styles.deckName}>{deck.name}</Text>
-                            <View style={styles.tierPill}>
-                              <Text style={styles.tierPillText}>
-                                Tier {deck.difficulty_level} • {deck.cefr_level}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                        <ChevronRight size={18} color="#94A3B8" />
-                      </View>
-
-                      {/* Progress Bar & Word Counts */}
-                      <View style={styles.deckProgressRow}>
-                        <View style={styles.progressBarBg}>
-                          <View
-                            style={[
-                              styles.progressBarFill,
-                              { width: `${queuePercent}%` },
-                              isFullyQueued && { backgroundColor: '#10B981' },
-                            ]}
-                          />
-                        </View>
-                        <Text style={styles.deckProgressText}>
-                          {deck.garrisoned_count}/{deck.card_count} {t('common.all').toLowerCase()}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          updateCellsBatchingPeriod={50}
+          windowSize={5}
+          removeClippedSubviews={true}
+        />
       )}
 
       {/* TAB 2: DIFFICULTY (CEFR / TIERS) */}
@@ -642,102 +936,15 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           ) : (
             <FlatList
               data={masteryWords}
-              keyExtractor={(item) => `mastery_${item.front_lexeme_id}`}
+              keyExtractor={masteryKeyExtractor}
+              renderItem={renderMasteryWord}
               contentContainerStyle={{ paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => {
-                const isQueued =
-                  item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
-                const cefrColors = getCefrBadgeColors(item.front_cefr);
-
-                return (
-                  <View style={styles.wordItemCard}>
-                    <View style={styles.wordItemHeader}>
-                      <View style={styles.wordTermBox}>
-                        <Text style={styles.wordFrontTerm}>{item.front_term}</Text>
-                        <TouchableOpacity
-                          style={styles.speakerBtn}
-                          onPress={() => speakWord(item.front_term, item.front_lang)}
-                        >
-                          <Volume2 size={16} color="#D97706" />
-                        </TouchableOpacity>
-                      </View>
-                      <View
-                        style={[
-                          styles.cefrBadge,
-                          { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
-                        ]}
-                      >
-                        <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
-                          {item.front_cefr}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.wordBackTerm}>{item.back_term}</Text>
-
-                    {/* SRS Retention Diagnostics */}
-                    {item.stage !== 'available' && (
-                      <View style={styles.srsMetricsRow}>
-                        {item.stability !== undefined && (
-                          <View style={styles.srsMetricBadge}>
-                            <Text style={styles.srsMetricLabel}>Stability:</Text>
-                            <Text style={styles.srsMetricVal}>
-                              {item.stability.toFixed(1)}d
-                            </Text>
-                          </View>
-                        )}
-                        {item.reps !== undefined && (
-                          <View style={styles.srsMetricBadge}>
-                            <Text style={styles.srsMetricLabel}>Reviews:</Text>
-                            <Text style={styles.srsMetricVal}>{item.reps}</Text>
-                          </View>
-                        )}
-                        {item.lapses !== undefined && item.lapses > 0 && (
-                          <View style={[styles.srsMetricBadge, { backgroundColor: '#FEE2E2' }]}>
-                            <Text style={[styles.srsMetricLabel, { color: '#DC2626' }]}>
-                              Lapses:
-                            </Text>
-                            <Text style={[styles.srsMetricVal, { color: '#DC2626' }]}>
-                              {item.lapses}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                    )}
-
-                    <View style={styles.wordItemFooter}>
-                      <Text style={styles.wordOriginText}>
-                        {item.theme_name} • {item.deck_name}
-                      </Text>
-
-                      {!isQueued ? (
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          style={styles.addQueueBtn}
-                          onPress={() =>
-                            handleAddWord(
-                              item.front_lexeme_id,
-                              item.back_lexeme_id,
-                              item.concept_id
-                            )
-                          }
-                        >
-                          <Plus size={14} color="#FFFFFF" />
-                          <Text style={styles.addQueueBtnText}>
-                            {t('explore.add_to_queue')}
-                          </Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <View style={styles.inQueueBadge}>
-                          <Check size={14} color="#2563EB" />
-                          <Text style={styles.inQueueBadgeText}>{t('explore.in_queue')}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                );
-              }}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              updateCellsBatchingPeriod={50}
+              windowSize={5}
+              removeClippedSubviews={true}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>{t('explore.no_words_found')}</Text>
@@ -782,70 +989,14 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
             ) : (
               <FlatList
                 data={deckCards}
-                keyExtractor={(item) => `deck_card_${item.front_lexeme_id}`}
+                keyExtractor={deckCardsKeyExtractor}
+                renderItem={renderDeckCardDetail}
                 contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
-                renderItem={({ item }) => {
-                  const isQueued =
-                    item.is_garrisoned ||
-                    locallyQueuedWordIds.has(item.front_lexeme_id);
-                  const cefrColors = getCefrBadgeColors(item.front_cefr);
-
-                  return (
-                    <View style={styles.modalWordCard}>
-                      <View style={styles.wordItemHeader}>
-                        <View style={styles.wordTermBox}>
-                          <Text style={styles.wordFrontTerm}>{item.front_term}</Text>
-                          <TouchableOpacity
-                            style={styles.speakerBtn}
-                            onPress={() => speakWord(item.front_term, item.front_lang)}
-                          >
-                            <Volume2 size={16} color="#D97706" />
-                          </TouchableOpacity>
-                        </View>
-                        <View
-                          style={[
-                            styles.cefrBadge,
-                            { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
-                          ]}
-                        >
-                          <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
-                            {item.front_cefr}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <Text style={styles.wordBackTerm}>{item.back_term}</Text>
-
-                      <View style={styles.modalWordCardFooter}>
-                        {isQueued ? (
-                          <View style={styles.inQueueBadge}>
-                            <Check size={14} color="#059669" />
-                            <Text style={[styles.inQueueBadgeText, { color: '#059669' }]}>
-                              {t('explore.in_queue')}
-                            </Text>
-                          </View>
-                        ) : (
-                          <TouchableOpacity
-                            activeOpacity={0.8}
-                            style={styles.addQueueBtn}
-                            onPress={() =>
-                              handleAddWord(
-                                item.front_lexeme_id,
-                                item.back_lexeme_id,
-                                item.concept_id
-                              )
-                            }
-                          >
-                            <Plus size={14} color="#FFFFFF" />
-                            <Text style={styles.addQueueBtnText}>
-                              {t('explore.add_to_queue')}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  );
-                }}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                updateCellsBatchingPeriod={50}
+                windowSize={5}
+                removeClippedSubviews={true}
               />
             )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -235,6 +235,56 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
     nativeName: 'Español',
   };
 
+  const handleDeleteCallback = useCallback((lang: LanguageOption) => {
+    handleDelete(lang);
+  }, [handleDelete]);
+
+  const handleSelectCallback = useCallback((lang: LanguageOption) => {
+    handleSelectLanguage(lang);
+  }, [handleSelectLanguage]);
+
+  const handleDownloadCallback = useCallback((lang: LanguageOption) => {
+    handleDownload(lang);
+  }, [handleDownload]);
+
+  const renderLanguageItem = useCallback(({ item }: { item: LanguageOption }) => {
+    const isDownloaded = downloadedCodesSet.has(item.code.toLowerCase());
+    const isOrigin = pair.origin_lang === item.code;
+    const isDest = pair.destination_lang === item.code;
+    const isSelectedInCurrentMode =
+      (mode === 'origin' && isOrigin) ||
+      (mode === 'destination' && isDest);
+    const isDownloading = downloadingCode === item.code;
+    const isDeleting = deletingCode === item.code;
+
+    return (
+      <LanguageRowItem
+        item={item}
+        isDownloaded={isDownloaded}
+        isSelectedInCurrentMode={isSelectedInCurrentMode}
+        isOrigin={isOrigin}
+        isDest={isDest}
+        isDownloading={isDownloading}
+        isDeleting={isDeleting}
+        onSelectLanguage={handleSelectCallback}
+        onDelete={handleDeleteCallback}
+        onDownload={handleDownloadCallback}
+      />
+    );
+  }, [
+    downloadedCodesSet,
+    pair.origin_lang,
+    pair.destination_lang,
+    mode,
+    downloadingCode,
+    deletingCode,
+    handleSelectCallback,
+    handleDeleteCallback,
+    handleDownloadCallback,
+  ]);
+
+  const languageKeyExtractor = useCallback((item: LanguageOption) => item.code, []);
+
   return (
     <Modal
       visible={visible}
@@ -383,104 +433,126 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           {/* 123 Languages List */}
           <FlatList
             data={filteredLanguages}
-            keyExtractor={(item) => item.code}
+            keyExtractor={languageKeyExtractor}
             contentContainerStyle={styles.listContent}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => {
-              const isDownloaded = downloadedCodesSet.has(item.code.toLowerCase());
-              const isOrigin = pair.origin_lang === item.code;
-              const isDest = pair.destination_lang === item.code;
-              const isSelectedInCurrentMode =
-                (mode === 'origin' && isOrigin) ||
-                (mode === 'destination' && isDest);
-              const isDownloading = downloadingCode === item.code;
-              const isDeleting = deletingCode === item.code;
-
-              return (
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => handleSelectLanguage(item)}
-                  style={[
-                    styles.langRow,
-                    isSelectedInCurrentMode && styles.langRowSelected,
-                  ]}
-                >
-                  <View style={styles.langNames}>
-                    <View style={styles.nameRow}>
-                      <Text
-                        style={[
-                          styles.nativeName,
-                          isSelectedInCurrentMode && styles.nativeNameSelected,
-                        ]}
-                      >
-                        {item.nativeName}
-                      </Text>
-
-                      {isOrigin && (
-                        <View style={styles.originTag}>
-                          <Text style={styles.originTagText}>App (Origin)</Text>
-                        </View>
-                      )}
-                      {isDest && (
-                        <View style={styles.destTag}>
-                          <Text style={styles.destTagText}>Study Target</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <Text style={styles.englishName}>
-                      {item.name} ({item.code.toUpperCase()}) • ~25 KB
-                    </Text>
-                  </View>
-
-                  {/* Actions / Status */}
-                  <View style={styles.rowActions}>
-                    {isDownloading ? (
-                      <ActivityIndicator size="small" color="#D97706" />
-                    ) : isDeleting ? (
-                      <ActivityIndicator size="small" color="#DC2626" />
-                    ) : isDownloaded ? (
-                      <View style={styles.downloadedGroup}>
-                        <View style={styles.downloadedBadge}>
-                          <Check size={12} color="#059669" />
-                          <Text style={styles.downloadedBadgeText}>Saved</Text>
-                        </View>
-
-                        {!isOrigin && !isDest && item.code !== 'en' && (
-                          <TouchableOpacity
-                            style={styles.deleteBtn}
-                            onPress={() => handleDelete(item)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Trash2 size={15} color="#94A3B8" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.downloadBtn}
-                        onPress={() => handleDownload(item)}
-                      >
-                        <Download size={13} color="#78350F" />
-                        <Text style={styles.downloadBtnText}>Get</Text>
-                      </TouchableOpacity>
-                    )}
-
-                    {isSelectedInCurrentMode && (
-                      <View style={styles.checkCircle}>
-                        <Check size={13} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            }}
+            initialNumToRender={15}
+            maxToRenderPerBatch={15}
+            updateCellsBatchingPeriod={50}
+            windowSize={5}
+            removeClippedSubviews={true}
+            renderItem={renderLanguageItem}
           />
         </View>
       </View>
     </Modal>
   );
 };
+
+interface LanguageRowItemProps {
+  item: LanguageOption;
+  isDownloaded: boolean;
+  isSelectedInCurrentMode: boolean;
+  isOrigin: boolean;
+  isDest: boolean;
+  isDownloading: boolean;
+  isDeleting: boolean;
+  onSelectLanguage: (item: LanguageOption) => void;
+  onDelete: (item: LanguageOption) => void;
+  onDownload: (item: LanguageOption) => void;
+}
+
+const LanguageRowItem = React.memo<LanguageRowItemProps>(({
+  item,
+  isDownloaded,
+  isSelectedInCurrentMode,
+  isOrigin,
+  isDest,
+  isDownloading,
+  isDeleting,
+  onSelectLanguage,
+  onDelete,
+  onDownload,
+}) => {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => onSelectLanguage(item)}
+      style={[
+        styles.langRow,
+        isSelectedInCurrentMode && styles.langRowSelected,
+      ]}
+    >
+      <View style={styles.langNames}>
+        <View style={styles.nameRow}>
+          <Text
+            style={[
+              styles.nativeName,
+              isSelectedInCurrentMode && styles.nativeNameSelected,
+            ]}
+          >
+            {item.nativeName}
+          </Text>
+
+          {isOrigin && (
+            <View style={styles.originTag}>
+              <Text style={styles.originTagText}>App (Origin)</Text>
+            </View>
+          )}
+          {isDest && (
+            <View style={styles.destTag}>
+              <Text style={styles.destTagText}>Study Target</Text>
+            </View>
+          )}
+        </View>
+
+        <Text style={styles.englishName}>
+          {item.name} ({item.code.toUpperCase()}) • ~25 KB
+        </Text>
+      </View>
+
+      {/* Actions / Status */}
+      <View style={styles.rowActions}>
+        {isDownloading ? (
+          <ActivityIndicator size="small" color="#D97706" />
+        ) : isDeleting ? (
+          <ActivityIndicator size="small" color="#DC2626" />
+        ) : isDownloaded ? (
+          <View style={styles.downloadedGroup}>
+            <View style={styles.downloadedBadge}>
+              <Check size={12} color="#059669" />
+              <Text style={styles.downloadedBadgeText}>Saved</Text>
+            </View>
+
+            {!isOrigin && !isDest && item.code !== 'en' && (
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => onDelete(item)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Trash2 size={15} color="#94A3B8" />
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.downloadBtn}
+            onPress={() => onDownload(item)}
+          >
+            <Download size={13} color="#78350F" />
+            <Text style={styles.downloadBtnText}>Get</Text>
+          </TouchableOpacity>
+        )}
+
+        {isSelectedInCurrentMode && (
+          <View style={styles.checkCircle}>
+            <Check size={13} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 const styles = StyleSheet.create({
   overlay: {

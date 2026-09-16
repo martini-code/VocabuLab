@@ -84,10 +84,23 @@ CREATE TABLE IF NOT EXISTS Downloaded_Deck_Translations (
 CREATE INDEX IF NOT EXISTS idx_user_cards_due ON User_Cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_user_cards_card_id ON User_Cards(card_id);
 CREATE INDEX IF NOT EXISTS idx_user_cards_lang ON User_Cards(target_lang);
+CREATE INDEX IF NOT EXISTS idx_user_cards_lang_due ON User_Cards(target_lang, due_date);
+CREATE INDEX IF NOT EXISTS idx_user_cards_lang_card ON User_Cards(target_lang, card_id);
+CREATE INDEX IF NOT EXISTS idx_user_cards_lang_state ON User_Cards(target_lang, state);
+CREATE INDEX IF NOT EXISTS idx_user_cards_lang_stability ON User_Cards(target_lang, stability);
+CREATE INDEX IF NOT EXISTS idx_user_cards_lang_reps ON User_Cards(target_lang, reps);
+CREATE INDEX IF NOT EXISTS idx_user_cards_due_state ON User_Cards(due_date, state);
+CREATE INDEX IF NOT EXISTS idx_user_cards_stability ON User_Cards(stability);
+
+CREATE INDEX IF NOT EXISTS idx_review_logs_card_id ON Review_Logs(card_id);
 CREATE INDEX IF NOT EXISTS idx_review_logs_reviewed_at ON Review_Logs(reviewed_at);
+
 CREATE INDEX IF NOT EXISTS idx_dl_trans_lang ON Downloaded_Card_Translations(lang_name);
+CREATE INDEX IF NOT EXISTS idx_dl_trans_card_lang ON Downloaded_Card_Translations(card_id, lang_name);
 CREATE INDEX IF NOT EXISTS idx_dl_defs_lang ON Downloaded_Card_Definitions(lang_name);
+CREATE INDEX IF NOT EXISTS idx_dl_defs_card_lang ON Downloaded_Card_Definitions(card_id, lang_name);
 CREATE INDEX IF NOT EXISTS idx_dl_deck_trans_lang ON Downloaded_Deck_Translations(lang_name);
+CREATE INDEX IF NOT EXISTS idx_dl_deck_trans_deck_lang ON Downloaded_Deck_Translations(deck_id, lang_name);
 `;
 
 export const SCHEMA_SQL = `

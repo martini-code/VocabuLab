@@ -19,6 +19,59 @@ interface FastSearchProps {
   onInsufficientTokens?: (requiredWords: number) => void;
 }
 
+interface SearchResultCardProps {
+  item: any;
+  isGarrisoned: boolean;
+  onLearn: (item: any) => void;
+  onSpeak: (term: string, lang: string) => void;
+}
+
+const SearchResultCard = React.memo<SearchResultCardProps>(
+  ({ item, isGarrisoned, onLearn, onSpeak }) => {
+    return (
+      <ParchmentCard style={styles.resultCard}>
+        <View style={styles.cardHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.term}>{item.term}</Text>
+            <Text style={styles.langAndPos}>
+              {item.language.toUpperCase()} • {item.pos || 'noun'}
+            </Text>
+          </View>
+          <ShieldBadge level={item.cefr_level} size="sm" />
+        </View>
+
+        <View style={styles.cardFooter}>
+          <TouchableOpacity
+            style={styles.audioBtn}
+            onPress={() => onSpeak(item.term, item.language)}
+          >
+            <Volume2 size={16} color="#78350F" style={{ marginRight: 6 }} />
+            <Text style={styles.audioText}>Hear Sound</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={isGarrisoned}
+            style={[styles.garrisonBtn, isGarrisoned && styles.garrisonBtnDone]}
+            onPress={() => onLearn(item)}
+          >
+            {isGarrisoned ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Check size={14} color="#166534" style={{ marginRight: 4 }} />
+                <Text style={styles.garrisonBtnText}>Learned</Text>
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                <Text style={styles.garrisonBtnText}>Learn Word</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ParchmentCard>
+    );
+  }
+);
+
 export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
@@ -34,16 +87,37 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
     setResults(res);
   };
 
-  const handleLearn = async (item: any) => {
-    const canLearn = await tokenWallet.canLearnWords(1);
-    if (!canLearn) {
-      onInsufficientTokens?.(1);
-      return;
-    }
-    await tokenWallet.consumeWordAllowance(1);
-    await garrisonCard(item.id, item.id);
-    setGarrisonedSet((prev) => new Set(prev).add(item.id));
-  };
+  const handleLearn = React.useCallback(
+    async (item: any) => {
+      const canLearn = await tokenWallet.canLearnWords(1);
+      if (!canLearn) {
+        onInsufficientTokens?.(1);
+        return;
+      }
+      await tokenWallet.consumeWordAllowance(1);
+      await garrisonCard(item.id, item.id);
+      setGarrisonedSet((prev) => new Set(prev).add(item.id));
+    },
+    [onInsufficientTokens]
+  );
+
+  const handleSpeak = React.useCallback((term: string, lang: string) => {
+    speakWord(term, lang);
+  }, []);
+
+  const renderResultItem = React.useCallback(
+    ({ item }: { item: any }) => (
+      <SearchResultCard
+        item={item}
+        isGarrisoned={garrisonedSet.has(item.id)}
+        onLearn={handleLearn}
+        onSpeak={handleSpeak}
+      />
+    ),
+    [garrisonedSet, handleLearn, handleSpeak]
+  );
+
+  const keyExtractor = React.useCallback((item: any) => item.id.toString(), []);
 
   return (
     <View style={styles.container}>
@@ -58,15 +132,15 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         </View>
       </View>
 
-      {/* Spell Scroll Search Input */}
+      {/* Medieval Input Field */}
       <View style={styles.searchBarContainer}>
         <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.input}
+          placeholder="Search archaic scrolls by prefix or rune..."
+          placeholderTextColor="#78350F88"
           value={query}
           onChangeText={handleSearch}
-          placeholder="Cast an inquiry (e.g. espada, banquete, truth)..."
-          placeholderTextColor="#94A3B8"
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -80,8 +154,14 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
       {/* Results List */}
       <FlatList
         data={results}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={keyExtractor}
+        renderItem={renderResultItem}
         contentContainerStyle={styles.resultsList}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        windowSize={5}
+        removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Sparkles size={44} color="#D97706" style={{ marginBottom: 12 }} />
@@ -95,51 +175,6 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
             </Text>
           </View>
         }
-        renderItem={({ item }) => {
-          const isGarrisoned = garrisonedSet.has(item.id);
-
-          return (
-            <ParchmentCard style={styles.resultCard}>
-              <View style={styles.cardHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.term}>{item.term}</Text>
-                  <Text style={styles.langAndPos}>
-                    {item.language.toUpperCase()} • {item.pos || 'noun'}
-                  </Text>
-                </View>
-                <ShieldBadge level={item.cefr_level} size="sm" />
-              </View>
-
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={styles.audioBtn}
-                  onPress={() => speakWord(item.term, item.language)}
-                >
-                  <Volume2 size={16} color="#78350F" style={{ marginRight: 6 }} />
-                  <Text style={styles.audioText}>Hear Sound</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  disabled={isGarrisoned}
-                  style={[styles.garrisonBtn, isGarrisoned && styles.garrisonBtnDone]}
-                  onPress={() => handleLearn(item)}
-                >
-                  {isGarrisoned ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Check size={14} color="#166534" style={{ marginRight: 4 }} />
-                      <Text style={styles.garrisonBtnText}>Learned</Text>
-                    </View>
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                      <Text style={styles.garrisonBtnText}>Learn Word</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </ParchmentCard>
-          );
-        }}
       />
     </View>
   );
