@@ -13,21 +13,28 @@ const LANGUAGE_CODE_MAP: Record<string, string> = {
  * Pronounces a term using native offline speech synthesis.
  */
 export async function speakWord(text: string, langCode: string = 'es'): Promise<void> {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return;
+  }
+
+  const cleanText = text.trim();
+
   try {
     const isSpeaking = await Speech.isSpeakingAsync();
     if (isSpeaking) {
       await Speech.stop();
     }
 
-    const voiceLang = LANGUAGE_CODE_MAP[langCode.toLowerCase()] || langCode;
+    const normalizedLang = (langCode || 'en').toLowerCase().trim();
+    const voiceLang = LANGUAGE_CODE_MAP[normalizedLang] || normalizedLang;
 
-    Speech.speak(text, {
+    Speech.speak(cleanText, {
       language: voiceLang,
       rate: 0.88,
       pitch: 1.05,
     });
   } catch (error) {
-    console.warn('[TTS] Offline speech engine error:', (error as Error).message);
+    console.warn('[TTS] Offline speech engine notice:', (error as Error).message);
   }
 }
 
