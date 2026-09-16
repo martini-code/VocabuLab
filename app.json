@@ -29,7 +29,58 @@
         {
           "enableFTS": true
         }
-      ]
+      ],
+      "./plugins/withAdMobMediation"
+    ]
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511",
+    "delay_app_measurement_init": false,
+    "user_tracking_usage_description": "This identifier helps deliver relevant rewarded ads and mediate top partner rewards to you.",
+    "sk_ad_network_items": [
+      "cstr6suwn9.skadnetwork",
+      "4fzdc2evr5.skadnetwork",
+      "4pfyvq9l8r.skadnetwork",
+      "2fnua5tdw4.skadnetwork",
+      "ydx93a7ass.skadnetwork",
+      "5a6flpkh64.skadnetwork",
+      "p78axxw29g.skadnetwork",
+      "v72qych5uu.skadnetwork",
+      "c6kg979843.skadnetwork",
+      "s39g8k73mm.skadnetwork",
+      "3qy4746246.skadnetwork",
+      "3sh42y64q3.skadnetwork",
+      "f38h382jlk.skadnetwork",
+      "hs6bdukanm.skadnetwork",
+      "prcb7njmu6.skadnetwork",
+      "v4nxqhlyqp.skadnetwork",
+      "wzmmz9fp6w.skadnetwork",
+      "yclnxrl5pm.skadnetwork",
+      "t38b2kh725.skadnetwork",
+      "7ug5zh24hu.skadnetwork",
+      "9rd848q2bz.skadnetwork",
+      "y5ghdn5j9q.skadnetwork",
+      "n6fk4nfna4.skadnetwork",
+      "v9wttpbfk9.skadnetwork",
+      "n38lu8286q.skadnetwork",
+      "47vh428956.skadnetwork",
+      "kbd757653g.skadnetwork",
+      "9t245vhm42.skadnetwork",
+      "a2p9lx4jpn.skadnetwork",
+      "22mmun2rn5.skadnetwork",
+      "446h53uz2q.skadnetwork",
+      "5l3tpt7t6e.skadnetwork",
+      "7rz5826l4v.skadnetwork",
+      "mlmmfzh3r3.skadnetwork",
+      "klf5c3l5u5.skadnetwork",
+      "ppxm28t8ap.skadnetwork",
+      "uw77j35x4d.skadnetwork",
+      "578prtvx9j.skadnetwork",
+      "4dzt52r2t5.skadnetwork",
+      "e5fvkx65mn.skadnetwork",
+      "8c4e2ghe7u.skadnetwork",
+      "zq4928m8fl.skadnetwork"
     ]
   }
 }

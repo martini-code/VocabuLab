@@ -457,6 +457,7 @@
     "unlock_unlimited_plus": "O Desbloquea Ilimitado con Plus",
     "daily_ads_limit_reached": "Límite Diario de Anuncios Alcanzado",
     "daily_ads_limit_reached_desc": "Has visto los 3 anuncios de hoy. Se reinicia mañana o desbloquea aprendizaje infinito con Plus.",
-    "upgrade_to_plus_cta": "Mejorar a Plus"
+    "upgrade_to_plus_cta": "Mejorar a Plus",
+    "inspect_mediation": "Inspeccionar mediación AdMob"
   }
 }

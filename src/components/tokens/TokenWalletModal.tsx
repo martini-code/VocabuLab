@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {
   Coins,
@@ -17,6 +18,7 @@ import {
   Sparkles,
   CheckCircle2,
   Clock,
+  Sliders,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
@@ -59,7 +61,17 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
     }
   };
 
-  if (!visible || !wallet) return null;
+  const handleInspectMediation = async () => {
+    const res = await adMobService.openAdInspector();
+    if (!res.success && res.error) {
+      Alert.alert(
+        'Google AdMob Mediation',
+        `${res.error}\n\nMediation adapters (Meta, AppLovin, Unity, Mintegral, ironSource, InMobi, Pangle, Vungle, DT Exchange, Yandex) are active in native builds.`
+      );
+    }
+  };
+
+  if (!wallet) return null;
 
   const adsRemaining = Math.max(0, wallet.maxDailyAds - wallet.adsWatchedToday);
 
@@ -70,9 +82,13 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <View style={styles.iconCircle}>
+              <TouchableOpacity
+                style={styles.iconCircle}
+                onLongPress={handleInspectMediation}
+                activeOpacity={0.8}
+              >
                 <Coins size={22} color="#D97706" />
-              </View>
+              </TouchableOpacity>
               <View>
                 <Text style={styles.title}>
                   {t('tokens.wallet_title', { defaultValue: 'ROYAL TOKENS' })}
@@ -201,6 +217,18 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                 </TouchableOpacity>
               )}
             </View>
+
+            {/* AdMob Mediation Inspector Trigger */}
+            <TouchableOpacity
+              style={styles.inspectorBtn}
+              onPress={handleInspectMediation}
+              activeOpacity={0.7}
+            >
+              <Sliders size={13} color="#92400E" />
+              <Text style={styles.inspectorBtnText}>
+                {t('tokens.inspect_mediation', { defaultValue: 'Inspect AdMob Mediation' })}
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </View>
@@ -209,6 +237,20 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  inspectorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  inspectorBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#92400E',
+    textDecorationLine: 'underline',
+  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',

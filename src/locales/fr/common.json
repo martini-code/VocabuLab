@@ -457,6 +457,7 @@
     "unlock_unlimited_plus": "Ou Débloquer l'Illimité avec Plus",
     "daily_ads_limit_reached": "Limite Quotidienne de Pubs Atteinte",
     "daily_ads_limit_reached_desc": "Vous avez regardé vos 3 pubs pour aujourd'hui. Réinitialisation demain ou illimité avec Plus.",
-    "upgrade_to_plus_cta": "Passer à Plus"
+    "upgrade_to_plus_cta": "Passer à Plus",
+    "inspect_mediation": "Inspecter la médiation AdMob"
   }
 }

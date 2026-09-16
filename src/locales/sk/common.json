@@ -231,7 +231,8 @@
     "unlock_unlimited_plus": "Or Unlock Unlimited with Plus",
     "daily_ads_limit_reached": "Daily Ad Limit Reached",
     "daily_ads_limit_reached_desc": "You have watched all 3 ads for today. Reset occurs tomorrow or unlock infinite learning with Plus.",
-    "upgrade_to_plus_cta": "Upgrade to Plus"
+    "upgrade_to_plus_cta": "Upgrade to Plus",
+    "inspect_mediation": "Inspect AdMob Mediation"
   },
   "db_decks": {
     "1": {

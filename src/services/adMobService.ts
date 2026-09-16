@@ -14,11 +14,19 @@ export type RewardedAdResult =
 type AdMobStatusListener = (isReady: boolean) => void;
 type FallbackAdModalHandler = (show: boolean, onRewarded: () => void, onClose: () => void) => void;
 
+export interface MediationAdapterStatus {
+  state: number; // 0 = NOT_READY, 1 = READY
+  description: string;
+  latency?: number;
+}
+
 class AdMobService {
   private nativeRewardedAd: any = null;
   private isLoaded: boolean = false;
   private isLoading: boolean = false;
   private hasNativeAdMob: boolean = false;
+  private isMediationInitialized: boolean = false;
+  private adapterStatuses: Record<string, MediationAdapterStatus> = {};
   private fallbackModalHandler: FallbackAdModalHandler | null = null;
   private statusListeners: Set<AdMobStatusListener> = new Set();
 
@@ -45,6 +53,66 @@ class AdMobService {
   }
 
   /**
+   * Initializes Google Mobile Ads SDK and all mediation partner adapters
+   * (Meta, AppLovin, Unity, Mintegral, ironSource, InMobi, Pangle, Vungle, Yandex).
+   */
+  async initMediation(): Promise<void> {
+    if (this.isMediationInitialized || !this.hasNativeAdMob) return;
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mobileAds = require('react-native-google-mobile-ads');
+      const statuses = await mobileAds().initialize();
+      this.isMediationInitialized = true;
+      this.adapterStatuses = statuses || {};
+
+      console.log('[AdMobMediation] Initialized successfully. Mediation adapter statuses:');
+      if (statuses) {
+        Object.entries(statuses).forEach(([adapter, status]: [string, any]) => {
+          console.log(`  - ${adapter}: state=${status.state}, description=${status.description}`);
+        });
+      }
+    } catch (err) {
+      console.warn('[AdMobMediation] Error during mediation initialization:', err);
+    }
+  }
+
+  /**
+   * Opens Google Ad Inspector overlay to inspect mediation waterfalls, bidding partners, and ad units.
+   */
+  async openAdInspector(): Promise<{ success: boolean; error?: string }> {
+    if (!this.hasNativeAdMob) {
+      console.log('[AdMobMediation] Ad Inspector is only available in native builds with Google Mobile Ads SDK linked.');
+      return {
+        success: false,
+        error: 'Ad Inspector requires a native build with react-native-google-mobile-ads linked.',
+      };
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mobileAds = require('react-native-google-mobile-ads');
+      await mobileAds().openAdInspector();
+      return { success: true };
+    } catch (err: any) {
+      console.warn('[AdMobMediation] Error launching Ad Inspector:', err);
+      return { success: false, error: err?.message || 'Failed to open Ad Inspector' };
+    }
+  }
+
+  /**
+   * Returns current mediation readiness and registered adapter statuses.
+   */
+  getMediationStatus() {
+    return {
+      hasNativeAdMob: this.hasNativeAdMob,
+      isMediationInitialized: this.isMediationInitialized,
+      adapterStatuses: this.adapterStatuses,
+      isLoaded: this.isLoaded,
+    };
+  }
+
+  /**
    * Registers UI handler for the simulated fallback ad modal when running on web or development.
    */
   setFallbackModalHandler(handler: FallbackAdModalHandler | null) {
@@ -66,6 +134,12 @@ class AdMobService {
 
     try {
       this.isLoading = true;
+
+      // Ensure mediation adapters are initialized before loading ads
+      if (!this.isMediationInitialized) {
+        await this.initMediation();
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { RewardedAd, RewardedAdEventType, TestIds } = require('react-native-google-mobile-ads');
       const adUnitId = Platform.select({
@@ -75,7 +149,7 @@ class AdMobService {
       });
 
       this.nativeRewardedAd = RewardedAd.createForAdRequest(adUnitId, {
-        requestNonPersonalizedAdsOnly: true,
+        requestNonPersonalizedAdsOnly: false,
       });
 
       const unsubLoaded = this.nativeRewardedAd.addAdEventListener(
