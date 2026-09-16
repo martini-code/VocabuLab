@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Rating, Grade } from 'ts-fsrs';
 import { CardWithDetails, MascotMood } from '../../types';
-import { getDueCards, getDeckCardsForReview, updateCardFSRS, logReviewEvent } from '../../db/vault';
+import { getDueCards, getDeckCardsForReview, recordCardReview } from '../../db/vault';
 import { getReviewOptions, gradeCardFSRS } from '../../services/fsrsService';
 import { speakWord } from '../../utils/tts';
 import { SquireMascot } from '../../components/mascot/Mascots';
@@ -103,15 +103,13 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       setMascotQuote("Huzzah! Pure mastery!");
     }
 
-    // 2. Persist FSRS state & review logs asynchronously in SQLite
+    // 2. Persist FSRS state & review logs asynchronously in SQLite within a single transaction
     const cardId = currentCard.id;
     try {
       const updatePayload = gradeCardFSRS(currentCard, rating);
-      updateCardFSRS(cardId, updatePayload)
-        .then(() => logReviewEvent(cardId, rating))
-        .catch((err) => {
-          console.warn('[ReviewSession] Notice updating card FSRS state:', err);
-        });
+      recordCardReview(cardId, updatePayload, rating).catch((err) => {
+        console.warn('[ReviewSession] Notice recording card review in SQLite:', err);
+      });
     } catch (err) {
       console.warn('[ReviewSession] Notice calculating FSRS grade payload:', err);
     }

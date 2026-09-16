@@ -882,7 +882,9 @@ export async function getCardsByDeck(
   deckIdOrSliceId: string | number,
   targetLang = 'es',
   difficultySlice?: number,
-  originLang?: string
+  originLang?: string,
+  limit = 100,
+  offset = 0
 ): Promise<DeckCardDetail[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
@@ -896,7 +898,7 @@ export async function getCardsByDeck(
     difficultySlice
   );
 
-  let query = 'SELECT c.card_id, c.deck_id, c.primary_term, c.pos, c.cili_id, c.difficulty, c.definition FROM cards c WHERE c.deck_id = ?';
+  let query = 'SELECT c.card_id, c.deck_id, c.primary_term, c.pos, c.cili_id, c.difficulty FROM cards c WHERE c.deck_id = ?';
   const params: any[] = [realDeckId];
 
   if (slice !== undefined) {
@@ -904,14 +906,14 @@ export async function getCardsByDeck(
     params.push(slice);
   }
 
-  query += ' ORDER BY c.card_id ASC;';
+  query += ' ORDER BY c.card_id ASC LIMIT ? OFFSET ?;';
+  params.push(limit, offset);
 
   const cardRows = await staticDb.getAllAsync<{
     card_id: number;
     deck_id: number;
     primary_term: string;
     pos: string;
-    definition: string;
     cili_id: string;
     difficulty: number;
   }>(query, params);
@@ -948,7 +950,7 @@ export async function getCardsByDeck(
     const uc = userMap.get(c.card_id);
     const frontTerm = destMap.get(c.card_id) || c.primary_term;
     const backTerm = origMap.get(c.card_id) || c.primary_term;
-    const definition = defMap.get(c.card_id) || c.definition || '';
+    const definition = defMap.get(c.card_id) || '';
 
     return {
       concept_id: c.cili_id || `c_${c.card_id}`,
@@ -1049,7 +1051,8 @@ export async function removeWordFromQueue(cardId: string): Promise<void> {
 export async function getDueCards(
   filterDeckId?: string | number,
   targetLang = 'es',
-  originLang?: string
+  originLang?: string,
+  limit = 100
 ): Promise<CardWithDetails[]> {
   const userDb = await getUserDb();
   const staticDb = await getStaticDb();
@@ -1074,8 +1077,8 @@ export async function getDueCards(
     lapses: number;
     updated_at: string;
   }>(
-    'SELECT * FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ? ORDER BY due_date ASC;',
-    [langName, targetLang, now]
+    'SELECT id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ? ORDER BY due_date ASC LIMIT ?;',
+    [langName, targetLang, now, limit]
   );
 
   if (userCards.length === 0) {
@@ -1245,7 +1248,7 @@ export async function getDeckCardsForReview(
     lapses: number;
     updated_at: string;
   }>(
-    `SELECT * FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND card_id IN (${placeholders});`,
+    `SELECT id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND card_id IN (${placeholders});`,
     [langName, targetLang, ...cardIds]
   );
 
@@ -1319,7 +1322,9 @@ export async function getDeckCardsForReview(
 export async function getWordsByDifficulty(
   cefr: string,
   targetLang = 'es',
-  originLang?: string
+  originLang?: string,
+  limit = 100,
+  offset = 0
 ): Promise<DifficultyWordItem[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
@@ -1331,7 +1336,6 @@ export async function getWordsByDifficulty(
       c.deck_id,
       c.primary_term,
       c.pos,
-      c.definition,
       c.cili_id,
       c.difficulty,
       d.category,
@@ -1346,14 +1350,14 @@ export async function getWordsByDifficulty(
     params.push(cefrToDifficulty(cefr));
   }
 
-  query += ' ORDER BY c.difficulty ASC, c.card_id ASC;';
+  query += ' ORDER BY c.difficulty ASC, c.card_id ASC LIMIT ? OFFSET ?;';
+  params.push(limit, offset);
 
   const rows = await staticDb.getAllAsync<{
     card_id: number;
     deck_id: number;
     primary_term: string;
     pos: string;
-    definition: string;
     cili_id: string;
     difficulty: number;
     category: string;
@@ -1389,7 +1393,7 @@ export async function getWordsByDifficulty(
     const cefrLevel = difficultyToCefr(r.difficulty);
     const frontTerm = destMap.get(r.card_id) || r.primary_term;
     const backTerm = origMap.get(r.card_id) || r.primary_term;
-    const definition = defMap.get(r.card_id) || r.definition || '';
+    const definition = defMap.get(r.card_id) || '';
 
     const dt = deckTransMap.get(r.deck_id);
     const deckName = dt?.subcategory_translation || capitalizeTitle(r.subcategory);
@@ -1505,16 +1509,18 @@ export async function addWordsByDifficultyToQueue(
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const now = new Date().toISOString();
 
-  for (const w of unqueued) {
-    const cardIdStr = `card_${w.front_lexeme_id}_${langName}`;
-    await userDb.runAsync(
-      `INSERT OR REPLACE INTO User_Cards (
-        id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
-        elapsed_days, scheduled_days, reps, lapses, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-      [cardIdStr, w.front_lexeme_id, langName, effectiveOrigin, now, 0, 0, 0, 0, 0, 0, 0, now]
-    );
-  }
+  await userDb.withTransactionAsync(async () => {
+    for (const w of unqueued) {
+      const cardIdStr = `card_${w.front_lexeme_id}_${langName}`;
+      await userDb.runAsync(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        [cardIdStr, w.front_lexeme_id, langName, effectiveOrigin, now, 0, 0, 0, 0, 0, 0, 0, now]
+      );
+    }
+  });
 
   return unqueued.length;
 }
@@ -1580,20 +1586,138 @@ export async function getMasterySummary(
 export async function getMasteryWords(
   stage: MasteryStage,
   targetLang = 'es',
-  originLang?: string
+  originLang?: string,
+  limit = 50,
+  offset = 0
 ): Promise<MasteryWordItem[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const now = new Date().toISOString();
 
-  // 1. Fetch all cards with deck info
-  const allCards = await staticDb.getAllAsync<{
+  if (stage === 'available') {
+    // 1. Get all card IDs already queued for this language
+    const queuedRows = await userDb.getAllAsync<{ card_id: number }>(
+      'SELECT card_id FROM User_Cards WHERE target_lang IN (?, ?);',
+      [langName, targetLang]
+    );
+    const queuedIds = queuedRows.map((r) => r.card_id);
+
+    let query = `
+      SELECT 
+        c.card_id,
+        c.deck_id,
+        c.primary_term,
+        c.pos,
+        c.cili_id,
+        c.difficulty,
+        d.category,
+        d.subcategory
+      FROM cards c
+      JOIN decks d ON d.deck_id = c.deck_id
+    `;
+    const params: any[] = [];
+    if (queuedIds.length > 0) {
+      const placeholders = queuedIds.map(() => '?').join(',');
+      query += ` WHERE c.card_id NOT IN (${placeholders})`;
+      params.push(...queuedIds);
+    }
+    query += ' ORDER BY c.card_id ASC LIMIT ? OFFSET ?;';
+    params.push(limit, offset);
+
+    const availableCards = await staticDb.getAllAsync<{
+      card_id: number;
+      deck_id: number;
+      primary_term: string;
+      pos: string;
+      cili_id: string;
+      difficulty: number;
+      category: string;
+      subcategory: string;
+    }>(query, params);
+
+    if (availableCards.length === 0) return [];
+
+    const cardIds = availableCards.map((c) => c.card_id);
+    const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+    const allDeckIds = Array.from(new Set(availableCards.map((c) => c.deck_id)));
+    const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
+
+    return availableCards.map((c) => {
+      const frontTerm = destMap.get(c.card_id) || c.primary_term;
+      const backTerm = origMap.get(c.card_id) || c.primary_term;
+      const definition = defMap.get(c.card_id) || '';
+      const dt = deckTransMap.get(c.deck_id);
+      const deckName = dt?.subcategory_translation || capitalizeTitle(c.subcategory);
+      const themeName = dt?.category_translation || capitalizeTitle(c.category);
+
+      return {
+        concept_id: c.cili_id || `c_${c.card_id}`,
+        concept_desc: definition,
+        front_lexeme_id: c.card_id,
+        front_term: frontTerm,
+        front_lang: targetLang,
+        front_pos: c.pos || null,
+        front_cefr: difficultyToCefr(c.difficulty),
+        back_lexeme_id: c.card_id,
+        back_term: backTerm,
+        back_lang: effectiveOrigin,
+        deck_name: deckName,
+        theme_name: themeName,
+        is_queued: false,
+        stage: 'available',
+      };
+    });
+  }
+
+  // Stages backed by User_Cards: 'new_in_queue' | 'learning' | 'slipping' | 'mastered'
+  let stageCondition = '';
+  const userParams: any[] = [langName, targetLang];
+
+  if (stage === 'new_in_queue') {
+    stageCondition = 'AND (reps = 0 OR state = 0)';
+  } else if (stage === 'slipping') {
+    stageCondition = 'AND (lapses > 0 AND due_date < ?)';
+    userParams.push(now);
+  } else if (stage === 'mastered') {
+    stageCondition = 'AND (stability >= 21 OR reps >= 3)';
+  } else if (stage === 'learning') {
+    stageCondition = 'AND NOT (reps = 0 OR state = 0) AND NOT (stability >= 21 OR reps >= 3) AND NOT (lapses > 0 AND due_date < ?)';
+    userParams.push(now);
+  }
+
+  userParams.push(limit, offset);
+
+  const userCards = await userDb.getAllAsync<{
+    id: string;
+    card_id: number;
+    state: number;
+    stability: number;
+    scheduled_days: number;
+    reps: number;
+    lapses: number;
+    due_date: string;
+  }>(
+    `SELECT id, card_id, state, stability, scheduled_days, reps, lapses, due_date
+     FROM User_Cards
+     WHERE (target_lang = ? OR target_lang = ?)
+       ${stageCondition}
+     ORDER BY due_date ASC
+     LIMIT ? OFFSET ?;`,
+    userParams
+  );
+
+  if (userCards.length === 0) return [];
+
+  const cardIds = userCards.map((uc) => uc.card_id);
+  const placeholders = cardIds.map(() => '?').join(',');
+
+  const cardMeta = await staticDb.getAllAsync<{
     card_id: number;
     deck_id: number;
     primary_term: string;
     pos: string;
-    definition: string;
     cili_id: string;
     difficulty: number;
     category: string;
@@ -1604,92 +1728,57 @@ export async function getMasteryWords(
       c.deck_id,
       c.primary_term,
       c.pos,
-      c.definition,
       c.cili_id,
       c.difficulty,
       d.category,
       d.subcategory
     FROM cards c
     JOIN decks d ON d.deck_id = c.deck_id
-    ORDER BY c.card_id ASC;`
+    WHERE c.card_id IN (${placeholders});`,
+    cardIds
   );
 
-  // 2. Fetch all user cards for this language
-  const userCards = await userDb.getAllAsync<{
-    id: string;
-    card_id: number;
-    state: number;
-    stability: number;
-    scheduled_days: number;
-    reps: number;
-    lapses: number;
-    due_date: string;
-  }>('SELECT id, card_id, state, stability, scheduled_days, reps, lapses, due_date FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);', [langName, targetLang]);
+  const metaMap = new Map<number, (typeof cardMeta)[0]>();
+  cardMeta.forEach((m) => metaMap.set(m.card_id, m));
 
-  const userMap = new Map<number, (typeof userCards)[0]>();
-  userCards.forEach((uc) => userMap.set(uc.card_id, uc));
-
-  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const cardIds = allCards.map((c) => c.card_id);
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
-
-  const allDeckIds = Array.from(new Set(allCards.map((c) => c.deck_id)));
+  const allDeckIds = Array.from(new Set(cardMeta.map((c) => c.deck_id)));
   const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
 
-  const items: MasteryWordItem[] = [];
+  return userCards.map((uc) => {
+    const meta = metaMap.get(uc.card_id);
+    const primaryTerm = meta?.primary_term || '';
+    const frontTerm = destMap.get(uc.card_id) || primaryTerm;
+    const backTerm = origMap.get(uc.card_id) || primaryTerm;
+    const definition = defMap.get(uc.card_id) || '';
+    const dt = meta ? deckTransMap.get(meta.deck_id) : undefined;
+    const deckName = dt?.subcategory_translation || (meta ? capitalizeTitle(meta.subcategory) : undefined);
+    const themeName = dt?.category_translation || (meta ? capitalizeTitle(meta.category) : undefined);
 
-  for (const c of allCards) {
-    const uc = userMap.get(c.card_id);
-    let cardStage: MasteryStage = 'available';
-
-    if (uc) {
-      if (uc.reps === 0 || uc.state === 0) {
-        cardStage = 'new_in_queue';
-      } else if (uc.lapses > 0 && uc.due_date < now) {
-        cardStage = 'slipping';
-      } else if (uc.stability >= 21 || uc.reps >= 3) {
-        cardStage = 'mastered';
-      } else {
-        cardStage = 'learning';
-      }
-    }
-
-    if (cardStage !== stage) continue;
-
-    const frontTerm = destMap.get(c.card_id) || c.primary_term;
-    const backTerm = origMap.get(c.card_id) || c.primary_term;
-    const definition = defMap.get(c.card_id) || c.definition || '';
-
-    const dt = deckTransMap.get(c.deck_id);
-    const deckName = dt?.subcategory_translation || capitalizeTitle(c.subcategory);
-    const themeName = dt?.category_translation || capitalizeTitle(c.category);
-
-    items.push({
-      concept_id: c.cili_id || `c_${c.card_id}`,
+    return {
+      concept_id: meta?.cili_id || `c_${uc.card_id}`,
       concept_desc: definition,
-      front_lexeme_id: c.card_id,
+      front_lexeme_id: uc.card_id,
       front_term: frontTerm,
       front_lang: targetLang,
-      front_pos: c.pos || null,
-      front_cefr: difficultyToCefr(c.difficulty),
-      back_lexeme_id: c.card_id,
+      front_pos: meta?.pos || null,
+      front_cefr: meta ? difficultyToCefr(meta.difficulty) : 'A1',
+      back_lexeme_id: uc.card_id,
       back_term: backTerm,
       back_lang: effectiveOrigin,
       deck_name: deckName,
       theme_name: themeName,
-      is_queued: !!uc,
-      user_card_id: uc ? uc.id : undefined,
-      stage: cardStage,
-      stability: uc ? uc.stability : undefined,
-      scheduled_days: uc ? uc.scheduled_days : undefined,
-      reps: uc ? uc.reps : undefined,
-      lapses: uc ? uc.lapses : undefined,
-      due_date: uc ? uc.due_date : undefined,
-      state: uc ? uc.state : undefined,
-    });
-  }
-
-  return items;
+      is_queued: true,
+      user_card_id: uc.id,
+      stage,
+      stability: uc.stability,
+      scheduled_days: uc.scheduled_days,
+      reps: uc.reps,
+      lapses: uc.lapses,
+      due_date: uc.due_date,
+      state: uc.state,
+    };
+  });
 }
 
 /**
@@ -1699,26 +1788,27 @@ export async function addAvailableWordsToQueue(
   limit = 10,
   targetLang = 'es'
 ): Promise<number> {
-  const available = await getMasteryWords('available', targetLang);
-  const toAdd = available.slice(0, limit);
-  if (toAdd.length === 0) return 0;
+  const available = await getMasteryWords('available', targetLang, undefined, limit, 0);
+  if (available.length === 0) return 0;
 
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
 
-  for (const w of toAdd) {
-    const cardIdStr = `card_${w.front_lexeme_id}_${langName}`;
-    await userDb.runAsync(
-      `INSERT OR REPLACE INTO User_Cards (
-        id, card_id, target_lang, due_date, state, stability, difficulty,
-        elapsed_days, scheduled_days, reps, lapses, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-      [cardIdStr, w.front_lexeme_id, langName, now, 0, 0, 0, 0, 0, 0, 0, now]
-    );
-  }
+  await userDb.withTransactionAsync(async () => {
+    for (const w of available) {
+      const cardIdStr = `card_${w.front_lexeme_id}_${langName}`;
+      await userDb.runAsync(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        [cardIdStr, w.front_lexeme_id, langName, now, 0, 0, 0, 0, 0, 0, 0, now]
+      );
+    }
+  });
 
-  return toAdd.length;
+  return available.length;
 }
 
 /**
@@ -2084,6 +2174,30 @@ export async function logReviewEvent(
   } catch (err) {
     console.warn('[Vault] Notice during logReviewEvent:', err);
   }
+}
+
+/**
+ * Records a card review attempt: updates FSRS state and writes review log in a single atomic SQLite transaction.
+ */
+export async function recordCardReview(
+  cardId: string,
+  fsrsData: {
+    due_date: string;
+    state: number;
+    stability: number;
+    difficulty: number;
+    elapsed_days: number;
+    scheduled_days: number;
+    reps: number;
+    lapses: number;
+  },
+  rating: number
+): Promise<void> {
+  const userDb = await getUserDb();
+  await userDb.withTransactionAsync(async () => {
+    await updateCardFSRS(cardId, fsrsData);
+    await logReviewEvent(cardId, rating);
+  });
 }
 
 /**

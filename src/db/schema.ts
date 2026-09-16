@@ -212,7 +212,9 @@ CREATE TABLE IF NOT EXISTS Settings (
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_due_date ON User_Cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_lexeme_lang ON Lexemes(language);
+CREATE INDEX IF NOT EXISTS idx_lexemes_lang_cefr ON Lexemes(language, cefr_level);
 CREATE INDEX IF NOT EXISTS idx_concept_lexeme ON Concept_Lexeme(concept_id);
+CREATE INDEX IF NOT EXISTS idx_concept_lexeme_both ON Concept_Lexeme(concept_id, lexeme_id);
 CREATE INDEX IF NOT EXISTS idx_concepts_domain ON Concepts(domain_id);
 CREATE INDEX IF NOT EXISTS idx_reviewed_at ON Review_Logs(reviewed_at);
 `;

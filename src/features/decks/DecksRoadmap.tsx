@@ -478,6 +478,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const [loadingMastery, setLoadingMastery] = useState(false);
   const [adoptingAvailable, setAdoptingAvailable] = useState(false);
 
+  const [masteryPage, setMasteryPage] = useState(0);
+  const [hasMoreMastery, setHasMoreMastery] = useState(true);
+  const [loadingMoreMastery, setLoadingMoreMastery] = useState(false);
+
   // Local word queue state tracking for instantaneous UI response
   const [locallyQueuedWordIds, setLocallyQueuedWordIds] = useState<Set<number>>(new Set());
 
@@ -517,19 +521,45 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   const loadMasteryData = async (stage: MasteryStage) => {
     setLoadingMastery(true);
+    setMasteryPage(0);
     try {
       const [summary, words] = await Promise.all([
         getMasterySummary(targetLang),
-        getMasteryWords(stage, targetLang, originLang),
+        getMasteryWords(stage, targetLang, originLang, 50, 0),
       ]);
       setMasterySummary(summary);
       setMasteryWords(words);
+      setHasMoreMastery(words.length === 50);
     } catch (e) {
       console.warn('[Explore] Error loading mastery:', e);
     } finally {
       setLoadingMastery(false);
     }
   };
+
+  const handleLoadMoreMastery = useCallback(async () => {
+    if (loadingMoreMastery || !hasMoreMastery || loadingMastery) return;
+    setLoadingMoreMastery(true);
+    try {
+      const nextPage = masteryPage + 1;
+      const moreWords = await getMasteryWords(
+        masteryStage,
+        targetLang,
+        originLang,
+        50,
+        nextPage * 50
+      );
+      if (moreWords.length > 0) {
+        setMasteryWords((prev) => [...prev, ...moreWords]);
+        setMasteryPage(nextPage);
+      }
+      setHasMoreMastery(moreWords.length === 50);
+    } catch (e) {
+      console.warn('[Explore] Error loading more mastery words:', e);
+    } finally {
+      setLoadingMoreMastery(false);
+    }
+  }, [loadingMoreMastery, hasMoreMastery, loadingMastery, masteryPage, masteryStage, targetLang, originLang]);
 
   // Open Deck Word Inspector
   const handleOpenDeck = useCallback(
@@ -945,6 +975,15 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               updateCellsBatchingPeriod={50}
               windowSize={5}
               removeClippedSubviews={true}
+              onEndReached={handleLoadMoreMastery}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                loadingMoreMastery ? (
+                  <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color="#D97706" />
+                  </View>
+                ) : null
+              }
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>{t('explore.no_words_found')}</Text>
