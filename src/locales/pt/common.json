@@ -36,7 +36,6 @@
     "deck_focus": "Foco no Baralho: {{name}}",
     "all_decks": "Todos os Baralhos",
     "translation": "TRADUÇÃO",
-    "concept_lore": "CONCEITO CILI / HISTÓRIA",
     "tap_to_reveal": "Toque no pergaminho para revelar a tradução",
     "reveal_scroll": "REVELAR PERGAMINHO",
     "how_well_recall": "QUÃO BEM VOCÊ SE LEMBROU?",
@@ -219,84 +218,84 @@
       "name": "Animais De Fazenda"
     },
     "5": {
-      "theme": "Conceitos Básicos",
-      "name": "Saudações Formais"
+      "theme": "Basics",
+      "name": "Formal Greetings"
     },
     "6": {
-      "theme": "Veículos",
-      "name": "Veículos Aéreos"
+      "theme": "Vehicles",
+      "name": "Air Vehicles"
     },
     "7": {
-      "theme": "Conceitos Básicos",
-      "name": "Saudações Informais"
+      "theme": "Basics",
+      "name": "Casual Greetings"
     },
     "8": {
-      "theme": "Veículos",
-      "name": "Veículos Terrestres"
+      "theme": "Vehicles",
+      "name": "Land Vehicles"
     },
     "9": {
-      "theme": "Veículos",
-      "name": "Veículos Aquáticos"
+      "theme": "Vehicles",
+      "name": "Water Vehicles"
     },
     "10": {
-      "theme": "Eletrônica",
-      "name": "Engenharia"
+      "theme": "Electronics",
+      "name": "Engineering"
     },
     "11": {
-      "theme": "Eletrônica",
-      "name": "Eletrodomésticos"
+      "theme": "Electronics",
+      "name": "House Appliances"
     },
     "12": {
-      "theme": "Conceitos Básicos",
-      "name": "Despedidas Formais"
+      "theme": "Basics",
+      "name": "Formal Farewells"
     },
     "13": {
-      "theme": "Biologia",
-      "name": "Ciclo Celular"
+      "theme": "Biology",
+      "name": "Cell Cycle"
     },
     "14": {
-      "theme": "Conceitos Básicos",
-      "name": "Despedidas Informais"
+      "theme": "Basics",
+      "name": "Casual Farewells"
     },
     "15": {
-      "theme": "Matemática",
-      "name": "Operações Matemáticas Básicas"
+      "theme": "Math",
+      "name": "Basic Math Operations"
     },
     "16": {
-      "theme": "Números",
-      "name": "Números Cardinais (0-10)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (0-10)"
     },
     "17": {
-      "theme": "Números",
-      "name": "Números Cardinais (11-19)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (11-19)"
     },
     "18": {
-      "theme": "Números",
-      "name": "Números Cardinais (20-29)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (20-29)"
     },
     "19": {
-      "theme": "Números",
-      "name": "Números Cardinais (30-90)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (30-90)"
     },
     "20": {
-      "theme": "Números",
-      "name": "Números Cardinais (100+)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (100+)"
     },
     "21": {
-      "theme": "Casa",
-      "name": "Cômodos"
+      "theme": "Home",
+      "name": "Home Spaces"
     },
     "22": {
-      "theme": "Casa",
-      "name": "Móveis"
+      "theme": "Home",
+      "name": "Furniture"
     },
     "23": {
-      "theme": "Construção",
-      "name": "Ferramentas Manuais"
+      "theme": "Construction",
+      "name": "Hand Tools"
     },
     "24": {
-      "theme": "Matemática",
-      "name": "Propriedades Numéricas"
+      "theme": "Math",
+      "name": "Number Properties"
     }
   },
   "db_cards": {
@@ -329,14 +328,14 @@
     "27": "coelho",
     "28": "furão",
     "29": "calopsita",
-    "30": "ant",
-    "31": "beetle",
-    "32": "bee",
-    "33": "butterfly",
-    "34": "wasp",
-    "35": "moth",
-    "36": "firefly",
-    "37": "cicada",
+    "30": "formiga",
+    "31": "besouro",
+    "32": "abelha",
+    "33": "borboleta",
+    "34": "vespa",
+    "35": "mariposa",
+    "36": "vaga-lume",
+    "37": "cigarra",
     "38": "cow",
     "39": "pig",
     "40": "bull",

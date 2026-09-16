@@ -35,9 +35,8 @@
     "refresh_queue": "REFRESH TRAINING QUEUE",
     "deck_focus": "Deck Focus: {{name}}",
     "all_decks": "All Decks",
-    "translation": "TRANSLATION",
-    "concept_lore": "CILI CONCEPT / LORE",
-    "tap_to_reveal": "Tap scroll to reveal translation",
+    "translation": "TRADUCTION",
+    "tap_to_reveal": "Appuyez pour révéler la traduction",
     "reveal_scroll": "REVEAL SCROLL",
     "how_well_recall": "HOW WELL DID THOU RECALL?",
     "grade_again": "AGAIN",
@@ -219,84 +218,84 @@
       "name": "Animaux De La Ferme"
     },
     "5": {
-      "theme": "Bases",
-      "name": "Salutations Formelles"
+      "theme": "Basics",
+      "name": "Formal Greetings"
     },
     "6": {
-      "theme": "Véhicules",
-      "name": "Véhicules Aériens"
+      "theme": "Vehicles",
+      "name": "Air Vehicles"
     },
     "7": {
-      "theme": "Bases",
-      "name": "Salutations Informelles"
+      "theme": "Basics",
+      "name": "Casual Greetings"
     },
     "8": {
-      "theme": "Véhicules",
-      "name": "Véhicules Terrestres"
+      "theme": "Vehicles",
+      "name": "Land Vehicles"
     },
     "9": {
-      "theme": "Véhicules",
-      "name": "Véhicules Aquatiques"
+      "theme": "Vehicles",
+      "name": "Water Vehicles"
     },
     "10": {
-      "theme": "Électronique",
-      "name": "Ingénierie"
+      "theme": "Electronics",
+      "name": "Engineering"
     },
     "11": {
-      "theme": "Électronique",
-      "name": "Appareils Électroménagers"
+      "theme": "Electronics",
+      "name": "House Appliances"
     },
     "12": {
-      "theme": "Bases",
-      "name": "Adieux Formels"
+      "theme": "Basics",
+      "name": "Formal Farewells"
     },
     "13": {
-      "theme": "Biologie",
-      "name": "Cycle Cellulaire"
+      "theme": "Biology",
+      "name": "Cell Cycle"
     },
     "14": {
-      "theme": "Bases",
-      "name": "Adieux Informels"
+      "theme": "Basics",
+      "name": "Casual Farewells"
     },
     "15": {
-      "theme": "Mathématiques",
-      "name": "Opérations Mathématiques De Base"
+      "theme": "Math",
+      "name": "Basic Math Operations"
     },
     "16": {
-      "theme": "Nombres",
-      "name": "Nombres Cardinaux (0-10)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (0-10)"
     },
     "17": {
-      "theme": "Nombres",
-      "name": "Nombres Cardinaux (11-19)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (11-19)"
     },
     "18": {
-      "theme": "Nombres",
-      "name": "Nombres Cardinaux (20-29)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (20-29)"
     },
     "19": {
-      "theme": "Nombres",
-      "name": "Nombres Cardinaux (30-90)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (30-90)"
     },
     "20": {
-      "theme": "Nombres",
-      "name": "Nombres Cardinaux (100+)"
+      "theme": "Numbers",
+      "name": "Cardinal Numbers (100+)"
     },
     "21": {
-      "theme": "Maison",
-      "name": "Espaces De La Maison"
+      "theme": "Home",
+      "name": "Home Spaces"
     },
     "22": {
-      "theme": "Maison",
-      "name": "Meubles"
+      "theme": "Home",
+      "name": "Furniture"
     },
     "23": {
       "theme": "Construction",
-      "name": "Outils Manuels"
+      "name": "Hand Tools"
     },
     "24": {
-      "theme": "Mathématiques",
-      "name": "Propriétés Des Nombres"
+      "theme": "Math",
+      "name": "Number Properties"
     }
   },
   "db_cards": {
@@ -329,14 +328,14 @@
     "27": "lapin",
     "28": "furet",
     "29": "cockatiel",
-    "30": "ant",
-    "31": "beetle",
-    "32": "bee",
-    "33": "butterfly",
-    "34": "wasp",
-    "35": "moth",
-    "36": "firefly",
-    "37": "cicada",
+    "30": "fourmi",
+    "31": "scarabée",
+    "32": "abeille",
+    "33": "papillon",
+    "34": "guêpe",
+    "35": "papillon de nuit",
+    "36": "luciole",
+    "37": "cigale",
     "38": "cow",
     "39": "pig",
     "40": "bull",

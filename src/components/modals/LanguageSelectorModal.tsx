@@ -207,6 +207,8 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
     if (onPairChanged) {
       onPairChanged(updatedPair);
     }
+
+    onClose();
   };
 
   const handleSwapPair = async () => {
@@ -274,7 +276,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               activeOpacity={0.8}
             >
               <Text style={styles.pairHalfLabel}>
-                {t('language.origin_label', 'APP (ORIGIN)')}
+                {t('language.origin_label', 'NATIVE / APP')}
               </Text>
               <Text style={styles.pairHalfName} numberOfLines={1}>
                 {originOption.nativeName}
@@ -301,7 +303,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               activeOpacity={0.8}
             >
               <Text style={styles.pairHalfLabel}>
-                {t('language.destination_label', 'STUDY (TARGET)')}
+                {t('language.destination_label', 'I AM LEARNING')}
               </Text>
               <Text style={styles.pairHalfName} numberOfLines={1}>
                 {destinationOption.nativeName}
@@ -317,8 +319,8 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             <Languages size={14} color="#B45309" />
             <Text style={styles.modeNoticeText}>
               {mode === 'origin'
-                ? t('language.selecting_origin', 'Configuring: App Interface & Explanation Language (Prefilled from device locale)')
-                : t('language.selecting_dest', 'Configuring: Study Target Language (Front of flashcards)')}
+                ? t('language.selecting_origin', 'Configuring App Interface & Explanation Language')
+                : t('language.selecting_dest', 'Select the language you want to learn')}
             </Text>
           </View>
 

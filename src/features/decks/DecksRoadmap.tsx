@@ -725,9 +725,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                     </View>
 
                     <Text style={styles.wordBackTerm}>{item.back_term}</Text>
-                    {Boolean(item.concept_desc) && (
-                      <Text style={styles.wordDescText}>{item.concept_desc}</Text>
-                    )}
 
                     {/* SRS Retention Diagnostics */}
                     {item.stage !== 'available' && (
@@ -868,9 +865,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                       </View>
 
                       <Text style={styles.wordBackTerm}>{item.back_term}</Text>
-                      {Boolean(item.concept_desc) && (
-                        <Text style={styles.wordDescText}>{item.concept_desc}</Text>
-                      )}
 
                       <View style={styles.modalWordCardFooter}>
                         {isQueued ? (

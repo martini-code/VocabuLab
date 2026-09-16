@@ -53,7 +53,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         <View style={styles.headerTextBox}>
           <Text style={styles.title}>THE WIZARD'S SCRIPTORIUM</Text>
           <Text style={styles.subtitle}>
-            FTS5 Full-Text Search into 10,000+ CILI concept anchors
+            FTS5 Full-Text Search across kingdom scrolls
           </Text>
         </View>
       </View>
@@ -109,8 +109,6 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
                 </View>
                 <ShieldBadge level={item.cefr_level} size="sm" />
               </View>
-
-              <Text style={styles.conceptDesc}>"{item.concept_desc}"</Text>
 
               <View style={styles.cardFooter}>
                 <TouchableOpacity
@@ -230,14 +228,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B',
     marginTop: 2,
-  },
-  conceptDesc: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569',
-    marginTop: 8,
-    lineHeight: 18,
-    fontStyle: 'italic',
   },
   cardFooter: {
     flexDirection: 'row',

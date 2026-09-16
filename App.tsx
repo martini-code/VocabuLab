@@ -52,7 +52,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [isVaultReady, setIsVaultReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Opening the fortress gates...');
-  const [languageModalMode, setLanguageModalMode] = useState<'origin' | 'destination'>('origin');
+  const [languageModalMode, setLanguageModalMode] = useState<'origin' | 'destination'>('destination');
   const [languagePair, setLanguagePair] = useState<LanguagePairSettings>(() => {
     const dev = getDeviceLanguage();
     return {
@@ -138,9 +138,9 @@ export default function App() {
     }
   };
 
-  const refreshStats = async () => {
+  const refreshStats = async (destLang?: string) => {
     try {
-      const currentStats = await getVaultStats(languagePair.destination_lang);
+      const currentStats = await getVaultStats(destLang || languagePair.destination_lang);
       setStats(currentStats);
     } catch (error) {
       // Ignore
@@ -197,18 +197,18 @@ export default function App() {
           </Text>
         </TouchableOpacity>
 
-        {/* Language Selector Pill */}
+        {/* Destination Language Selector Pill (Only displays learning language) */}
         <TouchableOpacity
           style={styles.statPill}
           onPress={() => {
-            setLanguageModalMode('origin');
+            setLanguageModalMode('destination');
             setLanguageModalOpen(true);
           }}
           activeOpacity={0.8}
         >
           <Globe size={16} color="#78350F" />
           <Text style={styles.statValue}>
-            {languagePair.origin_lang.toUpperCase().slice(0, 2)} ➔ {languagePair.destination_lang.toUpperCase().slice(0, 2)}
+            {languagePair.destination_lang.toUpperCase()}
           </Text>
         </TouchableOpacity>
 
@@ -459,7 +459,8 @@ export default function App() {
         initialMode={languageModalMode}
         onPairChanged={async (newPair) => {
           setLanguagePair(newPair);
-          await refreshStats();
+          setDeckFilter(null);
+          await refreshStats(newPair.destination_lang);
         }}
       />
 

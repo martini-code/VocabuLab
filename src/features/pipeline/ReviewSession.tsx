@@ -250,14 +250,12 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Back Side: Concept Description & Translation */}
+          {/* Back Side: Translation */}
           {isFlipped ? (
             <View style={styles.backContainer}>
               <View style={styles.divider} />
               <Text style={styles.backTranslationLabel}>TRANSLATION</Text>
               <Text style={styles.backTermText}>{currentCard.back_term}</Text>
-              <Text style={styles.conceptLabel}>CILI CONCEPT / LORE</Text>
-              <Text style={styles.conceptDesc}>"{currentCard.concept_desc}"</Text>
             </View>
           ) : (
             <View style={styles.tapToRevealBox}>
@@ -535,24 +533,8 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  conceptLabel: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#64748B',
-    letterSpacing: 0.5,
-    marginTop: 6,
     marginBottom: 4,
-  },
-  conceptDesc: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
     textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 10,
   },
   tapToRevealBox: {
     marginTop: 20,
