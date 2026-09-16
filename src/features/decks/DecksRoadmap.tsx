@@ -617,57 +617,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               <Text style={styles.stageCardTitle}>{t('explore.stage_new')}</Text>
               <Text style={styles.stageCardSubtitle}>{t('explore.stage_new_desc')}</Text>
             </TouchableOpacity>
-
-            {/* Available to Adopt */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.stageCard,
-                masteryStage === 'available' && styles.stageCardActiveAvailable,
-              ]}
-              onPress={() => {
-                setMasteryStage('available');
-                loadMasteryData('available');
-              }}
-            >
-              <View style={styles.stageCardTop}>
-                <PlusCircle
-                  size={16}
-                  color={masteryStage === 'available' ? '#0D9488' : '#14B8A6'}
-                />
-                <View style={[styles.stageBadge, { backgroundColor: '#CCFBF1' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#0F766E' }]}>
-                    {masterySummary?.available_count || 0}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.stageCardTitle}>{t('explore.stage_available')}</Text>
-              <Text style={styles.stageCardSubtitle}>{t('explore.stage_available_desc')}</Text>
-            </TouchableOpacity>
           </ScrollView>
-
-          {/* Contextual Action Bar for Selected Stage */}
-          {masteryStage === 'available' && (masterySummary?.available_count || 0) > 0 && (
-            <View style={styles.masteryActionCard}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.adoptAvailableBtn}
-                onPress={() => handleAdoptAvailable(10)}
-                disabled={adoptingAvailable}
-              >
-                {adoptingAvailable ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <PlusCircle size={16} color="#FFFFFF" />
-                    <Text style={styles.adoptAvailableBtnText}>
-                      {t('explore.learn_next_words', { count: 10, defaultValue: 'Learn Next 10 Words' })}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
 
           {masteryStage === 'slipping' && (masterySummary?.slipping_count || 0) > 0 && (
             <View style={styles.masteryActionCard}>
