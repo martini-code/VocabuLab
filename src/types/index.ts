@@ -75,6 +75,8 @@ export interface Lexeme {
 
 export interface UserCard {
   id: string;
+  card_id?: number;
+  target_lang?: string;
   front_lexeme_id: number;
   back_lexeme_id: number;
   due_date: string;

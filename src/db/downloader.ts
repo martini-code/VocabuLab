@@ -83,37 +83,39 @@ export async function downloadLanguagePack(
   const now = new Date().toISOString();
   let approxBytes = 0;
 
-  for (const t of translations) {
-    approxBytes += (t.translation ? t.translation.length * 2 : 0) + 32;
-    await userDb.runAsync(
-      `INSERT OR REPLACE INTO Downloaded_Card_Translations (card_id, lang_name, translation, source, role)
-       VALUES (?, ?, ?, ?, ?);`,
-      [t.card_id, langName, t.translation, t.source || null, t.role || null]
-    );
-    if (t.lang_name.toLowerCase() !== langName.toLowerCase()) {
+  await userDb.withTransactionAsync(async () => {
+    for (const t of translations) {
+      approxBytes += (t.translation ? t.translation.length * 2 : 0) + 32;
       await userDb.runAsync(
         `INSERT OR REPLACE INTO Downloaded_Card_Translations (card_id, lang_name, translation, source, role)
          VALUES (?, ?, ?, ?, ?);`,
-        [t.card_id, t.lang_name, t.translation, t.source || null, t.role || null]
+        [t.card_id, langName, t.translation, t.source || null, t.role || null]
       );
+      if (t.lang_name.toLowerCase() !== langName.toLowerCase()) {
+        await userDb.runAsync(
+          `INSERT OR REPLACE INTO Downloaded_Card_Translations (card_id, lang_name, translation, source, role)
+           VALUES (?, ?, ?, ?, ?);`,
+          [t.card_id, t.lang_name, t.translation, t.source || null, t.role || null]
+        );
+      }
     }
-  }
 
-  for (const d of definitions) {
-    approxBytes += (d.definition ? d.definition.length * 2 : 0) + 32;
-    await userDb.runAsync(
-      `INSERT OR REPLACE INTO Downloaded_Card_Definitions (card_id, lang_name, definition, source)
-       VALUES (?, ?, ?, ?);`,
-      [d.card_id, langName, d.definition, d.source || null]
-    );
-    if (d.lang_name.toLowerCase() !== langName.toLowerCase()) {
+    for (const d of definitions) {
+      approxBytes += (d.definition ? d.definition.length * 2 : 0) + 32;
       await userDb.runAsync(
         `INSERT OR REPLACE INTO Downloaded_Card_Definitions (card_id, lang_name, definition, source)
          VALUES (?, ?, ?, ?);`,
-        [d.card_id, d.lang_name, d.definition, d.source || null]
+        [d.card_id, langName, d.definition, d.source || null]
       );
+      if (d.lang_name.toLowerCase() !== langName.toLowerCase()) {
+        await userDb.runAsync(
+          `INSERT OR REPLACE INTO Downloaded_Card_Definitions (card_id, lang_name, definition, source)
+           VALUES (?, ?, ?, ?);`,
+          [d.card_id, d.lang_name, d.definition, d.source || null]
+        );
+      }
     }
-  }
+  });
 
   // Extract deck translations matching candidates
   try {
@@ -128,21 +130,23 @@ export async function downloadLanguagePack(
       candidates
     );
 
-    for (const dt of deckTranslations) {
-      approxBytes += ((dt.category_translation || '').length + (dt.subcategory_translation || '').length) * 2 + 32;
-      await userDb.runAsync(
-        `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
-         VALUES (?, ?, ?, ?, ?);`,
-        [dt.deck_id, langName, dt.category_translation, dt.subcategory_translation, dt.source || null]
-      );
-      if (dt.lang_name.toLowerCase() !== langName.toLowerCase()) {
+    await userDb.withTransactionAsync(async () => {
+      for (const dt of deckTranslations) {
+        approxBytes += ((dt.category_translation || '').length + (dt.subcategory_translation || '').length) * 2 + 32;
         await userDb.runAsync(
           `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
            VALUES (?, ?, ?, ?, ?);`,
-          [dt.deck_id, dt.lang_name, dt.category_translation, dt.subcategory_translation, dt.source || null]
+          [dt.deck_id, langName, dt.category_translation, dt.subcategory_translation, dt.source || null]
         );
+        if (dt.lang_name.toLowerCase() !== langName.toLowerCase()) {
+          await userDb.runAsync(
+            `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
+             VALUES (?, ?, ?, ?, ?);`,
+            [dt.deck_id, dt.lang_name, dt.category_translation, dt.subcategory_translation, dt.source || null]
+          );
+        }
       }
-    }
+    });
   } catch (e) {
     console.warn('[Downloader] Notice extracting deck_translations:', e);
   }

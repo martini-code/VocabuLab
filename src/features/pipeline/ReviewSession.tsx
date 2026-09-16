@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -41,7 +41,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [cards, setCards] = useState<CardWithDetails[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [isGrading, setIsGrading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
@@ -88,48 +87,59 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     });
   };
 
-  const handleGrade = async (rating: Grade) => {
-    if (!currentCard || isGrading) return;
-    setIsGrading(true);
+  const isProcessingRef = useRef(false);
 
-    try {
-      // React with Mascot
-      if (rating === Rating.Again) {
-        setMascotMood('confused');
-        setMascotQuote("A minor stumble! We shall reinforce this scroll soon.");
-      } else if (rating === Rating.Hard) {
-        setMascotMood('idle');
-        setMascotQuote("Grit and steel! It is holding in memory.");
-      } else if (rating === Rating.Good) {
-        setMascotMood('happy');
-        setMascotQuote("Well struck, brave knight!");
-      } else if (rating === Rating.Easy) {
-        setMascotMood('cheering');
-        setMascotQuote("Huzzah! Pure mastery!");
-      }
+  const handleGrade = (rating: Grade) => {
+    if (!currentCard || isProcessingRef.current) return;
+    isProcessingRef.current = true;
 
-      const updatePayload = gradeCardFSRS(currentCard, rating);
-      await updateCardFSRS(currentCard.id, updatePayload);
-      await logReviewEvent(currentCard.id, rating);
-      if (onCardReviewed) onCardReviewed();
-    } catch (err) {
-      console.warn('[ReviewSession] Error grading card:', err);
+    // Reset lock after brief debounce window
+    setTimeout(() => {
+      isProcessingRef.current = false;
+    }, 150);
+
+    // 1. Immediate visual mascot reaction
+    if (rating === Rating.Again) {
+      setMascotMood('confused');
+      setMascotQuote("A minor stumble! We shall reinforce this scroll soon.");
+    } else if (rating === Rating.Hard) {
+      setMascotMood('idle');
+      setMascotQuote("Grit and steel! It is holding in memory.");
+    } else if (rating === Rating.Good) {
+      setMascotMood('happy');
+      setMascotQuote("Well struck, brave knight!");
+    } else if (rating === Rating.Easy) {
+      setMascotMood('cheering');
+      setMascotQuote("Huzzah! Pure mastery!");
     }
 
-    // Advance to next card
-    setTimeout(() => {
-      setIsGrading(false);
-      if (currentIndex + 1 < cards.length) {
-        setCurrentIndex((prev) => prev + 1);
-        setIsFlipped(false);
-      } else {
-        // Finished deck!
-        setCurrentIndex(cards.length);
+    // 2. Persist FSRS state & review logs asynchronously in SQLite
+    const cardId = currentCard.id;
+    try {
+      const updatePayload = gradeCardFSRS(currentCard, rating);
+      updateCardFSRS(cardId, updatePayload)
+        .then(() => logReviewEvent(cardId, rating))
+        .then(() => {
+          if (onCardReviewed) onCardReviewed();
+        })
+        .catch((err) => {
+          console.warn('[ReviewSession] Notice updating card FSRS state:', err);
+        });
+    } catch (err) {
+      console.warn('[ReviewSession] Notice calculating FSRS grade payload:', err);
+    }
+
+    // 3. Immediately advance to next card and flip back to front
+    setIsFlipped(false);
+    setCurrentIndex((prev) => {
+      const next = prev + 1;
+      if (next >= cards.length) {
         setMascotMood('victorious');
         setMascotQuote("All garrisoned scrolls defended! Victory belongs to the Keep!");
         if (onSessionComplete) onSessionComplete();
       }
-    }, 380);
+      return next;
+    });
   };
 
   if (loading) {
@@ -294,7 +304,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="AGAIN"
               subtitle={reviewOptions[0]?.intervalText || '10m'}
               color="crimson"
-              disabled={isGrading}
               onPress={() => handleGrade(Rating.Again)}
               style={styles.gradeButton}
             />
@@ -304,7 +313,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="HARD"
               subtitle={reviewOptions[1]?.intervalText || '1d'}
               color="amber"
-              disabled={isGrading}
               onPress={() => handleGrade(Rating.Hard)}
               style={styles.gradeButton}
             />
@@ -314,7 +322,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="GOOD"
               subtitle={reviewOptions[2]?.intervalText || '4d'}
               color="green"
-              disabled={isGrading}
               onPress={() => handleGrade(Rating.Good)}
               style={styles.gradeButton}
             />
@@ -324,7 +331,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               title="EASY"
               subtitle={reviewOptions[3]?.intervalText || '12d'}
               color="blue"
-              disabled={isGrading}
               onPress={() => handleGrade(Rating.Easy)}
               style={styles.gradeButton}
             />

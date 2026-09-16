@@ -987,16 +987,18 @@ export async function garrisonEntireDeck(
   const origName = resolveLanguageName(originLang || (await getLanguagePairSettings()).origin_lang);
   const now = new Date().toISOString();
 
-  for (const c of unqueued) {
-    const cardIdStr = `card_${c.front_lexeme_id}_${langName}`;
-    await userDb.runAsync(
-      `INSERT OR REPLACE INTO User_Cards (
-        id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
-        elapsed_days, scheduled_days, reps, lapses, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-      [cardIdStr, c.front_lexeme_id, langName, origName, now, 0, 0, 0, 0, 0, 0, 0, now]
-    );
-  }
+  await userDb.withTransactionAsync(async () => {
+    for (const c of unqueued) {
+      const cardIdStr = `card_${c.front_lexeme_id}_${langName}`;
+      await userDb.runAsync(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        [cardIdStr, c.front_lexeme_id, langName, origName, now, 0, 0, 0, 0, 0, 0, 0, now]
+      );
+    }
+  });
 
   return unqueued.length;
 }
@@ -1153,6 +1155,8 @@ export async function getDueCards(
 
     result.push({
       id: uc.id,
+      card_id: uc.card_id,
+      target_lang: uc.target_lang,
       front_lexeme_id: uc.card_id,
       back_lexeme_id: uc.card_id,
       due_date: uc.due_date,
@@ -1281,6 +1285,8 @@ export async function getDeckCardsForReview(
 
     result.push({
       id: uc.id,
+      card_id: uc.card_id,
+      target_lang: uc.target_lang,
       front_lexeme_id: uc.card_id,
       back_lexeme_id: uc.card_id,
       due_date: uc.due_date,
@@ -1734,7 +1740,8 @@ export async function updateCardFSRS(
   const userDb = await getUserDb();
   const now = new Date().toISOString();
 
-  await userDb.runAsync(
+  // 1. Primary update by card unique string ID (e.g. 'card_1_Spanish')
+  const updateRes = await userDb.runAsync(
     `UPDATE User_Cards SET
       due_date = ?,
       state = ?,
@@ -1759,6 +1766,67 @@ export async function updateCardFSRS(
       cardId,
     ]
   );
+
+  // 2. Fallback: If no rows updated, match by numeric card_id
+  if (updateRes.changes === 0) {
+    const numericId = parseInt(cardId.split('_')[1] || cardId.replace(/\D/g, '') || '0', 10);
+    if (numericId > 0) {
+      const fallbackRes = await userDb.runAsync(
+        `UPDATE User_Cards SET
+          due_date = ?,
+          state = ?,
+          stability = ?,
+          difficulty = ?,
+          elapsed_days = ?,
+          scheduled_days = ?,
+          reps = ?,
+          lapses = ?,
+          updated_at = ?
+        WHERE card_id = ?;`,
+        [
+          data.due_date,
+          data.state,
+          data.stability,
+          data.difficulty,
+          data.elapsed_days,
+          data.scheduled_days,
+          data.reps,
+          data.lapses,
+          now,
+          numericId,
+        ]
+      );
+
+      // 3. Fallback: If card was never enrolled, insert it with the updated FSRS metrics
+      if (fallbackRes.changes === 0) {
+        const activeSettings = await getLanguagePairSettings();
+        const langName = resolveLanguageName(activeSettings.destination_lang);
+        const origName = resolveLanguageName(activeSettings.origin_lang);
+        const finalId = cardId.startsWith('card_') ? cardId : `card_${numericId}_${langName}`;
+        await userDb.runAsync(
+          `INSERT OR REPLACE INTO User_Cards (
+            id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+            elapsed_days, scheduled_days, reps, lapses, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          [
+            finalId,
+            numericId,
+            langName,
+            origName,
+            data.due_date,
+            data.state,
+            data.stability,
+            data.difficulty,
+            data.elapsed_days,
+            data.scheduled_days,
+            data.reps,
+            data.lapses,
+            now,
+          ]
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -1993,14 +2061,29 @@ export async function logReviewEvent(
   cardId: string | number,
   rating: number
 ): Promise<void> {
-  const userDb = await getUserDb();
-  const numericId = typeof cardId === 'number' ? cardId : parseInt(cardId.split('_')[1] || '1', 10);
-  const now = new Date().toISOString();
+  try {
+    const userDb = await getUserDb();
+    let numericId = 1;
+    if (typeof cardId === 'number') {
+      numericId = cardId;
+    } else if (typeof cardId === 'string') {
+      const parts = cardId.split('_');
+      if (parts.length > 1 && !isNaN(parseInt(parts[1], 10))) {
+        numericId = parseInt(parts[1], 10);
+      } else {
+        const digits = cardId.replace(/\D/g, '');
+        numericId = digits ? parseInt(digits, 10) : 1;
+      }
+    }
+    const now = new Date().toISOString();
 
-  await userDb.runAsync(
-    'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);',
-    [numericId, rating, now]
-  );
+    await userDb.runAsync(
+      'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);',
+      [numericId, rating, now]
+    );
+  } catch (err) {
+    console.warn('[Vault] Notice during logReviewEvent:', err);
+  }
 }
 
 /**
@@ -2010,20 +2093,22 @@ export async function seedSampleReviewLogs(db: SQLite.SQLiteDatabase): Promise<v
   const now = new Date();
   const daysActive = [0, 1, 2, 4, 5, 7, 8, 9, 11, 14, 15, 18, 20, 22, 25, 28, 30, 35, 42];
 
-  for (const dayOffset of daysActive) {
-    const reviewDate = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000);
-    const reviewsCount = Math.floor(Math.random() * 8) + 3;
-    for (let i = 0; i < reviewsCount; i++) {
-      const cardId = Math.floor(Math.random() * 50) + 1;
-      const rating = Math.random() > 0.15 ? 3 : 1;
-      const hoursOffset = Math.floor(Math.random() * 12);
-      const timestamp = new Date(reviewDate.getTime() + hoursOffset * 3600000).toISOString();
-      await db.runAsync(
-        'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);',
-        [cardId, rating, timestamp]
-      );
+  await db.withTransactionAsync(async () => {
+    for (const dayOffset of daysActive) {
+      const reviewDate = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+      const reviewsCount = Math.floor(Math.random() * 8) + 3;
+      for (let i = 0; i < reviewsCount; i++) {
+        const cardId = Math.floor(Math.random() * 50) + 1;
+        const rating = Math.random() > 0.15 ? 3 : 1;
+        const hoursOffset = Math.floor(Math.random() * 12);
+        const timestamp = new Date(reviewDate.getTime() + hoursOffset * 3600000).toISOString();
+        await db.runAsync(
+          'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);',
+          [cardId, rating, timestamp]
+        );
+      }
     }
-  }
+  });
 }
 
 /**
