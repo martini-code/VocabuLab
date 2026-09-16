@@ -72,14 +72,14 @@ export const ChunkyButton: React.FC<ChunkyButtonProps> = ({
     <Pressable
       disabled={disabled}
       onPress={onPress}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       style={({ pressed }) => [
         styles.base,
         {
           backgroundColor: palette.bg,
           borderBottomColor: palette.border,
-          borderBottomWidth: pressed ? 2 : 5,
-          transform: [{ translateY: pressed ? 3 : 0 }],
-          opacity: disabled ? 0.5 : 1,
+          transform: [{ translateY: pressed ? 2 : 0 }],
+          opacity: disabled ? 0.5 : pressed ? 0.88 : 1,
         },
         style,
       ]}
@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
+    borderBottomWidth: 4,
     borderColor: '#00000015',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

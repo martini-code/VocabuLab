@@ -21,14 +21,12 @@ import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
-import { FullScreenAdModal } from './src/components/ads/FullScreenAdModal';
 import { TokenWalletModal } from './src/components/tokens/TokenWalletModal';
 import { InsufficientTokensModal } from './src/components/tokens/InsufficientTokensModal';
 import { RewardedAdModal } from './src/components/ads/RewardedAdModal';
 import { tokenWallet, TokenWalletState } from './src/services/tokenWallet';
 import { adMobService } from './src/services/adMobService';
 import { iapService } from './src/services/iapService';
-import { adManager } from './src/services/adManager';
 import { srsManager } from './src/srs';
 import {
   Swords,
@@ -70,7 +68,6 @@ export default function App() {
   const [deckFilter, setDeckFilter] = useState<{ id: string; name: string } | null>(null);
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [adFreeModalOpen, setAdFreeModalOpen] = useState(false);
-  const [fullScreenAdOpen, setFullScreenAdOpen] = useState(false);
   const [isAdFree, setIsAdFree] = useState(false);
   const [activeAlgoName, setActiveAlgoName] = useState(srsManager.getActiveAlgorithm().meta.name);
   const [tokenWalletState, setTokenWalletState] = useState<TokenWalletState | null>(null);
@@ -235,16 +232,6 @@ export default function App() {
           <ReviewSession
             onSessionComplete={() => {
               refreshStats();
-              if (!isAdFree && adManager.shouldShowAdOnSessionComplete()) {
-                setFullScreenAdOpen(true);
-                adManager.resetCounter();
-              }
-            }}
-            onCardReviewed={() => {
-              if (!isAdFree && adManager.recordCardReview()) {
-                setFullScreenAdOpen(true);
-                adManager.resetCounter();
-              }
             }}
             onExploreArchives={() => setActiveTab('archives')}
             deckFilter={deckFilter}
@@ -472,12 +459,6 @@ export default function App() {
         onStatusChanged={(status) => setIsAdFree(status)}
       />
 
-      {/* Full-Screen Interstitial Ad Modal (Only for Free Tier) */}
-      <FullScreenAdModal
-        visible={fullScreenAdOpen && !isAdFree}
-        onClose={() => setFullScreenAdOpen(false)}
-        onOpenAdFreeModal={() => setAdFreeModalOpen(true)}
-      />
 
       {/* Royal Token Wallet Modal */}
       <TokenWalletModal

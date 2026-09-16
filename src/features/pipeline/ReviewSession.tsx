@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,7 +24,6 @@ interface ReviewSessionProps {
   onExploreArchives?: () => void;
   deckFilter?: { id: string; name: string } | null;
   onClearDeckFilter?: () => void;
-  onCardReviewed?: () => void;
   targetLang?: string;
   originLang?: string;
 }
@@ -34,7 +33,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   onExploreArchives,
   deckFilter,
   onClearDeckFilter,
-  onCardReviewed,
   targetLang,
   originLang,
 }) => {
@@ -87,16 +85,8 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     });
   };
 
-  const isProcessingRef = useRef(false);
-
   const handleGrade = (rating: Grade) => {
-    if (!currentCard || isProcessingRef.current) return;
-    isProcessingRef.current = true;
-
-    // Reset lock after brief debounce window
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 150);
+    if (!currentCard) return;
 
     // 1. Immediate visual mascot reaction
     if (rating === Rating.Again) {
@@ -119,9 +109,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       const updatePayload = gradeCardFSRS(currentCard, rating);
       updateCardFSRS(cardId, updatePayload)
         .then(() => logReviewEvent(cardId, rating))
-        .then(() => {
-          if (onCardReviewed) onCardReviewed();
-        })
         .catch((err) => {
           console.warn('[ReviewSession] Notice updating card FSRS state:', err);
         });
