@@ -22,9 +22,10 @@ import { getDeviceLanguage, changeAppLanguage } from './src/locales';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
 import { TokenWalletModal } from './src/components/tokens/TokenWalletModal';
+import { TokenPill } from './src/components/tokens/TokenPill';
 import { InsufficientTokensModal } from './src/components/tokens/InsufficientTokensModal';
 import { RewardedAdModal } from './src/components/ads/RewardedAdModal';
-import { tokenWallet, TokenWalletState } from './src/services/tokenWallet';
+import { tokenWallet } from './src/services/tokenWallet';
 import { adMobService } from './src/services/adMobService';
 import { iapService } from './src/services/iapService';
 import { srsManager } from './src/srs';
@@ -70,7 +71,6 @@ export default function App() {
   const [adFreeModalOpen, setAdFreeModalOpen] = useState(false);
   const [isAdFree, setIsAdFree] = useState(false);
   const [activeAlgoName, setActiveAlgoName] = useState(srsManager.getActiveAlgorithm().meta.name);
-  const [tokenWalletState, setTokenWalletState] = useState<TokenWalletState | null>(null);
   const [tokenWalletModalOpen, setTokenWalletModalOpen] = useState(false);
   const [insufficientModalOpen, setInsufficientModalOpen] = useState(false);
   const [insufficientRequiredWords, setInsufficientRequiredWords] = useState(1);
@@ -87,12 +87,7 @@ export default function App() {
       setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
     });
 
-    tokenWallet.initTokenWallet().then(() => {
-      tokenWallet.getWalletStatus().then(setTokenWalletState);
-    });
-    const unsubWallet = tokenWallet.subscribe((state) => {
-      setTokenWalletState(state);
-    });
+    tokenWallet.initTokenWallet();
 
     adMobService.setFallbackModalHandler((onComplete) => {
       setRewardedAdOnComplete(() => onComplete);
@@ -102,7 +97,6 @@ export default function App() {
     return () => {
       iapService.disconnect();
       unsubSRS();
-      unsubWallet();
     };
   }, []);
 
@@ -182,17 +176,8 @@ export default function App() {
           <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
         </View>
 
-        {/* Token Allowance Pill (Tapping opens Token Treasury Modal) */}
-        <TouchableOpacity
-          style={[styles.statPill, styles.tokenPill]}
-          onPress={() => setTokenWalletModalOpen(true)}
-          activeOpacity={0.8}
-        >
-          <Coins size={16} color="#D97706" />
-          <Text style={styles.tokenPillText}>
-            {tokenWalletState ? tokenWalletState.totalWordsAllowance : 0}
-          </Text>
-        </TouchableOpacity>
+        {/* Token Allowance Pill (Isolated component, granularly subscribed to wallet updates) */}
+        <TokenPill onPress={() => setTokenWalletModalOpen(true)} />
 
         {/* Destination Language Selector Pill (Only displays learning language) */}
         <TouchableOpacity
