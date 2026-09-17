@@ -1,9 +1,9 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-const inMemoryStorage: Record<string, string> = {};
+export const inMemoryStorage: Record<string, string> = {};
 
-const Storage = {
+export const Storage = {
   getItemAsync: async (key: string): Promise<string | null> => {
     try {
       if (Platform.OS === 'web') {
@@ -49,7 +49,7 @@ const Storage = {
   },
 };
 
-const KEYS = {
+export const KEYS = {
   TOKENS: 'vk_tokens_count',
   WORD_CREDITS: 'vk_unlocked_word_credits',
   DAILY_WORDS: 'vk_daily_pass_words',
@@ -77,12 +77,44 @@ export interface TokenWalletState {
 
 type WalletListener = (state: TokenWalletState) => void;
 
-class TokenWalletService {
+export class TokenWalletService {
   private listeners: Set<WalletListener> = new Set();
   private initialized = false;
+  private mockDateProvider: (() => string) | null = null;
+
+  /**
+   * For testing purposes: mock the current date format (YYYY-MM-DD).
+   */
+  setMockDate(dateStr: string | null): void {
+    if (dateStr) {
+      this.mockDateProvider = () => dateStr;
+    } else {
+      this.mockDateProvider = null;
+    }
+  }
 
   private todayDateString(): string {
+    if (this.mockDateProvider) {
+      return this.mockDateProvider();
+    }
     return new Date().toISOString().slice(0, 10);
+  }
+
+  /**
+   * For testing purposes: reset in-memory state.
+   */
+  async _resetForTesting(): Promise<void> {
+    this.initialized = false;
+    this.mockDateProvider = null;
+    this.listeners.clear();
+    await Promise.all([
+      Storage.deleteItemAsync(KEYS.TOKENS),
+      Storage.deleteItemAsync(KEYS.WORD_CREDITS),
+      Storage.deleteItemAsync(KEYS.DAILY_WORDS),
+      Storage.deleteItemAsync(KEYS.DAILY_DATE),
+      Storage.deleteItemAsync(KEYS.ADS_WATCHED),
+      Storage.deleteItemAsync(KEYS.ADS_DATE),
+    ]);
   }
 
   private parseNumber(val: string | null, fallback: number): number {
@@ -104,7 +136,6 @@ class TokenWalletService {
 
       await this.checkDailyReset();
       this.initialized = true;
-      this.notify();
     } catch (e) {
       console.warn('[TokenWallet] Initialization notice:', e);
       this.initialized = true;
@@ -131,7 +162,8 @@ class TokenWalletService {
       await Storage.setItemAsync(KEYS.ADS_DATE, today);
     }
 
-    this.notify();
+    // Note: notify() is triggered on state changes (consume, ad watch, etc.),
+    // not during read/checkDailyReset to prevent infinite async re-entry loops.
   }
 
   async getWalletStatus(): Promise<TokenWalletState> {
@@ -222,7 +254,7 @@ class TokenWalletService {
       Storage.setItemAsync(KEYS.TOKENS, String(newTokens)),
     ]);
 
-    this.notify();
+    await this.notify();
     return true;
   }
 
@@ -250,7 +282,7 @@ class TokenWalletService {
       Storage.setItemAsync(KEYS.ADS_DATE, this.todayDateString()),
     ]);
 
-    this.notify();
+    await this.notify();
     return { success: true, newTokens };
   }
 

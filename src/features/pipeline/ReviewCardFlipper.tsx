@@ -102,6 +102,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
 
             <TouchableOpacity
               style={styles.ttsButton}
+              testID="pronounce-btn"
               onPress={(e) => {
                 e.stopPropagation?.();
                 onSpeak(card.front_term, card.front_lang);

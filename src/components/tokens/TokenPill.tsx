@@ -5,6 +5,7 @@ import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 
 interface TokenPillProps {
   onPress: () => void;
+  testID?: string;
 }
 
 /**
@@ -12,7 +13,7 @@ interface TokenPillProps {
  * Subscribes to tokenWallet updates internally so wallet state changes
  * only re-render this pill rather than the entire App tree.
  */
-export const TokenPill: React.FC<TokenPillProps> = React.memo(({ onPress }) => {
+export const TokenPill: React.FC<TokenPillProps> = React.memo(({ onPress, testID = 'token-pill-btn' }) => {
   const [wallet, setWallet] = useState<TokenWalletState | null>(null);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export const TokenPill: React.FC<TokenPillProps> = React.memo(({ onPress }) => {
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       style={({ pressed }) => [
         styles.statPill,

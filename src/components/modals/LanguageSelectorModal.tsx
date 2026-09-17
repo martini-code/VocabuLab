@@ -310,7 +310,11 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               </View>
             </View>
 
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <TouchableOpacity
+              testID="modal-close-btn"
+              style={styles.closeBtn}
+              onPress={onClose}
+            >
               <X size={20} color="#78350F" />
             </TouchableOpacity>
           </View>
@@ -337,6 +341,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
+              testID="swap-lang-btn"
               style={styles.swapBtn}
               onPress={handleSwapPair}
               activeOpacity={0.7}

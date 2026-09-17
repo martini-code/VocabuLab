@@ -99,7 +99,12 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               </View>
             </View>
 
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+            <TouchableOpacity
+              testID="modal-close-btn"
+              style={styles.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.7}
+            >
               <X size={20} color="#64748B" />
             </TouchableOpacity>
           </View>

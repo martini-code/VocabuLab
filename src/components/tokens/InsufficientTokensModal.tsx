@@ -75,7 +75,12 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+          <TouchableOpacity
+            testID="modal-close-btn"
+            style={styles.closeBtn}
+            onPress={onClose}
+            activeOpacity={0.7}
+          >
             <X size={20} color="#64748B" />
           </TouchableOpacity>
 

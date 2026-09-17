@@ -17,6 +17,7 @@
     ".expo",
     ".env",
     "tests",
-    "scripts"
+    "scripts",
+    "src/**/__tests__/*"
   ]
 }
