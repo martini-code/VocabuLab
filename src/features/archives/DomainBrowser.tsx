@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   FlatList,
 } from 'react-native';
@@ -246,20 +247,30 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
 
       <View style={styles.cardActionsRow}>
         {/* Pronounce Horn */}
-        <TouchableOpacity
-          style={styles.audioButton}
+        <Pressable
+          style={({ pressed }) => [
+            styles.audioButton,
+            {
+              transform: [{ translateY: pressed ? 1 : 0 }],
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
           onPress={() => onSpeak(item.term, item.language)}
         >
           <Volume2 size={16} color="#78350F" style={{ marginRight: 4 }} />
           <Text style={styles.audioText}>Listen</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Learn Button */}
-        <TouchableOpacity
+        <Pressable
           disabled={isQueued}
-          style={[
+          style={({ pressed }) => [
             styles.queueButton,
             isQueued && styles.queueButtonDone,
+            {
+              transform: [{ translateY: pressed ? 2 : 0 }],
+              opacity: isQueued ? 0.6 : pressed ? 0.88 : 1,
+            },
           ]}
           onPress={() => onQueueWord(item.id)}
         >
@@ -278,7 +289,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
               </Text>
             </View>
           )}
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </ParchmentCard>
   );

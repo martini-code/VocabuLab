@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Modal,
   FlatList,
@@ -260,9 +261,14 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
           </Text>
 
           {!isQueued ? (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.addQueueBtn}
+            <Pressable
+              style={({ pressed }) => [
+                styles.addQueueBtn,
+                {
+                  transform: [{ translateY: pressed ? 1 : 0 }],
+                  opacity: pressed ? 0.88 : 1,
+                },
+              ]}
               onPress={() =>
                 onAddWord(
                   item.front_lexeme_id,
@@ -275,7 +281,7 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
               <Text style={styles.addQueueBtnText}>
                 {t('explore.add_to_queue')}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ) : (
             <View style={styles.inQueueBadge}>
               <Check size={14} color="#2563EB" />
@@ -335,9 +341,14 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
               </Text>
             </View>
           ) : (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.addQueueBtn}
+            <Pressable
+              style={({ pressed }) => [
+                styles.addQueueBtn,
+                {
+                  transform: [{ translateY: pressed ? 1 : 0 }],
+                  opacity: pressed ? 0.88 : 1,
+                },
+              ]}
               onPress={() =>
                 onAddWord(
                   item.front_lexeme_id,
@@ -350,7 +361,7 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
               <Text style={styles.addQueueBtnText}>
                 {t('explore.add_to_queue')}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
       </View>
@@ -373,9 +384,14 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
       : 0;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      style={styles.deckCard}
+    <Pressable
+      style={({ pressed }) => [
+        styles.deckCard,
+        {
+          transform: [{ translateY: pressed ? 2 : 0 }],
+          opacity: pressed ? 0.9 : 1,
+        },
+      ]}
       onPress={() => onOpenDeck(deck)}
     >
       <View style={styles.deckCardMain}>
@@ -410,7 +426,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
           {queuedCount}/{deck.card_count} {t('common.all').toLowerCase()}
         </Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 
@@ -1042,9 +1058,14 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
             {/* Modal Bottom Action Bar */}
             <View style={styles.modalFooter}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.modalAddAllBtn}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalAddAllBtn,
+                  {
+                    transform: [{ translateY: pressed ? 1 : 0 }],
+                    opacity: addingAllDeck ? 0.6 : pressed ? 0.85 : 1,
+                  },
+                ]}
                 onPress={handleAddAllDeck}
                 disabled={addingAllDeck}
               >
@@ -1058,11 +1079,16 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                     </Text>
                   </>
                 )}
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.modalStudyBtn}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalStudyBtn,
+                  {
+                    transform: [{ translateY: pressed ? 1 : 0 }],
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
                 onPress={() => {
                   if (selectedDeck) {
                     onStudyDeck(selectedDeck.id, selectedDeck.name);
@@ -1072,7 +1098,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               >
                 <Play size={16} color="#FFFFFF" />
                 <Text style={styles.modalStudyText}>{t('explore.study_deck')}</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>

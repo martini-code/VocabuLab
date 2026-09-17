@@ -6,6 +6,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import { Search, Sparkles, Volume2, Check, Plus, X } from 'lucide-react-native';
 import { searchLexemesFTS, addCardToQueue } from '../../db/vault';
@@ -41,17 +42,30 @@ const SearchResultCard = React.memo<SearchResultCardProps>(
         </View>
 
         <View style={styles.cardFooter}>
-          <TouchableOpacity
-            style={styles.audioBtn}
+          <Pressable
+            style={({ pressed }) => [
+              styles.audioBtn,
+              {
+                transform: [{ translateY: pressed ? 1 : 0 }],
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
             onPress={() => onSpeak(item.term, item.language)}
           >
             <Volume2 size={16} color="#78350F" style={{ marginRight: 6 }} />
             <Text style={styles.audioText}>Hear Sound</Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             disabled={isQueued}
-            style={[styles.learnBtn, isQueued && styles.learnBtnDone]}
+            style={({ pressed }) => [
+              styles.learnBtn,
+              isQueued && styles.learnBtnDone,
+              {
+                transform: [{ translateY: pressed ? 2 : 0 }],
+                opacity: isQueued ? 0.6 : pressed ? 0.88 : 1,
+              },
+            ]}
             onPress={() => onLearn(item)}
           >
             {isQueued ? (
@@ -65,7 +79,7 @@ const SearchResultCard = React.memo<SearchResultCardProps>(
                 <Text style={styles.learnBtnText}>Learn Word</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </ParchmentCard>
     );

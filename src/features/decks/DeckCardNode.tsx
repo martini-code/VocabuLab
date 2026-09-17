@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
   CheckCircle2,
   Sparkles,
@@ -91,10 +91,15 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
       : 0;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.88}
+    <Pressable
       onPress={onPress}
-      style={styles.container}
+      style={({ pressed }) => [
+        styles.container,
+        {
+          transform: [{ translateY: pressed ? 2 : 0 }],
+          opacity: pressed ? 0.92 : 1,
+        },
+      ]}
     >
       {/* Underlying 3D Physical Card Stack Layers */}
       <View style={[styles.cardStackBack, isMastered && styles.cardStackBackMastered]} />
@@ -190,7 +195,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
           <ChevronRight size={15} color="#94A3B8" />
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 

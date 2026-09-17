@@ -1,0 +1,271 @@
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Easing,
+  runOnUI,
+} from 'react-native-reanimated';
+import { Volume2 } from 'lucide-react-native';
+import { CardWithDetails } from '../../types';
+import { ShieldBadge } from '../../components/ui/ShieldBadge';
+import { ParchmentCard } from '../../components/ui/ParchmentCard';
+
+interface ReviewCardFlipperProps {
+  card: CardWithDetails;
+  isFlipped: boolean;
+  onFlip: () => void;
+  onSpeak: (term: string, lang: string) => void;
+}
+
+export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
+  card,
+  isFlipped,
+  onFlip,
+  onSpeak,
+}) => {
+  // Shared value 0 = Front, 1 = Back
+  const flipRotation = useSharedValue(isFlipped ? 1 : 0);
+
+  // Sync prop changes with UI thread animation
+  useEffect(() => {
+    runOnUI(() => {
+      'worklet';
+      flipRotation.value = withTiming(isFlipped ? 1 : 0, {
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
+      });
+    })();
+  }, [isFlipped, flipRotation]);
+
+  // Animated style for Front Side (rotates from 0deg to 180deg)
+  const frontAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    const rotateValue = interpolate(flipRotation.value, [0, 1], [0, 180]);
+    return {
+      transform: [
+        { perspective: 1000 },
+        { rotateY: `${rotateValue}deg` },
+      ],
+      opacity: interpolate(flipRotation.value, [0, 0.45, 0.5, 1], [1, 0.8, 0, 0]),
+      zIndex: flipRotation.value < 0.5 ? 2 : 1,
+    };
+  });
+
+  // Animated style for Back Side (rotates from -180deg to 0deg)
+  const backAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    const rotateValue = interpolate(flipRotation.value, [0, 1], [-180, 0]);
+    return {
+      transform: [
+        { perspective: 1000 },
+        { rotateY: `${rotateValue}deg` },
+      ],
+      opacity: interpolate(flipRotation.value, [0, 0.5, 0.55, 1], [0, 0, 0.8, 1]),
+      zIndex: flipRotation.value >= 0.5 ? 2 : 1,
+    };
+  });
+
+  return (
+    <Pressable
+      onPress={onFlip}
+      style={({ pressed }) => [
+        styles.flipperContainer,
+        {
+          transform: [{ translateY: pressed ? 2 : 0 }],
+          opacity: pressed ? 0.95 : 1,
+        },
+      ]}
+    >
+      {/* Front Face */}
+      <Animated.View
+        style={[styles.cardFace, frontAnimatedStyle]}
+        pointerEvents={isFlipped ? 'none' : 'auto'}
+      >
+        <ParchmentCard variant="light" style={styles.cardContent}>
+          {/* Card Header */}
+          <View style={styles.cardHeaderRow}>
+            <ShieldBadge level={card.front_cefr} size="md" />
+            <Text style={styles.langTag}>
+              {card.front_lang.toUpperCase()} ➔ {card.back_lang.toUpperCase()}
+            </Text>
+          </View>
+
+          {/* Front Word & Pronounce */}
+          <View style={styles.termBox}>
+            <Text style={styles.termText}>{card.front_term}</Text>
+            {card.front_pos && (
+              <Text style={styles.posText}>[{card.front_pos}]</Text>
+            )}
+
+            <TouchableOpacity
+              style={styles.ttsButton}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onSpeak(card.front_term, card.front_lang);
+              }}
+            >
+              <Volume2 size={16} color="#78350F" />
+              <Text style={styles.ttsLabel}>Pronounce</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Prompt */}
+          <View style={styles.tapToRevealBox}>
+            <Text style={styles.tapToRevealText}>Tap scroll to reveal translation</Text>
+          </View>
+        </ParchmentCard>
+      </Animated.View>
+
+      {/* Back Face */}
+      <Animated.View
+        style={[styles.cardFace, styles.cardFaceBack, backAnimatedStyle]}
+        pointerEvents={isFlipped ? 'auto' : 'none'}
+      >
+        <ParchmentCard variant="aged" style={styles.cardContent}>
+          {/* Card Header */}
+          <View style={styles.cardHeaderRow}>
+            <ShieldBadge level={card.front_cefr} size="md" />
+            <Text style={styles.langTag}>
+              {card.front_lang.toUpperCase()} ➔ {card.back_lang.toUpperCase()}
+            </Text>
+          </View>
+
+          {/* Front Word (summary) */}
+          <View style={styles.termBoxSmall}>
+            <Text style={styles.termTextSmall}>{card.front_term}</Text>
+            {card.front_pos && (
+              <Text style={styles.posText}>[{card.front_pos}]</Text>
+            )}
+          </View>
+
+          {/* Translation */}
+          <View style={styles.backContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.backTranslationLabel}>TRANSLATION</Text>
+            <Text style={styles.backTermText}>{card.back_term}</Text>
+          </View>
+        </ParchmentCard>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+const styles = StyleSheet.create({
+  flipperContainer: {
+    width: '100%',
+    minHeight: 270,
+    position: 'relative',
+  },
+  cardFace: {
+    width: '100%',
+    backfaceVisibility: 'hidden',
+  },
+  cardFaceBack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  cardContent: {
+    width: '100%',
+    minHeight: 270,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  langTag: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#94A3B8',
+    letterSpacing: 1,
+  },
+  termBox: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  termBoxSmall: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  termText: {
+    fontSize: 34,
+    fontWeight: '900',
+    color: '#1E293B',
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  termTextSmall: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#64748B',
+    textAlign: 'center',
+  },
+  posText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#64748B',
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  ttsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+  },
+  ttsLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#B45309',
+    marginLeft: 6,
+  },
+  divider: {
+    height: 1.5,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 12,
+    width: '80%',
+    alignSelf: 'center',
+  },
+  backContainer: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  backTranslationLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#A16207',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  backTermText: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  tapToRevealBox: {
+    marginTop: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderColor: '#F1F5F9',
+    alignItems: 'center',
+  },
+  tapToRevealText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+});

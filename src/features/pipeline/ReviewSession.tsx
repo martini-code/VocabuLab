@@ -18,6 +18,7 @@ import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { Volume2, Layers, X, Zap } from 'lucide-react-native';
 import { srsManager } from '../../srs';
+import { ReviewCardFlipper } from './ReviewCardFlipper';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -233,51 +234,13 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         </View>
       </View>
 
-      {/* Spaced Repetition Card */}
-      <TouchableOpacity activeOpacity={0.92} onPress={handleFlip} style={{ width: '100%' }}>
-        <ParchmentCard variant={isFlipped ? 'aged' : 'light'} style={styles.cardContainer}>
-          {/* Top Card Badges */}
-          <View style={styles.cardHeaderRow}>
-            <ShieldBadge level={currentCard.front_cefr} size="md" />
-            <Text style={styles.langTag}>
-              {currentCard.front_lang.toUpperCase()} ➔ {currentCard.back_lang.toUpperCase()}
-            </Text>
-          </View>
-
-          {/* Front Term & Audio */}
-          <View style={styles.termBox}>
-            <Text style={styles.termText}>{currentCard.front_term}</Text>
-            {currentCard.front_pos && (
-              <Text style={styles.posText}>[{currentCard.front_pos}]</Text>
-            )}
-
-            {/* Offline TTS Horn Button */}
-            <TouchableOpacity
-              style={styles.ttsButton}
-              onPress={(e) => {
-                e.stopPropagation?.();
-                speakWord(currentCard.front_term, currentCard.front_lang);
-              }}
-            >
-              <Volume2 size={16} color="#78350F" />
-              <Text style={styles.ttsLabel}>Pronounce</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Back Side: Translation */}
-          {isFlipped ? (
-            <View style={styles.backContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.backTranslationLabel}>TRANSLATION</Text>
-              <Text style={styles.backTermText}>{currentCard.back_term}</Text>
-            </View>
-          ) : (
-            <View style={styles.tapToRevealBox}>
-              <Text style={styles.tapToRevealText}>Tap scroll to reveal translation</Text>
-            </View>
-          )}
-        </ParchmentCard>
-      </TouchableOpacity>
+      {/* Spaced Repetition Card with Reanimated 3D UI Worklet Flip */}
+      <ReviewCardFlipper
+        card={currentCard}
+        isFlipped={isFlipped}
+        onFlip={handleFlip}
+        onSpeak={speakWord}
+      />
 
       {/* FSRS Grading Actions Bar */}
       {isFlipped ? (
