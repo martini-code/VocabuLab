@@ -58,7 +58,7 @@ export const USER_PROFILES: Record<UserProfilePreset, UserProfileInfo> = {
     streakDays: 12,
     totalReviews: 165,
     unlockedDecksCount: 6,
-    tokens: 6,
+    tokens: 1,
     isAdFree: false,
   },
   advanced: {
@@ -72,7 +72,7 @@ export const USER_PROFILES: Record<UserProfilePreset, UserProfileInfo> = {
     streakDays: 45,
     totalReviews: 780,
     unlockedDecksCount: 24,
-    tokens: 25,
+    tokens: 1,
     isAdFree: true,
   },
   clean: {
