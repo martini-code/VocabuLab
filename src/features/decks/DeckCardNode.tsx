@@ -3,82 +3,17 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
   CheckCircle2,
   Sparkles,
-  Layers,
   ChevronRight,
-  BookOpen,
-  Castle,
-  TreePine,
-  Coins,
-  Swords,
-  Sword,
-  Shield,
-  Crown,
-  Users,
-  Utensils,
-  Wine,
-  Footprints,
-  CloudLightning,
-  Compass,
-  Scale,
-  Award,
-  Scroll,
-  Landmark,
-  Flame,
-  Network,
   Plus,
+  Layers,
 } from 'lucide-react-native';
 import { DeckWithProgress } from '../../types';
+import { DeckIcon } from '../../components/icons/DeckIcon';
 
 interface DeckCardNodeProps {
   deck: DeckWithProgress;
   onPress: () => void;
   index: number;
-}
-
-function renderDeckIcon(iconName: string, size = 18, color = '#78350F') {
-  switch (iconName) {
-    case 'castle':
-    case 'handshake':
-      return <Castle size={size} color={color} />;
-    case 'tree':
-    case 'paw':
-      return <TreePine size={size} color={color} />;
-    case 'coins':
-      return <Coins size={size} color={color} />;
-    case 'swords':
-      return <Swords size={size} color={color} />;
-    case 'sword':
-      return <Sword size={size} color={color} />;
-    case 'shield':
-      return <Shield size={size} color={color} />;
-    case 'book':
-    case 'microscope':
-      return <BookOpen size={size} color={color} />;
-    case 'crown':
-      return <Crown size={size} color={color} />;
-    case 'utensils':
-      return <Utensils size={size} color={color} />;
-    case 'goblet':
-      return <Wine size={size} color={color} />;
-    case 'cloud-lightning':
-      return <CloudLightning size={size} color={color} />;
-    case 'compass':
-      return <Compass size={size} color={color} />;
-    case 'scale':
-      return <Scale size={size} color={color} />;
-    case 'award':
-      return <Award size={size} color={color} />;
-    case 'scroll':
-      return <Scroll size={size} color={color} />;
-    case 'landmark':
-      return <Landmark size={size} color={color} />;
-    case 'flame':
-      return <Flame size={size} color={color} />;
-    case 'network':
-      return <Network size={size} color={color} />;
-    default:
-      return <Layers size={size} color={color} />;
-  }
 }
 
 export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, index }) => {
@@ -122,7 +57,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
               isQueued && !isMastered && { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
             ]}
           >
-            {renderDeckIcon(deck.icon_name, 18, isMastered ? '#065F46' : '#92400E')}
+            <DeckIcon name={deck.icon_name} size={18} color={isMastered ? '#065F46' : '#92400E'} />
           </View>
 
           <View style={styles.badgeRow}>

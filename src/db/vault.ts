@@ -537,16 +537,62 @@ export async function loadDeckTranslationsForDecks(
   return result;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
+export const CATEGORY_ICONS: Record<string, string> = {
   greetings: 'handshake',
+  basics: 'message-circle',
   family: 'users',
   numbers: 'coins',
-  animals: 'paw',
-  vehicles: 'compass',
-  math: 'scale',
-  electronics: 'sparkles',
-  biology: 'book',
+  animals: 'paw-print',
+  vehicles: 'car',
+  math: 'calculator',
+  electronics: 'cpu',
+  biology: 'dna',
+  home: 'home',
+  construction: 'hammer',
+  food: 'apple',
+  sports: 'trophy',
+  travel: 'luggage',
+  dining: 'utensils',
+  health: 'stethoscope',
+  art: 'palette',
 };
+
+export const SUBCATEGORY_ICONS: Record<string, string> = {
+  'domestic animals': 'dog',
+  insects: 'bug',
+  'farm animals': 'paw-print',
+  'air vehicles': 'plane',
+  'land vehicles': 'car',
+  'water vehicles': 'ship',
+  furniture: 'armchair',
+  'home spaces': 'home',
+  'hand tools': 'hammer',
+  'power tools': 'wrench',
+  fruits: 'apple',
+  spices: 'flame',
+  'basic groceries': 'shopping-bag',
+  'core team sports': 'trophy',
+  'individual sports': 'activity',
+  'sport venues': 'landmark',
+  'cell cycle': 'microscope',
+  'basic math operations': 'divide',
+  'number properties': 'percent',
+  'electronic components': 'cpu',
+  'house appliances': 'tv',
+  'formal greetings': 'handshake',
+  'casual greetings': 'message-square',
+  'formal farewells': 'handshake',
+  'casual farewells': 'message-circle',
+};
+
+export function resolveDeckIcon(category?: string, subcategory?: string): string {
+  const subLower = (subcategory || '').trim().toLowerCase();
+  if (subLower && SUBCATEGORY_ICONS[subLower]) {
+    return SUBCATEGORY_ICONS[subLower];
+  }
+  const catLower = (category || '').trim().toLowerCase();
+  return CATEGORY_ICONS[catLower] || 'book-open';
+}
 
 export function capitalizeTitle(text: string): string {
   if (!text) return '';
@@ -670,7 +716,7 @@ export async function getThemesWithProgressiveDecks(
       difficulty_level: d.difficulty,
       difficulty_label: cefr,
       cefr_level: cefr,
-      icon_name: CATEGORY_ICONS[d.category] || 'book',
+      icon_name: resolveDeckIcon(d.category, d.subcategory),
       card_count: totalCards,
       queued_count: queued,
       garrisoned_count: queued,
@@ -708,7 +754,7 @@ export async function getThemesWithProgressiveDecks(
       id: `theme_${catKey}`,
       name: themeName,
       description: '',
-      icon_name: CATEGORY_ICONS[catKey] || 'book',
+      icon_name: resolveDeckIcon(catKey),
       is_pro: false,
       decks,
     });
@@ -722,7 +768,7 @@ export async function getThemesWithProgressiveDecks(
         id: `theme_${catKey}`,
         name: themeName,
         description: '',
-        icon_name: CATEGORY_ICONS[catKey] || 'book',
+        icon_name: resolveDeckIcon(catKey),
         is_pro: false,
         decks,
       });
@@ -819,7 +865,7 @@ export async function getAllDecksOrderedByDifficulty(
   for (const s of sliceRows) {
     const sliceKey = `${s.deck_id}_${s.difficulty}`;
     const cefr = difficultyToCefr(s.difficulty);
-    const iconName = CATEGORY_ICONS[s.category] || 'book';
+    const iconName = resolveDeckIcon(s.category, s.subcategory);
     const queued = sliceQueuedCount.get(sliceKey) || 0;
     const mastered = sliceMasteredCount.get(sliceKey) || 0;
 
@@ -2050,7 +2096,7 @@ export async function getDomainsHierarchy(targetLang?: string): Promise<Domain[]
       name: catName,
       description: '',
       difficulty_level: 1,
-      icon_name: CATEGORY_ICONS[cat] || 'book',
+      icon_name: resolveDeckIcon(cat),
       is_introductory: false,
     });
   }
@@ -2065,7 +2111,7 @@ export async function getDomainsHierarchy(targetLang?: string): Promise<Domain[]
       name: subName,
       description: '',
       difficulty_level: r.difficulty,
-      icon_name: CATEGORY_ICONS[r.category] || 'book',
+      icon_name: resolveDeckIcon(r.category, r.subcategory),
       is_introductory: r.difficulty === 1,
     });
   }

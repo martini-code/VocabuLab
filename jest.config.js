@@ -19,6 +19,7 @@ module.exports = {
     '^react-native$': '<rootDir>/tests/mocks/react-native.tsx',
     '^better-sqlite3$': '<rootDir>/tests/mocks/better-sqlite3.ts',
     '^expo-secure-store$': '<rootDir>/tests/mocks/expo-secure-store.ts',
+    '^react-native-svg$': '<rootDir>/tests/mocks/react-native-svg.tsx',
   },
   watchman: false,
   haste: {

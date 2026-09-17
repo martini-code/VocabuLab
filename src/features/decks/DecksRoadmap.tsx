@@ -73,6 +73,7 @@ import {
   addAvailableWordsToQueue,
 } from '../../db/vault';
 import { DifficultyProgressionMap } from './DifficultyProgressionMap';
+import { DeckIcon } from '../../components/icons/DeckIcon';
 import { speakWord } from '../../utils/tts';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet } from '../../services/tokenWallet';
@@ -88,54 +89,7 @@ export interface DecksRoadmapProps {
 type MainTab = 'decks' | 'difficulty' | 'mastery';
 
 function renderDeckIcon(iconName: string, size = 20, color = '#64748B') {
-  switch (iconName) {
-    case 'castle':
-      return <Castle size={size} color={color} />;
-    case 'tree':
-      return <TreePine size={size} color={color} />;
-    case 'coins':
-      return <Coins size={size} color={color} />;
-    case 'swords':
-      return <Swords size={size} color={color} />;
-    case 'sword':
-      return <Sword size={size} color={color} />;
-    case 'shield':
-      return <Shield size={size} color={color} />;
-    case 'book':
-      return <BookOpen size={size} color={color} />;
-    case 'crown':
-      return <Crown size={size} color={color} />;
-    case 'handshake':
-      return <Users size={size} color={color} />;
-    case 'utensils':
-      return <Utensils size={size} color={color} />;
-    case 'goblet':
-      return <Wine size={size} color={color} />;
-    case 'paw':
-      return <Footprints size={size} color={color} />;
-    case 'cloud-lightning':
-      return <CloudLightning size={size} color={color} />;
-    case 'compass':
-      return <Compass size={size} color={color} />;
-    case 'scale':
-      return <Scale size={size} color={color} />;
-    case 'award':
-      return <Award size={size} color={color} />;
-    case 'sparkles':
-      return <Sparkles size={size} color={color} />;
-    case 'scroll':
-      return <Scroll size={size} color={color} />;
-    case 'brain':
-      return <Brain size={size} color={color} />;
-    case 'landmark':
-      return <Landmark size={size} color={color} />;
-    case 'flame':
-      return <Flame size={size} color={color} />;
-    case 'network':
-      return <Network size={size} color={color} />;
-    default:
-      return <BookOpen size={size} color={color} />;
-  }
+  return <DeckIcon name={iconName} size={size} color={color} />;
 }
 
 function getCefrBadgeColors(cefr: string) {
