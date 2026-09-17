@@ -18,6 +18,7 @@ module.exports = {
   moduleNameMapper: {
     '^react-native$': '<rootDir>/tests/mocks/react-native.tsx',
     '^better-sqlite3$': '<rootDir>/tests/mocks/better-sqlite3.ts',
+    '^expo-secure-store$': '<rootDir>/tests/mocks/expo-secure-store.ts',
   },
   watchman: false,
   haste: {

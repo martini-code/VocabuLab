@@ -239,7 +239,7 @@
     },
     "10": {
       "theme": "Electronics",
-      "name": "Engineering"
+      "name": "Electronic Components"
     },
     "11": {
       "theme": "Electronics",
@@ -263,7 +263,7 @@
     },
     "16": {
       "theme": "Numbers",
-      "name": "Cardinal Numbers (0-10)"
+      "name": "Numbers (0-10)"
     },
     "17": {
       "theme": "Numbers",
@@ -296,6 +296,38 @@
     "24": {
       "theme": "Math",
       "name": "Number Properties"
+    },
+    "25": {
+      "theme": "Construction",
+      "name": "Power Tools"
+    },
+    "26": {
+      "theme": "Construction",
+      "name": "Building Materials"
+    },
+    "27": {
+      "theme": "Food",
+      "name": "Basic Groceries"
+    },
+    "28": {
+      "theme": "Food",
+      "name": "Fruits"
+    },
+    "29": {
+      "theme": "Food",
+      "name": "Spices"
+    },
+    "30": {
+      "theme": "Sports",
+      "name": "Core Team Sports"
+    },
+    "31": {
+      "theme": "Sports",
+      "name": "Individual Sports"
+    },
+    "32": {
+      "theme": "Sports",
+      "name": "Sport Venues"
     }
   },
   "db_cards": {
@@ -424,7 +456,55 @@
     "123": "wardrobe",
     "124": "hammer",
     "125": "odd",
-    "126": "even"
+    "126": "even",
+    "127": "tape measure",
+    "128": "pliers",
+    "129": "crowbar",
+    "130": "chisel",
+    "131": "impact driver",
+    "132": "circular saw",
+    "133": "nail gun",
+    "134": "lumber",
+    "135": "concrete",
+    "136": "mortar",
+    "137": "plywood",
+    "138": "tape measure",
+    "139": "dishwasher",
+    "140": "bread",
+    "141": "coffee",
+    "142": "apple",
+    "143": "rice",
+    "144": "pineapple",
+    "145": "pear",
+    "146": "grapefruit",
+    "147": "grape",
+    "148": "milk",
+    "149": "cheese",
+    "150": "garlic",
+    "151": "basil",
+    "152": "cinnamon",
+    "153": "ginger",
+    "154": "oregano",
+    "155": "mint",
+    "156": "cumin",
+    "157": "basketball",
+    "158": "soccer",
+    "159": "volleyball",
+    "160": "baseball",
+    "161": "rugby",
+    "162": "cricket",
+    "163": "tennis",
+    "164": "running",
+    "165": "swimming",
+    "166": "cycling",
+    "167": "boxing",
+    "168": "gymnastics",
+    "169": "wrestling",
+    "170": "surfing",
+    "171": "skiing",
+    "172": "stadium",
+    "173": "court",
+    "174": "pool"
   },
   "tokens": {
     "wallet_title": "ROYAL TOKENS",

@@ -239,7 +239,7 @@
     },
     "10": {
       "theme": "Electronics",
-      "name": "Engineering"
+      "name": "Electronic Components"
     },
     "11": {
       "theme": "Electronics",
@@ -262,24 +262,24 @@
       "name": "Basic Math Operations"
     },
     "16": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (0-10)"
+      "theme": "Nombres",
+      "name": "Nombres Cardinaux (0-10)"
     },
     "17": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (11-19)"
+      "theme": "Nombres",
+      "name": "Nombres (11-19)"
     },
     "18": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (20-29)"
+      "theme": "Nombres",
+      "name": "Nombres (20-29)"
     },
     "19": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (30-90)"
+      "theme": "Nombres",
+      "name": "Nombres (30-90)"
     },
     "20": {
-      "theme": "Numbers",
-      "name": "Cardinal Numbers (100+)"
+      "theme": "Nombres",
+      "name": "Nombres (100+)"
     },
     "21": {
       "theme": "Home",
@@ -296,6 +296,38 @@
     "24": {
       "theme": "Math",
       "name": "Number Properties"
+    },
+    "25": {
+      "theme": "Construction",
+      "name": "Power Tools"
+    },
+    "26": {
+      "theme": "Construction",
+      "name": "Building Materials"
+    },
+    "27": {
+      "theme": "Food",
+      "name": "Basic Groceries"
+    },
+    "28": {
+      "theme": "Food",
+      "name": "Fruits"
+    },
+    "29": {
+      "theme": "Food",
+      "name": "Spices"
+    },
+    "30": {
+      "theme": "Sports",
+      "name": "Core Team Sports"
+    },
+    "31": {
+      "theme": "Sports",
+      "name": "Individual Sports"
+    },
+    "32": {
+      "theme": "Sports",
+      "name": "Sport Venues"
     }
   },
   "db_cards": {
@@ -389,28 +421,28 @@
     "88": "dix-huit",
     "89": "dix-neuf",
     "90": "vingt",
-    "91": "twenty-one",
-    "92": "twenty-two",
-    "93": "twenty-three",
-    "94": "twenty-four",
-    "95": "twenty-five",
-    "96": "twenty-six",
-    "97": "twenty-seven",
-    "98": "twenty-eight",
-    "99": "twenty-nine",
-    "100": "thirty",
-    "101": "forty",
-    "102": "fifty",
-    "103": "sixty",
-    "104": "seventy",
-    "105": "eighty",
-    "106": "ninety",
-    "107": "one hundred",
-    "108": "one thousand",
-    "109": "one hundred thousand",
-    "110": "one million",
-    "111": "one billion",
-    "112": "one trillion",
+    "91": "vingt-et-un",
+    "92": "vingt-deux",
+    "93": "vingt-trois",
+    "94": "vingt-quatre",
+    "95": "vingt cinq",
+    "96": "vingt-six",
+    "97": "vingt-sept",
+    "98": "vingt-huit",
+    "99": "vingt-neuf",
+    "100": "trente",
+    "101": "quarante",
+    "102": "cinquante",
+    "103": "soixante",
+    "104": "soixante-dix",
+    "105": "quatre-vingts",
+    "106": "quatre-vingt-dix",
+    "107": "cent",
+    "108": "mille",
+    "109": "cent mille",
+    "110": "un million",
+    "111": "un milliard",
+    "112": "un billion",
     "113": "cinq",
     "114": "bathroom",
     "115": "kitchen",
@@ -424,7 +456,55 @@
     "123": "wardrobe",
     "124": "hammer",
     "125": "odd",
-    "126": "even"
+    "126": "even",
+    "127": "tape measure",
+    "128": "pliers",
+    "129": "crowbar",
+    "130": "chisel",
+    "131": "impact driver",
+    "132": "circular saw",
+    "133": "nail gun",
+    "134": "lumber",
+    "135": "concrete",
+    "136": "mortar",
+    "137": "plywood",
+    "138": "tape measure",
+    "139": "dishwasher",
+    "140": "bread",
+    "141": "coffee",
+    "142": "apple",
+    "143": "rice",
+    "144": "pineapple",
+    "145": "pear",
+    "146": "grapefruit",
+    "147": "grape",
+    "148": "milk",
+    "149": "cheese",
+    "150": "garlic",
+    "151": "basil",
+    "152": "cinnamon",
+    "153": "ginger",
+    "154": "oregano",
+    "155": "mint",
+    "156": "cumin",
+    "157": "basketball",
+    "158": "soccer",
+    "159": "volleyball",
+    "160": "baseball",
+    "161": "rugby",
+    "162": "cricket",
+    "163": "tennis",
+    "164": "running",
+    "165": "swimming",
+    "166": "cycling",
+    "167": "boxing",
+    "168": "gymnastics",
+    "169": "wrestling",
+    "170": "surfing",
+    "171": "skiing",
+    "172": "stadium",
+    "173": "court",
+    "174": "pool"
   },
   "tokens": {
     "wallet_title": "JETONS ROYAUX",

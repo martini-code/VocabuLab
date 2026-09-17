@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
@@ -22,6 +23,7 @@ import { getDeviceLanguage, changeAppLanguage } from './src/locales';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
 import { TokenWalletModal } from './src/components/tokens/TokenWalletModal';
+import { MockProfileModal } from './src/components/dev/MockProfileModal';
 import { TokenPill } from './src/components/tokens/TokenPill';
 import { InsufficientTokensModal } from './src/components/tokens/InsufficientTokensModal';
 import { RewardedAdModal } from './src/components/ads/RewardedAdModal';
@@ -76,6 +78,7 @@ export default function App() {
   const [insufficientRequiredWords, setInsufficientRequiredWords] = useState(1);
   const [rewardedAdModalOpen, setRewardedAdModalOpen] = useState(false);
   const [rewardedAdOnComplete, setRewardedAdOnComplete] = useState<(() => void) | null>(null);
+  const [mockProfileModalOpen, setMockProfileModalOpen] = useState(false);
 
   useEffect(() => {
     bootstrapKeep();
@@ -247,7 +250,11 @@ export default function App() {
         )}
         {activeTab === 'chronicles' && <ProgressScreen />}
         {activeTab === 'treasury' && (
-          <View style={styles.treasuryTabContainer}>
+          <ScrollView
+            style={styles.treasuryScrollView}
+            contentContainerStyle={styles.treasuryTabContainer}
+            showsVerticalScrollIndicator={false}
+          >
             <SquireMascot mood="victorious" size={120} />
             <Text style={styles.treasuryTitle}>THE ROYAL TREASURY</Text>
             <Text style={styles.treasurySub}>Zero Cloud Overhead • 100% Local Fortress</Text>
@@ -347,7 +354,16 @@ export default function App() {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
+
+            <TouchableOpacity
+              style={[styles.treasuryActionBtn, { marginTop: 12, backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}
+              onPress={() => setMockProfileModalOpen(true)}
+            >
+              <Text style={[styles.treasuryActionText, { color: '#334155' }]}>
+                SWITCH TESTING PROFILE
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         )}
       </View>
 
@@ -474,6 +490,17 @@ export default function App() {
           }
         }}
       />
+
+      {/* Testing Profiles Switcher Modal */}
+      <MockProfileModal
+        visible={mockProfileModalOpen}
+        onClose={() => setMockProfileModalOpen(false)}
+        targetLang={languagePair.destination_lang}
+        originLang={languagePair.origin_lang}
+        onProfileApplied={async () => {
+          await refreshStats();
+        }}
+      />
     </SafeAreaView>
   </SafeAreaProvider>
 );
@@ -596,11 +623,15 @@ const styles = StyleSheet.create({
   navLabelActive: {
     color: '#B45309',
   },
-  treasuryTabContainer: {
+  treasuryScrollView: {
     flex: 1,
+    width: '100%',
+  },
+  treasuryTabContainer: {
     alignItems: 'center',
     padding: 20,
-    paddingTop: 30,
+    paddingTop: 24,
+    paddingBottom: 48,
   },
   treasuryTitle: {
     fontSize: 22,

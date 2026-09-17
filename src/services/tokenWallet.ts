@@ -117,6 +117,24 @@ export class TokenWalletService {
     ]);
   }
 
+  /**
+   * Directly sets the wallet state for developer profile switching and testing.
+   */
+  async setWalletStateForTesting(
+    tokens: number,
+    wordCredits = 0,
+    dailyWords = TOKEN_CONFIG.DAILY_PASS_WORDS
+  ): Promise<void> {
+    const today = this.todayDateString();
+    await Storage.setItemAsync(KEYS.TOKENS, String(tokens));
+    await Storage.setItemAsync(KEYS.WORD_CREDITS, String(wordCredits));
+    await Storage.setItemAsync(KEYS.DAILY_WORDS, String(dailyWords));
+    await Storage.setItemAsync(KEYS.DAILY_DATE, today);
+    await Storage.setItemAsync(KEYS.ADS_WATCHED, '0');
+    await Storage.setItemAsync(KEYS.ADS_DATE, today);
+    await this.notify();
+  }
+
   private parseNumber(val: string | null, fallback: number): number {
     if (val === null || val === undefined) return fallback;
     const n = Number(val);
