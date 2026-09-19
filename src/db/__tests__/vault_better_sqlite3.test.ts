@@ -707,4 +707,69 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       expect(count.total).toBe(2);
     });
   });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // 10. Deck Title Language Preference & Translations (Origin vs Target)
+  // ───────────────────────────────────────────────────────────────────────────
+  describe('Deck Title Language Preference & Translations', () => {
+    beforeEach(() => {
+      // Insert deck
+      staticDb
+        .prepare('INSERT INTO decks (deck_id, category, subcategory, difficulty, description) VALUES (?, ?, ?, ?, ?);')
+        .run(10, 'family', 'members', 1, 'Family vocabulary');
+
+      // Insert translations for English (origin) and Spanish (target)
+      const insertTrans = staticDb.prepare(
+        'INSERT INTO deck_translations (deck_id, lang_name, category_translation, subcategory_translation) VALUES (?, ?, ?, ?);'
+      );
+      insertTrans.run(10, 'English', 'Family', 'Members');
+      insertTrans.run(10, 'Spanish', 'Familia', 'Miembros');
+    });
+
+    it('defaults deck title language preference to origin if not set in Settings', () => {
+      const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'deck_title_language';").get();
+      const pref = row ? row.value : 'origin';
+      expect(pref).toBe('origin');
+    });
+
+    it('persists target immersion preference when user opts in', () => {
+      userDb
+        .prepare("INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('deck_title_language', 'target', datetime('now'));")
+        .run();
+
+      const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'deck_title_language';").get();
+      expect(row.value).toBe('target');
+    });
+
+    it('loads origin language translations when preference is origin', () => {
+      const pref = 'origin';
+      const originLang = 'English';
+      const targetLang = 'Spanish';
+      const translationLang = pref === 'target' ? targetLang : originLang;
+
+      const trans = staticDb
+        .prepare('SELECT category_translation, subcategory_translation FROM deck_translations WHERE deck_id = ? AND lang_name = ?;')
+        .get(10, translationLang);
+
+      expect(trans).toBeDefined();
+      expect(trans.category_translation).toBe('Family');
+      expect(trans.subcategory_translation).toBe('Members');
+    });
+
+    it('loads target language translations when preference is target (immersion)', () => {
+      const pref = 'target';
+      const originLang = 'English';
+      const targetLang = 'Spanish';
+      const translationLang = pref === 'target' ? targetLang : originLang;
+
+      const trans = staticDb
+        .prepare('SELECT category_translation, subcategory_translation FROM deck_translations WHERE deck_id = ? AND lang_name = ?;')
+        .get(10, translationLang);
+
+      expect(trans).toBeDefined();
+      expect(trans.category_translation).toBe('Familia');
+      expect(trans.subcategory_translation).toBe('Miembros');
+    });
+  });
 });
+

@@ -19,6 +19,7 @@ import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { Volume2, Layers, X, Zap } from 'lucide-react-native';
 import { srsManager } from '../../srs';
 import { ReviewCardFlipper } from './ReviewCardFlipper';
+import { ReviewSessionSummary, ReviewSessionWordSummary } from './ReviewSessionSummary';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -43,10 +44,12 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [loading, setLoading] = useState(true);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
+  const [sessionHistory, setSessionHistory] = useState<ReviewSessionWordSummary[]>([]);
 
   const activeAlgorithm = srsManager.getActiveAlgorithm();
 
   useEffect(() => {
+    setSessionHistory([]);
     loadCards();
   }, [deckFilter?.id, targetLang, originLang]);
 
@@ -106,8 +109,9 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
     // 2. Persist FSRS state & review logs asynchronously in SQLite within a single transaction
     const cardId = currentCard.id;
+    let updatePayload: any = null;
     try {
-      const updatePayload = gradeCardFSRS(currentCard, rating);
+      updatePayload = gradeCardFSRS(currentCard, rating);
       recordCardReview(cardId, updatePayload, rating).catch((err) => {
         console.warn('[ReviewSession] Notice recording card review in SQLite:', err);
       });
@@ -115,14 +119,36 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       console.warn('[ReviewSession] Notice calculating FSRS grade payload:', err);
     }
 
-    // 3. Immediately advance to next card and flip back to front
+    // 3. Accumulate review result into session history
+    if (updatePayload) {
+      setSessionHistory((prev) => [
+        ...prev,
+        {
+          cardId: currentCard.id,
+          frontTerm: currentCard.front_term,
+          frontLang: currentCard.front_lang,
+          backTerm: currentCard.back_term,
+          backLang: currentCard.back_lang,
+          frontCefr: currentCard.front_cefr,
+          pos: currentCard.front_pos,
+          rating,
+          prevStability: currentCard.stability || 0,
+          newStability: updatePayload.stability,
+          prevDifficulty: currentCard.difficulty || 0,
+          newDifficulty: updatePayload.difficulty,
+          scheduledDays: updatePayload.scheduled_days,
+          state: updatePayload.state,
+        },
+      ]);
+    }
+
+    // 4. Immediately advance to next card and flip back to front
     setIsFlipped(false);
     setCurrentIndex((prev) => {
       const next = prev + 1;
       if (next >= cards.length) {
         setMascotMood('victorious');
         setMascotQuote("All cards in review completed! Well done!");
-        if (onSessionComplete) onSessionComplete();
       }
       return next;
     });
@@ -137,7 +163,27 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     );
   }
 
-  // Session Victory / Empty Queue State
+  // Session Summary (Rendered after completing reviews in this session)
+  if (sessionHistory.length > 0 && (!currentCard || currentIndex >= cards.length)) {
+    return (
+      <ReviewSessionSummary
+        items={sessionHistory}
+        deckName={deckFilter?.name}
+        onDone={() => {
+          setSessionHistory([]);
+          if (onSessionComplete) onSessionComplete();
+          loadCards();
+        }}
+        onExploreArchives={onExploreArchives}
+        onTrainAgain={() => {
+          setSessionHistory([]);
+          loadCards();
+        }}
+      />
+    );
+  }
+
+  // Session Victory / Empty Queue State (When no cards were due to begin with)
   if (!currentCard || currentIndex >= cards.length) {
     return (
       <ScrollView contentContainerStyle={styles.victoryContainer}>

@@ -613,7 +613,8 @@ export function capitalizeTitle(text: string): string {
  */
 export async function getThemesWithProgressiveDecks(
   targetLang = 'es',
-  originLang?: string
+  originLang?: string,
+  titleLangPreference?: DeckTitleLanguageMode
 ): Promise<ThemeGroup[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
@@ -684,8 +685,12 @@ export async function getThemesWithProgressiveDecks(
   );
   const unlockedSet = new Set(unlockedRows.map((r) => r.deck_id));
 
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
+
   const allDeckIds = decksRows.map((d) => d.deck_id);
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
   // Group decks by category
   const categoriesMap = new Map<string, DeckWithProgress[]>();
@@ -786,12 +791,15 @@ export async function getThemesWithProgressiveDecks(
  */
 export async function getAllDecksOrderedByDifficulty(
   targetLang = 'es',
-  originLang?: string
+  originLang?: string,
+  titleLangPreference?: DeckTitleLanguageMode
 ): Promise<DeckWithProgress[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
 
   // Group cards by (deck_id, difficulty)
   const sliceRows = await staticDb.getAllAsync<{
@@ -814,7 +822,7 @@ export async function getAllDecksOrderedByDifficulty(
   `);
 
   const allDeckIds = Array.from(new Set(sliceRows.map((s) => s.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
   // Fetch all user cards for this language
   const userCards = await userDb.getAllAsync<{
@@ -1375,7 +1383,8 @@ export async function getWordsByDifficulty(
   targetLang = 'es',
   originLang?: string,
   limit = 100,
-  offset = 0
+  offset = 0,
+  titleLangPreference?: DeckTitleLanguageMode
 ): Promise<DifficultyWordItem[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
@@ -1436,8 +1445,10 @@ export async function getWordsByDifficulty(
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
 
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
   const allDeckIds = Array.from(new Set(rows.map((r) => r.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
   return rows.map((r) => {
     const uc = ucMap.get(r.card_id);
@@ -1639,13 +1650,16 @@ export async function getMasteryWords(
   targetLang = 'es',
   originLang?: string,
   limit = 50,
-  offset = 0
+  offset = 0,
+  titleLangPreference?: DeckTitleLanguageMode
 ): Promise<MasteryWordItem[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const now = new Date().toISOString();
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
 
   if (stage === 'available') {
     // 1. Get all card IDs already queued for this language
@@ -1693,7 +1707,7 @@ export async function getMasteryWords(
     const cardIds = availableCards.map((c) => c.card_id);
     const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
     const allDeckIds = Array.from(new Set(availableCards.map((c) => c.deck_id)));
-    const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
+    const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
     return availableCards.map((c) => {
       const frontTerm = destMap.get(c.card_id) || c.primary_term;
@@ -1794,7 +1808,7 @@ export async function getMasteryWords(
 
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
   const allDeckIds = Array.from(new Set(cardMeta.map((c) => c.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, targetLang);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
   return userCards.map((uc) => {
     const meta = metaMap.get(uc.card_id);
@@ -2067,9 +2081,16 @@ export const searchLexemesFTS = searchLexicon;
 /**
  * Returns domains hierarchy for DomainBrowser.
  */
-export async function getDomainsHierarchy(targetLang?: string): Promise<Domain[]> {
+export async function getDomainsHierarchy(
+  targetLang?: string,
+  originLang?: string,
+  titleLangPreference?: DeckTitleLanguageMode
+): Promise<Domain[]> {
   const staticDb = await getStaticDb();
   const effectiveTarget = targetLang || (await getLanguagePairSettings()).destination_lang;
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const translationLang = pref === 'target' ? effectiveTarget : effectiveOrigin;
 
   const rows = await staticDb.getAllAsync<{
     deck_id: number;
@@ -2080,7 +2101,7 @@ export async function getDomainsHierarchy(targetLang?: string): Promise<Domain[]
   }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
 
   const allDeckIds = rows.map((r) => r.deck_id);
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, effectiveTarget);
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
   const categories = Array.from(new Set(rows.map((r) => r.category)));
   const domains: Domain[] = [];
@@ -2531,3 +2552,20 @@ export async function isAdFreeUser(): Promise<boolean> {
 export async function setAdFreeUser(adFree: boolean): Promise<void> {
   await setSetting('is_ad_free', adFree ? 'true' : 'false');
 }
+
+export type DeckTitleLanguageMode = 'origin' | 'target';
+
+/**
+ * Returns the deck titles display language preference.
+ * Defaults to 'origin' so beginner learners see deck categories and titles
+ * in their native/origin language instead of the unfamiliar target language.
+ */
+export async function getDeckTitleLanguagePreference(): Promise<DeckTitleLanguageMode> {
+  const val = await getSetting('deck_title_language');
+  return val === 'target' ? 'target' : 'origin';
+}
+
+export async function setDeckTitleLanguagePreference(mode: DeckTitleLanguageMode): Promise<void> {
+  await setSetting('deck_title_language', mode);
+}
+

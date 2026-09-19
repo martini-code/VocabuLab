@@ -9,7 +9,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { initVault, getVaultStats, getLanguagePairSettings } from './src/db/vault';
+import {
+  initVault,
+  getVaultStats,
+  getLanguagePairSettings,
+  getDeckTitleLanguagePreference,
+  setDeckTitleLanguagePreference,
+  DeckTitleLanguageMode,
+} from './src/db/vault';
 import { syncDatabaseFromR2, ensureDefaultLanguagePairInstalled } from './src/db/downloader';
 import { VaultStats, LanguagePairSettings } from './src/types';
 import { ReviewSession } from './src/features/pipeline/ReviewSession';
@@ -31,6 +38,7 @@ import { tokenWallet } from './src/services/tokenWallet';
 import { adMobService } from './src/services/adMobService';
 import { iapService } from './src/services/iapService';
 import { srsManager } from './src/srs';
+import { configureAudioSession } from './src/utils/tts';
 import {
   Swords,
   Library,
@@ -44,6 +52,7 @@ import {
   Sparkles,
   Zap,
   Check,
+  Languages,
 } from 'lucide-react-native';
 
 type TabType = 'pipeline' | 'archives' | 'search' | 'chronicles' | 'treasury';
@@ -79,6 +88,7 @@ export default function App() {
   const [rewardedAdModalOpen, setRewardedAdModalOpen] = useState(false);
   const [rewardedAdOnComplete, setRewardedAdOnComplete] = useState<(() => void) | null>(null);
   const [mockProfileModalOpen, setMockProfileModalOpen] = useState(false);
+  const [deckTitleLanguage, setDeckTitleLanguage] = useState<DeckTitleLanguageMode>('origin');
 
   useEffect(() => {
     bootstrapKeep();
@@ -107,6 +117,7 @@ export default function App() {
     try {
       // Preload AdMob rewarded ads in background immediately
       adMobService.preload();
+      configureAudioSession().catch(() => {});
       setStatusMessage('Checking kingdom scrolls...');
       await syncDatabaseFromR2();
 
@@ -121,6 +132,9 @@ export default function App() {
       const currentPair = await getLanguagePairSettings();
       setLanguagePair(currentPair);
       await changeAppLanguage(currentPair.origin_lang);
+
+      const titlePref = await getDeckTitleLanguagePreference();
+      setDeckTitleLanguage(titlePref);
 
       const currentStats = await getVaultStats(currentPair.destination_lang);
       setStats(currentStats);
@@ -242,6 +256,7 @@ export default function App() {
             }}
             targetLang={languagePair.destination_lang}
             originLang={languagePair.origin_lang}
+            deckTitleLanguage={deckTitleLanguage}
             onInsufficientTokens={handleInsufficientTokens}
           />
         )}
@@ -353,6 +368,67 @@ export default function App() {
                   STUDY TARGET: {languagePair.destination_lang.toUpperCase()}
                 </Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Deck & Subdeck Title Language Preference Setting */}
+            <View style={styles.deckTitlePrefCard}>
+              <View style={styles.deckTitlePrefHeader}>
+                <Languages size={18} color="#92400E" />
+                <Text style={styles.deckTitlePrefTitle}>DECK & TOPIC TITLES</Text>
+              </View>
+              <Text style={styles.deckTitlePrefSubtitle}>
+                Choose the display language for categories, decks, and subdecks.
+              </Text>
+              <View style={styles.deckTitleToggleRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.deckTitleToggleBtn,
+                    deckTitleLanguage === 'origin' && styles.deckTitleToggleBtnActive,
+                  ]}
+                  onPress={async () => {
+                    await setDeckTitleLanguagePreference('origin');
+                    setDeckTitleLanguage('origin');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  {deckTitleLanguage === 'origin' && <Check size={14} color="#B45309" />}
+                  <Text
+                    style={[
+                      styles.deckTitleToggleText,
+                      deckTitleLanguage === 'origin' && styles.deckTitleToggleTextActive,
+                    ]}
+                  >
+                    NATIVE ({languagePair.origin_lang.toUpperCase()})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.deckTitleToggleBtn,
+                    deckTitleLanguage === 'target' && styles.deckTitleToggleBtnActive,
+                  ]}
+                  onPress={async () => {
+                    await setDeckTitleLanguagePreference('target');
+                    setDeckTitleLanguage('target');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  {deckTitleLanguage === 'target' && <Check size={14} color="#B45309" />}
+                  <Text
+                    style={[
+                      styles.deckTitleToggleText,
+                      deckTitleLanguage === 'target' && styles.deckTitleToggleTextActive,
+                    ]}
+                  >
+                    IMMERSION ({languagePair.destination_lang.toUpperCase()})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.deckTitlePrefNote}>
+                {deckTitleLanguage === 'origin'
+                  ? '✓ Recommended: Beginner friendly, titles shown in your native language.'
+                  : '⚡ Advanced: Full immersion, titles shown in the language you are learning.'}
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -797,5 +873,74 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#065F46',
     letterSpacing: 0.5,
+  },
+  deckTitlePrefCard: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    padding: 14,
+    marginTop: 12,
+    width: '100%',
+  },
+  deckTitlePrefHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  deckTitlePrefTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#78350F',
+    letterSpacing: 0.5,
+  },
+  deckTitlePrefSubtitle: {
+    fontSize: 11,
+    color: '#92400E',
+    marginBottom: 10,
+    lineHeight: 15,
+  },
+  deckTitleToggleRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  deckTitleToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  deckTitleToggleBtnActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#B45309',
+    shadowColor: '#B45309',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  deckTitleToggleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#92400E',
+    letterSpacing: 0.3,
+  },
+  deckTitleToggleTextActive: {
+    color: '#B45309',
+    fontWeight: '900',
+  },
+  deckTitlePrefNote: {
+    fontSize: 10,
+    color: '#B45309',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });

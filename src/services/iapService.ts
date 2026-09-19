@@ -4,7 +4,7 @@
  */
 
 import { Platform } from 'react-native';
-import * as RNIap from 'react-native-iap';
+import type { EventSubscription, Purchase, PurchaseError } from 'react-native-iap';
 import { isAdFreeUser, setAdFreeUser } from '../db/vault';
 
 // Official Product SKUs
@@ -46,10 +46,76 @@ export const DEFAULT_PRODUCTS: AdFreeProductItem[] = [
 
 type AdFreeListener = (isAdFree: boolean) => void;
 
+let rniapModule: typeof import('react-native-iap') | null = null;
+let rniapChecked = false;
+
+function isExpoGo(): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Constants = require('expo-constants').default || require('expo-constants');
+    if (Constants) {
+      if (Constants.appOwnership === 'expo') return true;
+      if (Constants.executionEnvironment === 'storeClient') return true;
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+function hasNativeNitroModule(): boolean {
+  if (Platform.OS === 'web') return false;
+  if (isExpoGo()) return false;
+
+  try {
+    if (typeof (global as any).NitroModulesProxy !== 'undefined') {
+      return true;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const RN = require('react-native');
+    if (RN && RN.TurboModuleRegistry && typeof RN.TurboModuleRegistry.get === 'function') {
+      return RN.TurboModuleRegistry.get('NitroModules') != null;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function getRNIap(): typeof import('react-native-iap') | null {
+  if (rniapChecked) return rniapModule;
+  rniapChecked = true;
+
+  // Crucial: never call require('react-native-iap') in Expo Go or when NitroModules TurboModule is missing,
+  // because react-native-nitro-modules throws a fatal ModuleNotFoundError at evaluation time.
+  if (!hasNativeNitroModule()) {
+    console.log(
+      '[IAP] Native NitroModules not found in this runtime (Expo Go or unlinked build). Native IAP disabled, SQLite local mode active.'
+    );
+    rniapModule = null;
+    return null;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require('react-native-iap');
+    if (mod && typeof mod.initConnection === 'function') {
+      rniapModule = mod;
+    }
+  } catch (err) {
+    console.warn(
+      '[IAP] Failed to initialize react-native-iap. Running in offline/simulated mode:',
+      err
+    );
+    rniapModule = null;
+  }
+  return rniapModule;
+}
+
 class IAPService {
   private isConnected = false;
-  private updateSubscription: RNIap.EventSubscription | null = null;
-  private errorSubscription: RNIap.EventSubscription | null = null;
+  private updateSubscription: EventSubscription | null = null;
+  private errorSubscription: EventSubscription | null = null;
   private listeners: Set<AdFreeListener> = new Set();
   private cachedAdFreeStatus: boolean = false;
 
@@ -76,18 +142,25 @@ class IAPService {
       return true;
     }
 
-    // 2. Initialize native store connection
+    // 2. Initialize native store connection if available
+    const RNIap = getRNIap();
+    if (!RNIap) {
+      console.log('[IAP] Native StoreKit/Google Play billing unavailable in this runtime (Expo Go or unlinked build). Local SQLite fallback active.');
+      this.isConnected = false;
+      return false;
+    }
+
     try {
       this.isConnected = await RNIap.initConnection();
       console.log('[IAP] Connected to native billing store:', this.isConnected);
 
       // Register purchase update listener
-      this.updateSubscription = RNIap.purchaseUpdatedListener(async (purchase: RNIap.Purchase) => {
+      this.updateSubscription = RNIap.purchaseUpdatedListener(async (purchase: Purchase) => {
         await this.handlePurchase(purchase);
       });
 
       // Register purchase error listener
-      this.errorSubscription = RNIap.purchaseErrorListener((error: RNIap.PurchaseError) => {
+      this.errorSubscription = RNIap.purchaseErrorListener((error: PurchaseError) => {
         console.warn('[IAP] Purchase error occurred:', error.code, error.message);
       });
 
@@ -115,7 +188,8 @@ class IAPService {
       this.errorSubscription = null;
     }
 
-    if (this.isConnected && Platform.OS !== 'web') {
+    const RNIap = getRNIap();
+    if (this.isConnected && RNIap && Platform.OS !== 'web') {
       try {
         await RNIap.endConnection();
       } catch (err) {
@@ -147,7 +221,8 @@ class IAPService {
    * Fetches product localized details from store or returns default metadata.
    */
   async getProducts(): Promise<AdFreeProductItem[]> {
-    if (!this.isConnected || Platform.OS === 'web') {
+    const RNIap = getRNIap();
+    if (!this.isConnected || !RNIap || Platform.OS === 'web') {
       return DEFAULT_PRODUCTS;
     }
 
@@ -201,8 +276,9 @@ class IAPService {
    * Initiates a purchase flow for the specified SKU.
    */
   async purchase(sku: string): Promise<{ success: boolean; message?: string }> {
-    // Web / Simulator test simulation
-    if (Platform.OS === 'web' || !this.isConnected) {
+    const RNIap = getRNIap();
+    // Web / Simulator test simulation / missing native module
+    if (Platform.OS === 'web' || !this.isConnected || !RNIap) {
       console.log('[IAP] Simulating purchase in web / dev environment for SKU:', sku);
       await this.grantEntitlement(true);
       return { success: true };
@@ -232,7 +308,8 @@ class IAPService {
    * Restores existing purchases for the user and updates SQLite entitlements.
    */
   async restore(): Promise<{ restored: boolean; count: number }> {
-    if (Platform.OS === 'web' || !this.isConnected) {
+    const RNIap = getRNIap();
+    if (Platform.OS === 'web' || !this.isConnected || !RNIap) {
       const current = await isAdFreeUser();
       return { restored: current, count: current ? 1 : 0 };
     }
@@ -275,6 +352,8 @@ class IAPService {
    * Reconciles available purchases and finalizes any unfinished transactions.
    */
   private async reconcileAvailablePurchases(): Promise<void> {
+    const RNIap = getRNIap();
+    if (!RNIap) return;
     try {
       const purchases = await RNIap.getAvailablePurchases();
       for (const purchase of purchases || []) {
@@ -294,14 +373,17 @@ class IAPService {
   /**
    * Handles a verified purchase delivered by the store listener.
    */
-  private async handlePurchase(purchase: RNIap.Purchase): Promise<void> {
+  private async handlePurchase(purchase: Purchase): Promise<void> {
+    const RNIap = getRNIap();
     try {
       if (
         purchase.productId === IAP_SKUS.AD_FREE_LIFETIME ||
         purchase.productId === IAP_SKUS.AD_FREE_MONTHLY
       ) {
         // Finalize non-consumable transaction
-        await RNIap.finishTransaction({ purchase, isConsumable: false });
+        if (RNIap) {
+          await RNIap.finishTransaction({ purchase, isConsumable: false });
+        }
         await this.grantEntitlement(true);
         console.log('[IAP] Transaction finished and entitlement granted for:', purchase.productId);
       }

@@ -71,6 +71,7 @@ import {
   getMasterySummary,
   getMasteryWords,
   addAvailableWordsToQueue,
+  DeckTitleLanguageMode,
 } from '../../db/vault';
 import { DifficultyProgressionMap } from './DifficultyProgressionMap';
 import { DeckIcon } from '../../components/icons/DeckIcon';
@@ -83,6 +84,7 @@ export interface DecksRoadmapProps {
   onStartReview?: () => void;
   targetLang?: string;
   originLang?: string;
+  deckTitleLanguage?: DeckTitleLanguageMode;
   onInsufficientTokens?: (requiredWords: number) => void;
 }
 
@@ -422,6 +424,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   onStartReview,
   targetLang: propTargetLang,
   originLang: propOriginLang,
+  deckTitleLanguage,
   onInsufficientTokens,
 }) => {
   const { t, i18n } = useTranslation();
@@ -459,7 +462,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   // Initial Load
   useEffect(() => {
     loadAllData();
-  }, [targetLang, originLang]);
+  }, [targetLang, originLang, deckTitleLanguage]);
 
   const loadAllData = async () => {
     await Promise.all([
@@ -471,7 +474,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   const loadDecksData = async () => {
     try {
-      const data = await getThemesWithProgressiveDecks(targetLang);
+      const data = await getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage);
       setThemes(data);
     } catch (e) {
       console.warn('[Explore] Error loading decks:', e);
@@ -481,7 +484,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const loadDifficultyData = async () => {
     setLoadingDifficulty(true);
     try {
-      const decks = await getAllDecksOrderedByDifficulty(targetLang);
+      const decks = await getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage);
       setMapDecks(decks);
     } catch (e) {
       console.warn('[Explore] Error loading difficulty:', e);
@@ -496,7 +499,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     try {
       const [summary, words] = await Promise.all([
         getMasterySummary(targetLang),
-        getMasteryWords(stage, targetLang, originLang, 50, 0),
+        getMasteryWords(stage, targetLang, originLang, 50, 0, deckTitleLanguage),
       ]);
       setMasterySummary(summary);
       setMasteryWords(words);
@@ -518,7 +521,8 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         targetLang,
         originLang,
         50,
-        nextPage * 50
+        nextPage * 50,
+        deckTitleLanguage
       );
       if (moreWords.length > 0) {
         setMasteryWords((prev) => [...prev, ...moreWords]);
@@ -530,7 +534,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     } finally {
       setLoadingMoreMastery(false);
     }
-  }, [loadingMoreMastery, hasMoreMastery, loadingMastery, masteryPage, masteryStage, targetLang, originLang]);
+  }, [loadingMoreMastery, hasMoreMastery, loadingMastery, masteryPage, masteryStage, targetLang, originLang, deckTitleLanguage]);
 
   // Open Deck Word Inspector
   const handleOpenDeck = useCallback(
@@ -569,13 +573,13 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         await addWordToQueue(frontLexemeId, backLexemeId, conceptId, targetLang, originLang);
         // Refresh background stats without blocking
         getMasterySummary(targetLang).then(setMasterySummary);
-        getThemesWithProgressiveDecks(targetLang).then(setThemes);
-        getAllDecksOrderedByDifficulty(targetLang).then(setMapDecks);
+        getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage).then(setThemes);
+        getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage).then(setMapDecks);
       } catch (e) {
         console.warn('[Explore] Error adding word:', e);
       }
     },
-    [targetLang, originLang, onInsufficientTokens]
+    [targetLang, originLang, deckTitleLanguage, onInsufficientTokens]
   );
 
   // Add all unqueued words in current deck

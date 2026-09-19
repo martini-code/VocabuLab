@@ -81,6 +81,8 @@ import {
   getDownloadedLanguages,
   logReviewEvent,
   updateCardFSRS,
+  getDeckTitleLanguagePreference,
+  setDeckTitleLanguagePreference,
 } from '../vault';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -611,3 +613,59 @@ describe('updateCardFSRS', () => {
     expect(mockRunAsync).toHaveBeenCalledTimes(1);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. getDeckTitleLanguagePreference & setDeckTitleLanguagePreference
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('getDeckTitleLanguagePreference and setDeckTitleLanguagePreference', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('defaults to "origin" when no preference is stored in Settings table', async () => {
+    mockGetFirstAsync.mockResolvedValueOnce(null);
+
+    const pref = await getDeckTitleLanguagePreference();
+    expect(pref).toBe('origin');
+    expect(mockGetFirstAsync).toHaveBeenCalledWith(
+      expect.stringContaining('SELECT value FROM Settings WHERE key = ?;'),
+      ['deck_title_language']
+    );
+  });
+
+  it('returns "target" when preference is explicitly set to "target"', async () => {
+    mockGetFirstAsync.mockResolvedValueOnce({ value: 'target' });
+
+    const pref = await getDeckTitleLanguagePreference();
+    expect(pref).toBe('target');
+  });
+
+  it('returns "origin" when preference is stored as "origin"', async () => {
+    mockGetFirstAsync.mockResolvedValueOnce({ value: 'origin' });
+
+    const pref = await getDeckTitleLanguagePreference();
+    expect(pref).toBe('origin');
+  });
+
+  it('sets preference to "target" by running INSERT OR REPLACE INTO Settings', async () => {
+    mockRunAsync.mockResolvedValueOnce({ changes: 1, lastInsertRowId: 1 });
+
+    await setDeckTitleLanguagePreference('target');
+    expect(mockRunAsync).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'),
+      expect.arrayContaining(['deck_title_language', 'target'])
+    );
+  });
+
+  it('sets preference to "origin" by running INSERT OR REPLACE INTO Settings', async () => {
+    mockRunAsync.mockResolvedValueOnce({ changes: 1, lastInsertRowId: 1 });
+
+    await setDeckTitleLanguagePreference('origin');
+    expect(mockRunAsync).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'),
+      expect.arrayContaining(['deck_title_language', 'origin'])
+    );
+  });
+});
+
