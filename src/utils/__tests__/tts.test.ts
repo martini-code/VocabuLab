@@ -9,6 +9,12 @@ import {
   getVoices,
 } from '../tts';
 
+// Mock expo-modules-core
+const mockRequireOptionalNativeModule = jest.fn().mockReturnValue({});
+jest.mock('expo-modules-core', () => ({
+  requireOptionalNativeModule: (...args: any[]) => mockRequireOptionalNativeModule(...args),
+}));
+
 // Mock expo-speech
 jest.mock('expo-speech', () => ({
   speak: jest.fn(),
@@ -26,9 +32,11 @@ jest.mock('expo-audio', () => ({
 describe('TTS Utility Unit & Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRequireOptionalNativeModule.mockReturnValue({});
     ttsAudioCache.clear();
     ttsAudioCache._resetVoiceCache();
     ttsAudioCache._resetThrottle();
+    ttsAudioCache._resetAudioSessionConfigured();
   });
 
   describe('normalizeLanguageCode', () => {
@@ -69,7 +77,8 @@ describe('TTS Utility Unit & Integration Tests', () => {
   });
 
   describe('configureAudioSession', () => {
-    it('calls setAudioModeAsync with playsInSilentMode: true', async () => {
+    it('calls setAudioModeAsync with playsInSilentMode: true when native module is available', async () => {
+      mockRequireOptionalNativeModule.mockReturnValue({});
       await configureAudioSession();
       expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -78,6 +87,12 @@ describe('TTS Utility Unit & Integration Tests', () => {
           interruptionMode: 'mixWithOthers',
         })
       );
+    });
+
+    it('skips setAudioModeAsync safely when native ExpoAudio module is missing (e.g. simulator without rebuild)', async () => {
+      mockRequireOptionalNativeModule.mockReturnValue(null);
+      await configureAudioSession();
+      expect(mockSetAudioModeAsync).not.toHaveBeenCalled();
     });
   });
 

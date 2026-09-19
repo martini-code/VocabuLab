@@ -5,11 +5,31 @@ import * as Speech from 'expo-speech';
 let isAudioSessionConfigured = false;
 
 /**
+ * Checks if the native ExpoAudio module is compiled and available in the current native binary.
+ * Prevents throwing "Cannot find native module 'ExpoAudio'" on simulators or Expo Go clients
+ * that were built without expo-audio linked.
+ */
+export function hasNativeExpoAudio(): boolean {
+  try {
+    const { requireOptionalNativeModule } = require('expo-modules-core');
+    if (typeof requireOptionalNativeModule === 'function') {
+      return requireOptionalNativeModule('ExpoAudio') != null;
+    }
+  } catch {
+    // Non-fatal if expo-modules-core is unavailable
+  }
+  return false;
+}
+
+/**
  * Pre-warms and configures the audio session so speech synthesis
  * can play aloud even if the hardware silent / mute switch is enabled on physical iPhones.
  */
 export async function configureAudioSession(): Promise<void> {
   if (isAudioSessionConfigured) return;
+  if (!hasNativeExpoAudio()) {
+    return;
+  }
   try {
     const { setAudioModeAsync } = require('expo-audio');
     if (typeof setAudioModeAsync === 'function') {
@@ -303,7 +323,7 @@ export async function speakWord(text: string, langCode: string = 'es'): Promise<
       options.voice = matchedVoice.identifier;
     }
 
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' && isAudioSessionConfigured) {
       options.useApplicationAudioSession = true;
     }
 
@@ -343,6 +363,10 @@ export const ttsAudioCache = {
   /** Reset cached voices (e.g. for testing) */
   _resetVoiceCache: (): void => {
     cachedVoices = null;
+  },
+  /** Reset audio session configuration state (e.g. for testing) */
+  _resetAudioSessionConfigured: (): void => {
+    isAudioSessionConfigured = false;
   },
   /** Reset debounce/throttle timers (e.g. for testing) */
   _resetThrottle: (): void => {
