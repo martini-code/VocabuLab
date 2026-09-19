@@ -18,7 +18,6 @@ export interface AdMobConfig {
 
 export interface IapConfig {
   SKUS: {
-    AD_FREE_LIFETIME: string;
     AD_FREE_MONTHLY: string;
   };
 }
@@ -48,7 +47,6 @@ export const DEFAULT_SECRETS: AppSecrets = {
   },
   IAP_CONFIG: {
     SKUS: {
-      AD_FREE_LIFETIME: 'vocabkeep_adfree_lifetime',
       AD_FREE_MONTHLY: 'vocabkeep_adfree_monthly',
     },
   },

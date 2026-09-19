@@ -162,60 +162,33 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
 
                 {/* Purchase Options */}
                 <View style={styles.plansSection}>
-                  {/* Lifetime Deed (Recommended) */}
-                  <TouchableOpacity
-                    style={[styles.planCard, styles.planCardFeatured]}
-                    activeOpacity={0.85}
-                    onPress={() => handlePurchase(IAP_SKUS.AD_FREE_LIFETIME)}
-                    disabled={loadingSku !== null}
-                  >
-                    <View style={styles.planHeader}>
-                      <View style={styles.planBadge}>
-                        <Sparkles size={12} color="#FFFFFF" />
-                        <Text style={styles.planBadgeText}>BEST VALUE</Text>
-                      </View>
-                      <Text style={styles.planPrice}>
-                        {products.find((p) => p.id === IAP_SKUS.AD_FREE_LIFETIME)?.price || t('ad_free.price_lifetime')}
-                      </Text>
-                    </View>
-                    <Text style={styles.planTitle}>{t('ad_free.plan_lifetime')}</Text>
-                    <Text style={styles.planSub}>{t('ad_free.plan_lifetime_sub')}</Text>
-
-                    <View style={styles.planBtn}>
-                      {loadingSku === IAP_SKUS.AD_FREE_LIFETIME ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                      ) : (
-                        <>
-                          <Zap size={15} color="#FFFFFF" />
-                          <Text style={styles.planBtnText}>UNLOCK FOREVER</Text>
-                        </>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-
                   {/* Monthly Patron Pass */}
                   <TouchableOpacity
-                    style={styles.planCard}
+                    style={[styles.planCard, styles.planCardFeatured]}
                     activeOpacity={0.85}
                     onPress={() => handlePurchase(IAP_SKUS.AD_FREE_MONTHLY)}
                     disabled={loadingSku !== null}
                   >
                     <View style={styles.planHeader}>
-                      <View style={styles.monthlyTag}>
-                        <Text style={styles.monthlyTagText}>FLEXIBLE</Text>
+                      <View style={styles.planBadge}>
+                        <Sparkles size={12} color="#FFFFFF" />
+                        <Text style={styles.planBadgeText}>MONTHLY SUBSCRIPTION</Text>
                       </View>
-                      <Text style={styles.planPriceSecondary}>
+                      <Text style={styles.planPrice}>
                         {products.find((p) => p.id === IAP_SKUS.AD_FREE_MONTHLY)?.price || t('ad_free.price_monthly')}
                       </Text>
                     </View>
                     <Text style={styles.planTitle}>{t('ad_free.plan_monthly')}</Text>
                     <Text style={styles.planSub}>{t('ad_free.plan_monthly_sub')}</Text>
 
-                    <View style={styles.planBtnSecondary}>
+                    <View style={styles.planBtn}>
                       {loadingSku === IAP_SKUS.AD_FREE_MONTHLY ? (
-                        <ActivityIndicator size="small" color="#78350F" />
+                        <ActivityIndicator size="small" color="#FFFFFF" />
                       ) : (
-                        <Text style={styles.planBtnTextSecondary}>SUBSCRIBE MONTHLY</Text>
+                        <>
+                          <Zap size={15} color="#FFFFFF" />
+                          <Text style={styles.planBtnText}>SUBSCRIBE MONTHLY</Text>
+                        </>
                       )}
                     </View>
                   </TouchableOpacity>

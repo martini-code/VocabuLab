@@ -11,7 +11,6 @@ import { IAP_SKUS } from '../config/secrets';
 export { IAP_SKUS };
 
 export const ALL_AD_FREE_SKUS = [
-  IAP_SKUS.AD_FREE_LIFETIME,
   IAP_SKUS.AD_FREE_MONTHLY,
 ];
 
@@ -25,13 +24,6 @@ export interface AdFreeProductItem {
 
 // Fallback pricing metadata when store connection is unavailable (e.g. offline, simulator, web)
 export const DEFAULT_PRODUCTS: AdFreeProductItem[] = [
-  {
-    id: IAP_SKUS.AD_FREE_LIFETIME,
-    title: 'Ad-Free Lifetime Deed',
-    description: 'Banish all merchant banners forever. Permanent kingdom entitlement.',
-    price: '$9.99',
-    type: 'in-app',
-  },
   {
     id: IAP_SKUS.AD_FREE_MONTHLY,
     title: 'Ad-Free Monthly Patron',
@@ -224,30 +216,12 @@ class IAPService {
     }
 
     try {
-      const inAppRes = await RNIap.fetchProducts({
-        skus: [IAP_SKUS.AD_FREE_LIFETIME],
-        type: 'in-app',
-      });
-
       const subsRes = await RNIap.fetchProducts({
         skus: [IAP_SKUS.AD_FREE_MONTHLY],
         type: 'subs',
       });
 
       const products: AdFreeProductItem[] = [];
-
-      const lifetime = inAppRes?.find((p) => p.id === IAP_SKUS.AD_FREE_LIFETIME);
-      if (lifetime) {
-        products.push({
-          id: lifetime.id,
-          title: lifetime.title || 'Ad-Free Lifetime Deed',
-          description: lifetime.description || 'Banish all merchant banners forever.',
-          price: lifetime.displayPrice || '$9.99',
-          type: 'in-app',
-        });
-      } else {
-        products.push(DEFAULT_PRODUCTS[0]);
-      }
 
       const monthly = subsRes?.find((p) => p.id === IAP_SKUS.AD_FREE_MONTHLY);
       if (monthly) {
@@ -259,7 +233,7 @@ class IAPService {
           type: 'subs',
         });
       } else {
-        products.push(DEFAULT_PRODUCTS[1]);
+        products.push(DEFAULT_PRODUCTS[0]);
       }
 
       return products;
@@ -317,10 +291,7 @@ class IAPService {
       let matchedCount = 0;
 
       for (const purchase of purchases || []) {
-        if (
-          purchase.productId === IAP_SKUS.AD_FREE_LIFETIME ||
-          purchase.productId === IAP_SKUS.AD_FREE_MONTHLY
-        ) {
+        if (purchase.productId === IAP_SKUS.AD_FREE_MONTHLY) {
           matchedCount++;
           await RNIap.finishTransaction({ purchase, isConsumable: false });
         }
@@ -354,10 +325,7 @@ class IAPService {
     try {
       const purchases = await RNIap.getAvailablePurchases();
       for (const purchase of purchases || []) {
-        if (
-          purchase.productId === IAP_SKUS.AD_FREE_LIFETIME ||
-          purchase.productId === IAP_SKUS.AD_FREE_MONTHLY
-        ) {
+        if (purchase.productId === IAP_SKUS.AD_FREE_MONTHLY) {
           await RNIap.finishTransaction({ purchase, isConsumable: false });
           await this.grantEntitlement(true);
         }
@@ -373,11 +341,8 @@ class IAPService {
   private async handlePurchase(purchase: Purchase): Promise<void> {
     const RNIap = getRNIap();
     try {
-      if (
-        purchase.productId === IAP_SKUS.AD_FREE_LIFETIME ||
-        purchase.productId === IAP_SKUS.AD_FREE_MONTHLY
-      ) {
-        // Finalize non-consumable transaction
+      if (purchase.productId === IAP_SKUS.AD_FREE_MONTHLY) {
+        // Finalize transaction
         if (RNIap) {
           await RNIap.finishTransaction({ purchase, isConsumable: false });
         }

@@ -33,7 +33,6 @@ export const SECRETS: AppSecrets = {
   // In-App Purchase SKUs (StoreKit & Google Play Billing)
   IAP_CONFIG: {
     SKUS: {
-      AD_FREE_LIFETIME: 'vocabkeep_adfree_lifetime',
       AD_FREE_MONTHLY: 'vocabkeep_adfree_monthly',
     },
   },

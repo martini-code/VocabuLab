@@ -26,11 +26,8 @@ describe('Secrets & Config Architecture', () => {
 
   it('exports valid IAP_CONFIG with store SKUs', () => {
     expect(IAP_SKUS).toBeDefined();
-    expect(typeof IAP_SKUS.AD_FREE_LIFETIME).toBe('string');
-    expect(IAP_SKUS.AD_FREE_LIFETIME.length).toBeGreaterThan(0);
     expect(typeof IAP_SKUS.AD_FREE_MONTHLY).toBe('string');
     expect(IAP_SKUS.AD_FREE_MONTHLY.length).toBeGreaterThan(0);
-    expect(IAP_SKUS.AD_FREE_LIFETIME).toBe(SECRETS.IAP_CONFIG.SKUS.AD_FREE_LIFETIME);
     expect(IAP_SKUS.AD_FREE_MONTHLY).toBe(SECRETS.IAP_CONFIG.SKUS.AD_FREE_MONTHLY);
   });
 
