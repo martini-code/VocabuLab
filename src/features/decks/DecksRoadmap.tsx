@@ -332,7 +332,7 @@ interface ThemeDeckCardProps {
 
 const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
   const { t } = useTranslation();
-  const queuedCount = deck.queued_count ?? deck.garrisoned_count ?? 0;
+  const queuedCount = deck.queued_count ?? 0;
   const isFullyQueued = deck.card_count > 0 && queuedCount >= deck.card_count;
   const queuePercent =
     deck.card_count > 0
@@ -586,7 +586,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const handleAddAllDeck = async () => {
     if (!selectedDeck) return;
     const unqueuedCards = deckCards.filter(
-      (c) => !(c.is_queued ?? c.is_garrisoned) && !locallyQueuedWordIds.has(c.front_lexeme_id)
+      (c) => !c.is_queued && !locallyQueuedWordIds.has(c.front_lexeme_id)
     ).length;
     if (unqueuedCards === 0) return;
 
@@ -662,7 +662,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const renderDeckCardDetail = useCallback(
     ({ item }: { item: DeckCardDetail }) => {
       const isQueued =
-        (item.is_queued ?? item.is_garrisoned) || locallyQueuedWordIds.has(item.front_lexeme_id);
+        item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
       return (
         <DeckCardDetailItem
           item={item}

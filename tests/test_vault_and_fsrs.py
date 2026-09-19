@@ -58,7 +58,7 @@ class TestVocabKeepVault(unittest.TestCase):
     def test_user_cards_and_fsrs_state(self):
         self.cursor.execute("SELECT * FROM User_Cards LIMIT 5;")
         cards = self.cursor.fetchall()
-        self.assertGreater(len(cards), 0, "Initial garrison cards must exist")
+        self.assertGreater(len(cards), 0, "Initial learned cards must exist")
         for card in cards:
             self.assertIn("stability", card.keys())
             self.assertIn("difficulty", card.keys())

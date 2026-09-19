@@ -18,7 +18,7 @@ interface DeckCardNodeProps {
 
 export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, index }) => {
   const isMastered = deck.card_count > 0 && deck.mastered_count >= deck.card_count;
-  const queuedCount = deck.queued_count ?? deck.garrisoned_count ?? 0;
+  const queuedCount = deck.queued_count ?? 0;
   const isQueued = queuedCount > 0;
   const queuePercent =
     deck.card_count > 0

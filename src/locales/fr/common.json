@@ -49,7 +49,6 @@
     "subtitle": "Ascending campaigns ordered from Novice to Master difficulty",
     "themes": "THEMES",
     "decks": "DECKS",
-    "garrisoned": "APPRIS",
     "concepts_one": "{{count}} Concept",
     "concepts_other": "{{count}} Concepts",
     "in_training": "{{count}} in Training",
@@ -57,15 +56,16 @@
     "royal_pass_required": "Royal Pass",
     "scrolls_in_deck": "SCROLLS IN THIS DECK ({{count}})",
     "tap_speaker_sub": "Tap speaker to hear offline native pronunciation",
-    "garrisoned_status": "Appris",
     "available_status": "Available",
     "unlock_with_pro": "UNLOCK REALM WITH PRO",
     "unlock_with_pro_sub": "Requires Royal Guild Pass",
-    "garrison_all": "TOUT APPRENDRE",
-    "garrison_all_sub": "Ajouter toutes les cartes à l'entraînement",
-    "garrisoning": "APPRENTISSAGE...",
     "study_deck": "STUDY DECK",
-    "study_deck_sub": "Begin review arena"
+    "study_deck_sub": "Begin review arena",
+    "learned": "APPRIS",
+    "learned_status": "Appris",
+    "learn_all": "TOUT APPRENDRE",
+    "learn_all_sub": "Ajouter toutes les cartes à l'entraînement",
+    "learning": "APPRENTISSAGE..."
   },
   "chronicles": {
     "title": "BATTLE CHRONICLES",
@@ -82,13 +82,13 @@
     "days_active": "Days Active",
     "unlocked_masteries": "UNLOCKED SCROLL MASTERIES",
     "mastered_scrolls": "Mastered Scrolls (S ≥ 10)",
-    "garrison_size": "Garrison Size",
-    "total_inscribed": "Total Inscribed Lexemes"
+    "total_inscribed": "Total Inscribed Lexemes",
+    "learned_size": "Learned Cards"
   },
   "treasury": {
     "title": "THE ROYAL TREASURY",
     "subtitle": "Zero Cloud Overhead • 100% Local Fortress",
-    "total_cards": "Total Garrisoned Cards:",
+    "total_cards": "Total Learned Cards:",
     "pending_reviews": "Pending Reviews (Due):",
     "mastered_scrolls": "Mastered Scrolls (S≥10):",
     "db_engine": "Database Engine:",

@@ -49,7 +49,6 @@
     "subtitle": "Campanhas ordenadas do nível Iniciante ao Mestre",
     "themes": "TEMAS",
     "decks": "BARALHOS",
-    "garrisoned": "APRENDIDO",
     "concepts_one": "{{count}} Conceito",
     "concepts_other": "{{count}} Conceitos",
     "in_training": "{{count}} em Treinamento",
@@ -57,15 +56,16 @@
     "royal_pass_required": "Passe Real",
     "scrolls_in_deck": "PERGAMINHOS NESTE BARALHO ({{count}})",
     "tap_speaker_sub": "Toque no alto-falante para ouvir a pronúncia",
-    "garrisoned_status": "Aprendido",
     "available_status": "Disponível",
     "unlock_with_pro": "DESBLOQUEAR COM PRO",
     "unlock_with_pro_sub": "Requer Passe da Guilda Real",
-    "garrison_all": "APRENDER TUDO",
-    "garrison_all_sub": "Adicionar todas as cartas ao treino",
-    "garrisoning": "APRENDENDO...",
     "study_deck": "ESTUDAR BARALHO",
-    "study_deck_sub": "Iniciar arena de revisão"
+    "study_deck_sub": "Iniciar arena de revisão",
+    "learned": "APRENDIDO",
+    "learned_status": "Aprendido",
+    "learn_all": "APRENDER TUDO",
+    "learn_all_sub": "Adicionar todas as cartas ao treino",
+    "learning": "APRENDENDO..."
   },
   "chronicles": {
     "title": "CRÔNICAS DE BATALHA",
@@ -82,13 +82,13 @@
     "days_active": "Dias Ativos",
     "unlocked_masteries": "MAESTRIAS DESBLOQUEADAS",
     "mastered_scrolls": "Pergaminhos Dominados (S ≥ 10)",
-    "garrison_size": "Tamanho da Guarnição",
-    "total_inscribed": "Total de Lexemas Inscritos"
+    "total_inscribed": "Total de Lexemas Inscritos",
+    "learned_size": "Cartas Aprendidas"
   },
   "treasury": {
     "title": "O TESOURO REAL",
     "subtitle": "Zero Custo em Nuvem • Fortaleza 100% Local",
-    "total_cards": "Total de Cartas na Guarnição:",
+    "total_cards": "Total de Cartas Aprendidas:",
     "pending_reviews": "Revisões Pendentes:",
     "mastered_scrolls": "Pergaminhos Dominados (S≥10):",
     "db_engine": "Motor de Banco de Dados:",

@@ -281,7 +281,7 @@ export default function App() {
 
             <View style={styles.statsCard}>
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Total Garrisoned Cards:</Text>
+                <Text style={styles.statLabel}>{t('treasury.total_cards', { defaultValue: 'Total Learned Cards:' })}</Text>
                 <Text style={styles.statNumber}>{stats.totalCards}</Text>
               </View>
               <View style={styles.statRow}>

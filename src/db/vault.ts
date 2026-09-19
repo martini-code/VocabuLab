@@ -724,7 +724,6 @@ export async function getThemesWithProgressiveDecks(
       icon_name: resolveDeckIcon(d.category, d.subcategory),
       card_count: totalCards,
       queued_count: queued,
-      garrisoned_count: queued,
       mastered_count: mastered,
       is_pro: false,
       is_locked: !isUnlocked,
@@ -895,7 +894,6 @@ export async function getAllDecksOrderedByDifficulty(
       icon_name: iconName,
       card_count: s.card_count,
       queued_count: queued,
-      garrisoned_count: queued,
       mastered_count: mastered,
       is_pro: false,
       is_locked: false,
@@ -1020,7 +1018,6 @@ export async function getCardsByDeck(
       back_term: backTerm,
       back_lang: effectiveOrigin,
       is_queued: !!uc,
-      is_garrisoned: !!uc,
       user_card_id: uc ? uc.id : undefined,
       stability: uc ? uc.stability : undefined,
       reps: uc ? uc.reps : undefined,
@@ -1061,8 +1058,6 @@ export async function addEntireDeckToQueue(
 
   return unqueued.length;
 }
-
-export const garrisonEntireDeck = addEntireDeckToQueue;
 
 /**
  * Adds a single card to User_Cards queue.
@@ -2215,8 +2210,6 @@ export async function addCardToQueue(
 ): Promise<string> {
   return addWordToQueue(frontLexemeId, backLexemeId, `c_${frontLexemeId}`, targetLang);
 }
-
-export const garrisonCard = addCardToQueue;
 
 /**
  * Logs a review attempt in Review_Logs for activity heatmap & streaks.

@@ -7,7 +7,7 @@ Generates the SQLite master payload with:
 - Multilingual Lexemes with CEFR ratings (A1 to C2)
 - FTS5 virtual table & synchronization triggers
 - Concept_Lexeme junction solving polysemy
-- Initial User_Cards (Garrison) for immediate SRS review
+- Initial User_Cards for immediate SRS review
 """
 
 import os
@@ -467,7 +467,7 @@ def create_database(db_path: str):
 
     conn.commit()
     conn.close()
-    print(f"Database successfully created at {db_path} with {lexeme_id_counter - 1} lexemes, {len(user_cards_to_create)} garrisoned cards, and {len(sample_logs)} activity review logs.")
+    print(f"Database successfully created at {db_path} with {lexeme_id_counter - 1} lexemes, {len(user_cards_to_create)} learned cards, and {len(sample_logs)} activity review logs.")
 
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent.parent

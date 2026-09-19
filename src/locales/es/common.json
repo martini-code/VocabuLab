@@ -49,7 +49,6 @@
     "subtitle": "Campañas ordenadas de Principiante a Maestro",
     "themes": "TEMAS",
     "decks": "MAZOS",
-    "garrisoned": "APRENDIDO",
     "concepts_one": "{{count}} Concepto",
     "concepts_other": "{{count}} Conceptos",
     "in_training": "{{count}} en Entrenamiento",
@@ -57,15 +56,16 @@
     "royal_pass_required": "Pase Real",
     "scrolls_in_deck": "PERGAMINOS EN ESTE MAZO ({{count}})",
     "tap_speaker_sub": "Toca el altavoz para escuchar la pronunciación",
-    "garrisoned_status": "Aprendido",
     "available_status": "Disponible",
     "unlock_with_pro": "DESBLOQUEAR CON PRO",
     "unlock_with_pro_sub": "Requiere Pase del Gremio Real",
-    "garrison_all": "APRENDER TODO",
-    "garrison_all_sub": "Añadir todas las cartas al entrenamiento",
-    "garrisoning": "APRENDIENDO...",
     "study_deck": "ESTUDIAR MAZO",
-    "study_deck_sub": "Iniciar arena de repaso"
+    "study_deck_sub": "Iniciar arena de repaso",
+    "learned": "APRENDIDO",
+    "learned_status": "Aprendido",
+    "learn_all": "APRENDER TODO",
+    "learn_all_sub": "Añadir todas las cartas al entrenamiento",
+    "learning": "APRENDIENDO..."
   },
   "chronicles": {
     "title": "CRÓNICAS DE BATALLA",
@@ -82,13 +82,13 @@
     "days_active": "Días Activo",
     "unlocked_masteries": "MAESTRÍAS DESBLOQUEADAS",
     "mastered_scrolls": "Pergaminos Dominados (S ≥ 10)",
-    "garrison_size": "Tamaño de Guarnición",
-    "total_inscribed": "Total de Lexemas Inscritos"
+    "total_inscribed": "Total de Lexemas Inscritos",
+    "learned_size": "Cartas Aprendidas"
   },
   "treasury": {
     "title": "LA TESORERÍA REAL",
     "subtitle": "Cero Costo en la Nube • Fortaleza 100% Local",
-    "total_cards": "Total de Cartas en Guarnición:",
+    "total_cards": "Total de Cartas Aprendidas:",
     "pending_reviews": "Repasos Pendientes:",
     "mastered_scrolls": "Pergaminos Dominados (S≥10):",
     "db_engine": "Motor de Base de Datos:",
