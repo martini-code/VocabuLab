@@ -87,6 +87,7 @@ export default function App() {
   const [insufficientRequiredWords, setInsufficientRequiredWords] = useState(1);
   const [rewardedAdModalOpen, setRewardedAdModalOpen] = useState(false);
   const [rewardedAdOnComplete, setRewardedAdOnComplete] = useState<(() => void) | null>(null);
+  const [rewardedAdOnClose, setRewardedAdOnClose] = useState<(() => void) | null>(null);
   const [mockProfileModalOpen, setMockProfileModalOpen] = useState(false);
   const [deckTitleLanguage, setDeckTitleLanguage] = useState<DeckTitleLanguageMode>('origin');
 
@@ -102,8 +103,12 @@ export default function App() {
 
     tokenWallet.initTokenWallet();
 
-    adMobService.setFallbackModalHandler((onComplete) => {
-      setRewardedAdOnComplete(() => onComplete);
+    adMobService.setFallbackModalHandler((_show, onRewarded, onClose) => {
+      // Avoid dual-modal presentation collision on iOS Fabric
+      setTokenWalletModalOpen(false);
+      setInsufficientModalOpen(false);
+      setRewardedAdOnComplete(() => onRewarded);
+      setRewardedAdOnClose(() => onClose);
       setRewardedAdModalOpen(true);
     });
 
@@ -558,7 +563,13 @@ export default function App() {
       {/* Rewarded Ad Modal (Fallback & Dev/Web Simulation) */}
       <RewardedAdModal
         visible={rewardedAdModalOpen}
-        onClose={() => setRewardedAdModalOpen(false)}
+        onClose={() => {
+          setRewardedAdModalOpen(false);
+          if (rewardedAdOnClose) {
+            rewardedAdOnClose();
+            setRewardedAdOnClose(null);
+          }
+        }}
         onReward={() => {
           if (rewardedAdOnComplete) {
             rewardedAdOnComplete();

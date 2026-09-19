@@ -89,33 +89,35 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
+import { TOKEN_CONFIG } from '../../../config/secrets';
+
 // ─── tokenWallet mock ─────────────────────────────────────────────────────────
-// NOTE: jest.mock is hoisted to the top, so we cannot reference a `const` declared
-// in module scope. Instead, inline the state inside the factory and expose it
-// through the module so tests can access it via require().
-jest.mock('../../../services/tokenWallet', () => ({
-  tokenWallet: {
-    getWalletStatus: jest.fn().mockResolvedValue({
-      tokens: 2,
-      tokenWordCredits: 20,
-      dailyPassWords: 5,
-      totalWordsAllowance: 25,
-      adsWatchedToday: 0,
-      maxDailyAds: 3,
-      canWatchAd: true,
-    }),
-    subscribe: jest.fn().mockReturnValue(() => {}),
-  },
-}));
+jest.mock('../../../services/tokenWallet', () => {
+  const { TOKEN_CONFIG: TC } = require('../../../config/secrets');
+  return {
+    tokenWallet: {
+      getWalletStatus: jest.fn().mockResolvedValue({
+        tokens: TC.INITIAL_TOKENS,
+        tokenWordCredits: TC.WORDS_PER_TOKEN * 2,
+        dailyPassWords: TC.DAILY_PASS_WORDS,
+        totalWordsAllowance: TC.DAILY_PASS_WORDS + TC.WORDS_PER_TOKEN * 2,
+        adsWatchedToday: 0,
+        maxDailyAds: TC.MAX_DAILY_ADS,
+        canWatchAd: true,
+      }),
+      subscribe: jest.fn().mockReturnValue(() => {}),
+    },
+  };
+});
 
 // Convenience alias for tests that need to override the mock
 const BASE_WALLET_STATE = {
-  tokens: 2,
-  tokenWordCredits: 20,
-  dailyPassWords: 5,
-  totalWordsAllowance: 25,
+  tokens: TOKEN_CONFIG.INITIAL_TOKENS,
+  tokenWordCredits: TOKEN_CONFIG.WORDS_PER_TOKEN * 2,
+  dailyPassWords: TOKEN_CONFIG.DAILY_PASS_WORDS,
+  totalWordsAllowance: TOKEN_CONFIG.DAILY_PASS_WORDS + TOKEN_CONFIG.WORDS_PER_TOKEN * 2,
   adsWatchedToday: 0,
-  maxDailyAds: 3,
+  maxDailyAds: TOKEN_CONFIG.MAX_DAILY_ADS,
   canWatchAd: true,
 };
 
@@ -187,17 +189,17 @@ describe('TokenWalletModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows total words allowance (25) from wallet', async () => {
+  it('shows total words allowance from wallet', async () => {
     const { findByText } = await render(<TokenWalletModal {...defaultProps} />);
-    const value = await findByText('25');
+    const value = await findByText(String(BASE_WALLET_STATE.totalWordsAllowance));
     expect(value).toBeTruthy();
   });
 
   it('shows ads remaining text when canWatchAd is true', async () => {
     const { findByText } = await render(<TokenWalletModal {...defaultProps} />);
     await findByText('ROYAL TOKENS');
-    // adsRemaining = max(0, 3 - 0) = 3; defaultValue uses count+max
-    const adText = await findByText('3 of 3 rewarded ads left today');
+    const remaining = Math.max(0, BASE_WALLET_STATE.maxDailyAds - BASE_WALLET_STATE.adsWatchedToday);
+    const adText = await findByText(`${remaining} of ${BASE_WALLET_STATE.maxDailyAds} rewarded ads left today`);
     expect(adText).toBeTruthy();
   });
 

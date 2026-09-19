@@ -1,11 +1,8 @@
 import { Platform } from 'react-native';
 import { tokenWallet } from './tokenWallet';
 
-// Official Google AdMob Test Ad Unit IDs
-export const ADMOB_TEST_IDS = {
-  REWARDED_ANDROID: 'ca-app-pub-3940256099942544/5224354917',
-  REWARDED_IOS: 'ca-app-pub-3940256099942544/1712485313',
-};
+import { ADMOB_CONFIG, ADMOB_TEST_IDS } from '../config/secrets';
+export { ADMOB_CONFIG, ADMOB_TEST_IDS };
 
 export type RewardedAdResult =
   | { success: true; rewardGranted: boolean }
@@ -26,12 +23,70 @@ class AdMobService {
   private isLoading: boolean = false;
   private hasNativeAdMob: boolean = false;
   private isMediationInitialized: boolean = false;
+  /**
+   * Safe Mode flag: defaults to true so developer testing NEVER triggers
+   * live production ads or incurs Google invalid traffic account bans.
+   */
+  private isTestMode: boolean = true;
   private adapterStatuses: Record<string, MediationAdapterStatus> = {};
   private fallbackModalHandler: FallbackAdModalHandler | null = null;
   private statusListeners: Set<AdMobStatusListener> = new Set();
 
   constructor() {
     this.detectNativeSdk();
+  }
+
+  private getGmaModule(): any {
+    try {
+      // Conditionally require to avoid crashing on web / environments where native module is not linked
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require('react-native-google-mobile-ads');
+    } catch {
+      return null;
+    }
+  }
+
+  private getMobileAdsInstance(): any {
+    const gma = this.getGmaModule();
+    if (!gma) return null;
+    const callable =
+      typeof gma.default === 'function'
+        ? gma.default
+        : typeof gma === 'function'
+        ? gma
+        : null;
+    return callable ? callable() : null;
+  }
+
+  private getRewardedAdClass(): any {
+    const gma = this.getGmaModule();
+    return gma?.RewardedAd || gma?.default?.RewardedAd || null;
+  }
+
+  private getRewardedAdEventType(): any {
+    const gma = this.getGmaModule();
+    return (
+      gma?.RewardedAdEventType ||
+      gma?.default?.RewardedAdEventType || {
+        LOADED: 'rewarded_loaded',
+        EARNED_REWARD: 'rewarded_earned_reward',
+      }
+    );
+  }
+
+  private getAdEventType(): any {
+    const gma = this.getGmaModule();
+    return (
+      gma?.AdEventType ||
+      gma?.default?.AdEventType || {
+        LOADED: 'loaded',
+        ERROR: 'error',
+        OPENED: 'opened',
+        CLICKED: 'clicked',
+        CLOSED: 'closed',
+        IMPRESSION: 'impression',
+      }
+    );
   }
 
   private detectNativeSdk() {
@@ -41,10 +96,8 @@ class AdMobService {
     }
 
     try {
-      // Conditionally require to avoid crashing on web / environments where native module is not linked
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const mobileAds = require('react-native-google-mobile-ads');
-      if (mobileAds && mobileAds.RewardedAd) {
+      const gma = this.getGmaModule();
+      if (gma && (gma.RewardedAd || gma.default?.RewardedAd)) {
         this.hasNativeAdMob = true;
       }
     } catch {
@@ -60,21 +113,89 @@ class AdMobService {
     if (this.isMediationInitialized || !this.hasNativeAdMob) return;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const mobileAds = require('react-native-google-mobile-ads');
-      const statuses = await mobileAds().initialize();
+      const mobileAdsInstance = this.getMobileAdsInstance();
+      if (!mobileAdsInstance) return;
+
+      // Register emulator test device configuration if in safe test mode
+      if (this.isTestMode || __DEV__) {
+        try {
+          if (typeof mobileAdsInstance.setRequestConfiguration === 'function') {
+            await mobileAdsInstance.setRequestConfiguration({
+              testDeviceIdentifiers: ['EMULATOR'],
+            });
+          }
+        } catch {
+          // Non-fatal if configuration fails
+        }
+      }
+
+      let statuses: any = null;
+      if (typeof mobileAdsInstance.initialize === 'function') {
+        statuses = await mobileAdsInstance.initialize();
+      }
       this.isMediationInitialized = true;
       this.adapterStatuses = statuses || {};
 
       console.log('[AdMobMediation] Initialized successfully. Mediation adapter statuses:');
       if (statuses) {
         Object.entries(statuses).forEach(([adapter, status]: [string, any]) => {
-          console.log(`  - ${adapter}: state=${status.state}, description=${status.description}`);
+          console.log(`  - ${adapter}: state=${status?.state}, description=${status?.description}`);
         });
       }
     } catch (err) {
       console.warn('[AdMobMediation] Error during mediation initialization:', err);
     }
+  }
+
+  /**
+   * Returns whether Safe Mode (Google Test Ads) is currently active.
+   */
+  isTestModeEnabled(): boolean {
+    return this.isTestMode;
+  }
+
+  /**
+   * Sets whether the app should use Google Test Ads (Safe Mode) or Production Ads.
+   * Switching modes resets the preloaded ad so that the correct ad unit is fetched.
+   */
+  async setTestMode(enabled: boolean): Promise<void> {
+    if (this.isTestMode === enabled) return;
+    this.isTestMode = enabled;
+    this.isLoaded = false;
+    this.nativeRewardedAd = null;
+    console.log(`[AdMobService] Test Mode toggled to: ${enabled ? 'SAFE TEST MODE' : 'PRODUCTION LIVE ADS'}`);
+    await this.preload();
+  }
+
+  /**
+   * Returns the active Ad Unit ID based on platform and safe mode status.
+   * If in Safe Mode or __DEV__, it ALWAYS returns Google's official Test Ad Unit ID.
+   */
+  getActiveAdUnitId(): string {
+    // If in safe mode or running in dev environment, ALWAYS return test ad unit IDs
+    if (this.isTestMode || __DEV__) {
+      return Platform.select({
+        ios: ADMOB_CONFIG.TEST_AD_UNITS.REWARDED_IOS,
+        android: ADMOB_CONFIG.TEST_AD_UNITS.REWARDED_ANDROID,
+        default: ADMOB_CONFIG.TEST_AD_UNITS.REWARDED_IOS,
+      });
+    }
+
+    // Only in production mode (explicitly opted in by the developer)
+    return ADMOB_CONFIG.PRODUCTION_AD_UNITS.REWARDED;
+  }
+
+  /**
+   * Returns detailed configuration info for diagnostics & UI display.
+   */
+  getAdConfig() {
+    return {
+      appId: ADMOB_CONFIG.APP_ID,
+      activeAdUnitId: this.getActiveAdUnitId(),
+      isTestMode: this.isTestMode,
+      isDev: __DEV__,
+      hasNativeAdMob: this.hasNativeAdMob,
+    };
   }
 
   /**
@@ -90,9 +211,11 @@ class AdMobService {
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const mobileAds = require('react-native-google-mobile-ads');
-      await mobileAds().openAdInspector();
+      const mobileAdsInstance = this.getMobileAdsInstance();
+      if (!mobileAdsInstance || typeof mobileAdsInstance.openAdInspector !== 'function') {
+        throw new Error('Google Mobile Ads SDK not initialized');
+      }
+      await mobileAdsInstance.openAdInspector();
       return { success: true };
     } catch (err: any) {
       console.warn('[AdMobMediation] Error launching Ad Inspector:', err);
@@ -113,7 +236,7 @@ class AdMobService {
   }
 
   /**
-   * Registers UI handler for the simulated fallback ad modal when running on web or development.
+   * Registers UI handler for the simulated fallback ad modal when running on web or non-native dev environments.
    */
   setFallbackModalHandler(handler: FallbackAdModalHandler | null) {
     this.fallbackModalHandler = handler;
@@ -140,13 +263,21 @@ class AdMobService {
         await this.initMediation();
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { RewardedAd, RewardedAdEventType, TestIds } = require('react-native-google-mobile-ads');
-      const adUnitId = Platform.select({
-        ios: ADMOB_TEST_IDS.REWARDED_IOS,
-        android: ADMOB_TEST_IDS.REWARDED_ANDROID,
-        default: TestIds.REWARDED,
-      });
+      const RewardedAd = this.getRewardedAdClass();
+      const RewardedAdEventType = this.getRewardedAdEventType();
+      const AdEventType = this.getAdEventType();
+
+      if (!RewardedAd) {
+        throw new Error('Native RewardedAd class not found');
+      }
+
+      const adUnitId = this.getActiveAdUnitId();
+
+      if (this.isTestMode || __DEV__) {
+        console.log(`[AdMobService] 🛡️ Safe Test Mode ACTIVE. Serving test ad: ${adUnitId} (No ban risk)`);
+      } else {
+        console.warn(`[AdMobService] ⚠️ Production Live Ads ACTIVE. Serving live ad: ${adUnitId}`);
+      }
 
       this.nativeRewardedAd = RewardedAd.createForAdRequest(adUnitId, {
         requestNonPersonalizedAdsOnly: false,
@@ -163,7 +294,7 @@ class AdMobService {
       );
 
       const unsubError = this.nativeRewardedAd.addAdEventListener(
-        RewardedAdEventType.ERROR,
+        AdEventType.ERROR,
         (error: any) => {
           console.warn('[AdMobService] Preload error:', error);
           this.isLoaded = false;
@@ -197,48 +328,98 @@ class AdMobService {
       return { success: false, reason: 'limit_reached' };
     }
 
-    // 2. Native AdMob Presentation
-    if (this.hasNativeAdMob && this.nativeRewardedAd && this.isLoaded) {
-      return new Promise<RewardedAdResult>((resolve) => {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const { RewardedAdEventType } = require('react-native-google-mobile-ads');
-          let rewardEarned = false;
+    // 2. Native AdMob Presentation (Full-screen native Google AdMob video overlay)
+    if (this.hasNativeAdMob) {
+      if (!this.isLoaded && !this.isLoading) {
+        // Trigger preload if not loaded
+        this.preload();
+      }
 
-          const unsubEarned = this.nativeRewardedAd.addAdEventListener(
-            RewardedAdEventType.EARNED_REWARD,
-            async () => {
-              rewardEarned = true;
-              await tokenWallet.recordRewardedAdWatch();
-            }
-          );
+      // If ad is currently loading, wait up to 4s (20 * 200ms) for it to finish
+      let retries = 0;
+      while (this.isLoading && retries < 20) {
+        await new Promise((r) => setTimeout(r, 200));
+        retries++;
+      }
 
-          const unsubClosed = this.nativeRewardedAd.addAdEventListener(
-            RewardedAdEventType.CLOSED,
-            () => {
-              unsubEarned();
-              unsubClosed();
+      if (this.nativeRewardedAd && this.isLoaded) {
+        return new Promise<RewardedAdResult>((resolve) => {
+          try {
+            const RewardedAdEventType = this.getRewardedAdEventType();
+            const AdEventType = this.getAdEventType();
+
+            let rewardEarned = false;
+            let resolved = false;
+
+            let unsubEarned = () => {};
+            let unsubClosed = () => {};
+            let unsubError = () => {};
+
+            const cleanup = () => {
+              try { unsubEarned(); } catch {}
+              try { unsubClosed(); } catch {}
+              try { unsubError(); } catch {}
+            };
+
+            const finish = (result: RewardedAdResult) => {
+              if (resolved) return;
+              resolved = true;
+              cleanup();
               this.isLoaded = false;
-              this.preload(); // Preload next ad immediately in background!
-              if (rewardEarned) {
-                resolve({ success: true, rewardGranted: true });
-              } else {
-                resolve({ success: false, reason: 'cancelled' });
-              }
-            }
-          );
+              this.preload(); // Preload next ad immediately in background
+              resolve(result);
+            };
 
-          this.nativeRewardedAd.show();
-        } catch (err) {
-          console.warn('[AdMobService] Error showing native ad:', err);
-          this.isLoaded = false;
-          this.preload();
-          resolve({ success: false, reason: 'error' });
-        }
-      });
+            unsubEarned = this.nativeRewardedAd.addAdEventListener(
+              RewardedAdEventType.EARNED_REWARD,
+              async (reward: any) => {
+                console.log('[AdMobService] User earned reward:', reward);
+                rewardEarned = true;
+                await tokenWallet.recordRewardedAdWatch();
+              }
+            );
+
+            unsubClosed = this.nativeRewardedAd.addAdEventListener(
+              AdEventType.CLOSED,
+              () => {
+                if (rewardEarned) {
+                  finish({ success: true, rewardGranted: true });
+                } else {
+                  finish({ success: false, reason: 'cancelled' });
+                }
+              }
+            );
+
+            unsubError = this.nativeRewardedAd.addAdEventListener(
+              AdEventType.ERROR,
+              (error: any) => {
+                console.warn('[AdMobService] Error while presenting rewarded ad:', error);
+                finish({ success: false, reason: 'error' });
+              }
+            );
+
+            const showPromise = this.nativeRewardedAd.show();
+            if (showPromise && typeof showPromise.catch === 'function') {
+              showPromise.catch((showErr: any) => {
+                console.warn('[AdMobService] show() promise rejection:', showErr);
+                finish({ success: false, reason: 'error' });
+              });
+            }
+          } catch (err) {
+            console.warn('[AdMobService] Error showing native ad:', err);
+            this.isLoaded = false;
+            this.preload();
+            resolve({ success: false, reason: 'error' });
+          }
+        });
+      }
+
+      // If native ad is not ready, do NOT show fallback modal on native builds!
+      console.warn('[AdMobService] Native ad not ready or failed to load.');
+      return { success: false, reason: 'unavailable' };
     }
 
-    // 3. Fallback Presentation (Web, Expo Go, or when native ad is not ready)
+    // 3. Fallback Presentation (Web or non-native dev environments only)
     if (this.fallbackModalHandler) {
       return new Promise<RewardedAdResult>((resolve) => {
         this.fallbackModalHandler!(

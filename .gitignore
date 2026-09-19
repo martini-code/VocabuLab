@@ -33,6 +33,12 @@ yarn-error.*
 # local env files
 .env*.local
 
+# local secrets & untracked configuration
+src/config/secrets.local.ts
+*.secrets.local.ts
+secrets.local.ts
+
+
 # typescript
 *.tsbuildinfo
 

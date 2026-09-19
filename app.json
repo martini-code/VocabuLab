@@ -30,12 +30,20 @@
           "enableFTS": true
         }
       ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-1330371800127240~1760647065",
+          "iosAppId": "ca-app-pub-1330371800127240~1760647065",
+          "userTrackingUsageDescription": "This identifier helps deliver relevant rewarded ads and mediate top partner rewards to you."
+        }
+      ],
       "./plugins/withAdMobMediation"
     ]
   },
   "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
-    "ios_app_id": "ca-app-pub-3940256099942544~1458002511",
+    "android_app_id": "ca-app-pub-1330371800127240~1760647065",
+    "ios_app_id": "ca-app-pub-1330371800127240~1760647065",
     "delay_app_measurement_init": false,
     "user_tracking_usage_description": "This identifier helps deliver relevant rewarded ads and mediate top partner rewards to you.",
     "sk_ad_network_items": [

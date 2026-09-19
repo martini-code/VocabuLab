@@ -58,12 +58,8 @@ export const KEYS = {
   ADS_DATE: 'vk_ads_last_date',
 };
 
-export const TOKEN_CONFIG = {
-  INITIAL_TOKENS: 2,
-  WORDS_PER_TOKEN: 10,
-  DAILY_PASS_WORDS: 5,
-  MAX_DAILY_ADS: 3,
-};
+import { TOKEN_CONFIG } from '../config/secrets';
+export { TOKEN_CONFIG };
 
 export interface TokenWalletState {
   tokens: number;

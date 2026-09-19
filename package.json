@@ -18,6 +18,7 @@
     "react-dom": "19.2.3",
     "react-i18next": "^17.0.13",
     "react-native": "0.86.3",
+    "react-native-google-mobile-ads": "^17.0.0",
     "react-native-iap": "^16.6.0",
     "react-native-nitro-modules": "^0.37.1",
     "react-native-reanimated": "4.5.1",

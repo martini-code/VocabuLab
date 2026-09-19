@@ -8,7 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, Sparkles, X, Check, Award, Coins } from 'lucide-react-native';
+import { Shield, Sparkles, X, Check, Award, Coins, ShieldCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { SquireMascot } from '../mascot/Mascots';
 
@@ -103,16 +103,23 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
               <Text style={styles.tokenPillText}>+1 TOKEN (+10 WORDS)</Text>
             </View>
 
+            <View style={styles.testModeBanner}>
+              <ShieldCheck size={14} color="#10B981" />
+              <Text style={styles.testModeBannerText}>
+                TEST AD • Safe Mode Active (No Ban Risk)
+              </Text>
+            </View>
+
             <Text style={styles.adHeadline}>
               {rewardReady
-                ? t('tokens.ad_completed_title', { defaultValue: 'Scroll Studied! Token Ready!' })
+                ? t('tokens.ad_completed_title', { defaultValue: 'Ad Watched! Token Ready!' })
                 : t('tokens.ad_in_progress_title', { defaultValue: 'Support Vocab Keep & Earn Words' })}
             </Text>
 
             <Text style={styles.adTagline}>
               {rewardReady
-                ? t('tokens.ad_completed_sub', { defaultValue: 'Thy token has been earned. Tap above to claim 10 new words!' })
-                : t('tokens.ad_in_progress_sub', { defaultValue: 'Watching sponsored scrolls fuels the kingdom archives and grants learning tokens.' })}
+                ? t('tokens.ad_completed_sub', { defaultValue: 'Your token has been earned. Tap above to claim 10 new words!' })
+                : t('tokens.ad_in_progress_sub', { defaultValue: 'Watching sponsored ads supports Vocab Keep and grants learning tokens.' })}
             </Text>
 
             {rewardReady && (
@@ -268,5 +275,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.5,
+  },
+  testModeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#064E3B',
+    borderWidth: 1,
+    borderColor: '#059669',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginBottom: 14,
+  },
+  testModeBannerText: {
+    color: '#A7F3D0',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });

@@ -7,11 +7,8 @@ import { Platform } from 'react-native';
 import type { EventSubscription, Purchase, PurchaseError } from 'react-native-iap';
 import { isAdFreeUser, setAdFreeUser } from '../db/vault';
 
-// Official Product SKUs
-export const IAP_SKUS = {
-  AD_FREE_LIFETIME: 'vocabkeep_adfree_lifetime',
-  AD_FREE_MONTHLY: 'vocabkeep_adfree_monthly',
-} as const;
+import { IAP_SKUS } from '../config/secrets';
+export { IAP_SKUS };
 
 export const ALL_AD_FREE_SKUS = [
   IAP_SKUS.AD_FREE_LIFETIME,

@@ -39,10 +39,12 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
   const { t } = useTranslation();
   const [wallet, setWallet] = useState<TokenWalletState | null>(null);
   const [isAdLoading, setIsAdLoading] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(() => adMobService.isTestModeEnabled?.() ?? true);
 
   useEffect(() => {
     if (visible) {
       tokenWallet.getWalletStatus().then(setWallet);
+      setIsTestMode(adMobService.isTestModeEnabled?.() ?? true);
       const unsub = tokenWallet.subscribe(setWallet);
       return unsub;
     }
@@ -52,12 +54,51 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
     setIsAdLoading(true);
     try {
       const result = await adMobService.showRewardedAd();
-      if (!result.success && result.reason === 'limit_reached') {
-        onClose();
-        onOpenPlusModal();
+      if (!result.success) {
+        if (result.reason === 'limit_reached') {
+          onClose();
+          onOpenPlusModal();
+        } else if (result.reason === 'unavailable') {
+          Alert.alert(
+            t('tokens.ad_not_ready_title', { defaultValue: 'Ad Not Ready' }),
+            t('tokens.ad_not_ready_msg', {
+              defaultValue: 'The ad is still preparing. Please try again in a few moments.',
+            })
+          );
+        } else if (result.reason === 'error') {
+          Alert.alert(
+            t('tokens.ad_error_title', { defaultValue: 'Ad Unavailable' }),
+            t('tokens.ad_error_msg', {
+              defaultValue: 'Unable to load ad right now. Please check your network connection and try again.',
+            })
+          );
+        }
       }
     } finally {
       setIsAdLoading(false);
+    }
+  };
+
+  const handleToggleAdMode = () => {
+    if (isTestMode) {
+      Alert.alert(
+        'Activate Production Live Ads?',
+        'Warning: Google AdMob policy strictly forbids viewing or clicking your own live ads. Doing so on your development device will result in account suspension or ban.\n\nOnly activate Live Ads for genuine end-user store releases.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Activate Live Ads',
+            style: 'destructive',
+            onPress: async () => {
+              await adMobService.setTestMode(false);
+              setIsTestMode(false);
+            },
+          },
+        ]
+      );
+    } else {
+      adMobService.setTestMode(true);
+      setIsTestMode(true);
     }
   };
 
@@ -221,6 +262,25 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                   </Text>
                 </TouchableOpacity>
               )}
+            </View>
+
+            {/* AdMob Safe Mode Status & Live Toggle */}
+            <View style={styles.adModeContainer}>
+              <View style={[styles.adModeBadge, isTestMode ? styles.adModeBadgeSafe : styles.adModeBadgeLive]}>
+                <ShieldCheck size={14} color={isTestMode ? '#16A34A' : '#EA580C'} />
+                <Text style={[styles.adModeBadgeText, { color: isTestMode ? '#16A34A' : '#EA580C' }]}>
+                  {isTestMode ? 'Safe Mode: Test Ads (No Ban Risk)' : 'Live Production Ads Active'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.adModeToggleBtn}
+                onPress={handleToggleAdMode}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.adModeToggleText}>
+                  {isTestMode ? 'Switch to Live Ads' : 'Switch to Safe Mode'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* AdMob Mediation Inspector Trigger */}
@@ -472,5 +532,46 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+  },
+  adModeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  adModeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  adModeBadgeSafe: {
+    opacity: 1,
+  },
+  adModeBadgeLive: {
+    opacity: 1,
+  },
+  adModeBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  adModeToggleBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+  },
+  adModeToggleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
   },
 });

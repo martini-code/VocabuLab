@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   AlertCircle,
@@ -60,6 +61,20 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
       } else if (result.reason === 'limit_reached') {
         onClose();
         onOpenPlusModal();
+      } else if (result.reason === 'unavailable') {
+        Alert.alert(
+          t('tokens.ad_not_ready_title', { defaultValue: 'Ad Not Ready' }),
+          t('tokens.ad_not_ready_msg', {
+            defaultValue: 'The ad is still preparing. Please try again in a few moments.',
+          })
+        );
+      } else if (result.reason === 'error') {
+        Alert.alert(
+          t('tokens.ad_error_title', { defaultValue: 'Ad Unavailable' }),
+          t('tokens.ad_error_msg', {
+            defaultValue: 'Unable to load ad right now. Please check your network connection and try again.',
+          })
+        );
       }
     } finally {
       setIsAdLoading(false);

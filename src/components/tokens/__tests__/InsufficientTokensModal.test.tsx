@@ -89,31 +89,35 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
+import { TOKEN_CONFIG } from '../../../config/secrets';
+
 // ─── tokenWallet mock ─────────────────────────────────────────────────────────
-// NOTE: jest.mock is hoisted — cannot reference a `const` in module scope.
-jest.mock('../../../services/tokenWallet', () => ({
-  tokenWallet: {
-    getWalletStatus: jest.fn().mockResolvedValue({
-      tokens: 2,
-      tokenWordCredits: 20,
-      dailyPassWords: 5,
-      totalWordsAllowance: 25,
-      adsWatchedToday: 0,
-      maxDailyAds: 3,
-      canWatchAd: true,
-    }),
-    subscribe: jest.fn().mockReturnValue(() => {}),
-  },
-}));
+jest.mock('../../../services/tokenWallet', () => {
+  const { TOKEN_CONFIG: TC } = require('../../../config/secrets');
+  return {
+    tokenWallet: {
+      getWalletStatus: jest.fn().mockResolvedValue({
+        tokens: TC.INITIAL_TOKENS,
+        tokenWordCredits: TC.WORDS_PER_TOKEN * 2,
+        dailyPassWords: TC.DAILY_PASS_WORDS,
+        totalWordsAllowance: TC.DAILY_PASS_WORDS + TC.WORDS_PER_TOKEN * 2,
+        adsWatchedToday: 0,
+        maxDailyAds: TC.MAX_DAILY_ADS,
+        canWatchAd: true,
+      }),
+      subscribe: jest.fn().mockReturnValue(() => {}),
+    },
+  };
+});
 
 // Convenience alias used in tests that override the mock
 const BASE_WALLET_STATE = {
-  tokens: 2,
-  tokenWordCredits: 20,
-  dailyPassWords: 5,
-  totalWordsAllowance: 25,
+  tokens: TOKEN_CONFIG.INITIAL_TOKENS,
+  tokenWordCredits: TOKEN_CONFIG.WORDS_PER_TOKEN * 2,
+  dailyPassWords: TOKEN_CONFIG.DAILY_PASS_WORDS,
+  totalWordsAllowance: TOKEN_CONFIG.DAILY_PASS_WORDS + TOKEN_CONFIG.WORDS_PER_TOKEN * 2,
   adsWatchedToday: 0,
-  maxDailyAds: 3,
+  maxDailyAds: TOKEN_CONFIG.MAX_DAILY_ADS,
   canWatchAd: true,
 };
 
@@ -201,8 +205,7 @@ describe('InsufficientTokensModal', () => {
     await findByText('More Words Needed');
     const availLabel = await findByText('Available');
     expect(availLabel).toBeTruthy();
-    // totalWordsAllowance = 25
-    const availValue = await findByText('25');
+    const availValue = await findByText(String(BASE_WALLET_STATE.totalWordsAllowance));
     expect(availValue).toBeTruthy();
   });
 
