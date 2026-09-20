@@ -13,6 +13,7 @@ describe('Secrets & Config Architecture', () => {
     expect(TOKEN_CONFIG.WORDS_PER_TOKEN).toBeGreaterThanOrEqual(1);
     expect(TOKEN_CONFIG.DAILY_PASS_WORDS).toBeGreaterThanOrEqual(1);
     expect(TOKEN_CONFIG.MAX_DAILY_ADS).toBeGreaterThanOrEqual(1);
+    expect(TOKEN_CONFIG.MAX_TOKENS_HELD).toBe(2);
   });
 
   it('exports valid ADMOB_CONFIG with App ID and Ad Units', () => {

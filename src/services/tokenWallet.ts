@@ -69,6 +69,7 @@ export interface TokenWalletState {
   adsWatchedToday: number;
   maxDailyAds: number;
   canWatchAd: boolean;
+  maxTokensHeld: number;
 }
 
 type WalletListener = (state: TokenWalletState) => void;
@@ -121,8 +122,9 @@ export class TokenWalletService {
     wordCredits = 0,
     dailyWords = TOKEN_CONFIG.DAILY_PASS_WORDS
   ): Promise<void> {
+    const clampedTokens = Math.min(Math.max(0, tokens), TOKEN_CONFIG.MAX_TOKENS_HELD);
     const today = this.todayDateString();
-    await Storage.setItemAsync(KEYS.TOKENS, String(tokens));
+    await Storage.setItemAsync(KEYS.TOKENS, String(clampedTokens));
     await Storage.setItemAsync(KEYS.WORD_CREDITS, String(wordCredits));
     await Storage.setItemAsync(KEYS.DAILY_WORDS, String(dailyWords));
     await Storage.setItemAsync(KEYS.DAILY_DATE, today);
@@ -143,8 +145,9 @@ export class TokenWalletService {
     try {
       const existingTokens = await Storage.getItemAsync(KEYS.TOKENS);
       if (existingTokens === null) {
-        // First app launch: grant 2 initial tokens
-        await Storage.setItemAsync(KEYS.TOKENS, String(TOKEN_CONFIG.INITIAL_TOKENS));
+        // First app launch: grant initial tokens (capped at MAX_TOKENS_HELD)
+        const initial = Math.min(TOKEN_CONFIG.INITIAL_TOKENS, TOKEN_CONFIG.MAX_TOKENS_HELD);
+        await Storage.setItemAsync(KEYS.TOKENS, String(initial));
         await Storage.setItemAsync(KEYS.WORD_CREDITS, '0');
       }
 
@@ -157,12 +160,13 @@ export class TokenWalletService {
   }
 
   /**
-   * Checks and resets daily non-cumulative pass (5 words) and daily ad count (max 3)
+   * Checks and resets daily non-cumulative pass (2 words) and daily ad count (max 3)
+   * if the current calendar date differs from the last active date.
    */
   async checkDailyReset(): Promise<void> {
     const today = this.todayDateString();
 
-    // 1. Daily Pass Reset (non-cumulative 5 words on daily login)
+    // 1. Daily Pass Reset (non-cumulative 2 words on daily login)
     const storedDailyDate = await Storage.getItemAsync(KEYS.DAILY_DATE);
     if (storedDailyDate !== today) {
       await Storage.setItemAsync(KEYS.DAILY_WORDS, String(TOKEN_CONFIG.DAILY_PASS_WORDS));
@@ -191,13 +195,14 @@ export class TokenWalletService {
       Storage.getItemAsync(KEYS.ADS_WATCHED),
     ]);
 
-    const tokens = this.parseNumber(rawTokens, TOKEN_CONFIG.INITIAL_TOKENS);
+    const parsedTokens = this.parseNumber(rawTokens, TOKEN_CONFIG.INITIAL_TOKENS);
+    const tokens = Math.min(Math.max(0, parsedTokens), TOKEN_CONFIG.MAX_TOKENS_HELD);
     const tokenWordCredits = this.parseNumber(rawCredits, 0);
     const dailyPassWords = this.parseNumber(rawDailyWords, TOKEN_CONFIG.DAILY_PASS_WORDS);
     const adsWatchedToday = this.parseNumber(rawAds, 0);
 
     const totalWordsAllowance = dailyPassWords + tokenWordCredits + tokens * TOKEN_CONFIG.WORDS_PER_TOKEN;
-    const canWatchAd = adsWatchedToday < TOKEN_CONFIG.MAX_DAILY_ADS;
+    const canWatchAd = adsWatchedToday < TOKEN_CONFIG.MAX_DAILY_ADS && tokens < TOKEN_CONFIG.MAX_TOKENS_HELD;
 
     return {
       tokens,
@@ -207,6 +212,7 @@ export class TokenWalletService {
       adsWatchedToday,
       maxDailyAds: TOKEN_CONFIG.MAX_DAILY_ADS,
       canWatchAd,
+      maxTokensHeld: TOKEN_CONFIG.MAX_TOKENS_HELD,
     };
   }
 
@@ -283,11 +289,14 @@ export class TokenWalletService {
    */
   async recordRewardedAdWatch(): Promise<{ success: boolean; newTokens: number }> {
     const status = await this.getWalletStatus();
-    if (status.adsWatchedToday >= TOKEN_CONFIG.MAX_DAILY_ADS) {
+    if (
+      status.adsWatchedToday >= TOKEN_CONFIG.MAX_DAILY_ADS ||
+      status.tokens >= TOKEN_CONFIG.MAX_TOKENS_HELD
+    ) {
       return { success: false, newTokens: status.tokens };
     }
 
-    const newTokens = status.tokens + 1;
+    const newTokens = Math.min(status.tokens + 1, TOKEN_CONFIG.MAX_TOKENS_HELD);
     const newAdsWatched = status.adsWatchedToday + 1;
 
     await Promise.all([

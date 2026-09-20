@@ -145,17 +145,21 @@ jest.mock('../../../locales', () => ({
 
 jest.mock('../../../locales/languages', () => ({
   SUPPORTED_LANGUAGES: [
-    { code: 'en', name: 'English', nativeName: 'English' },
-    { code: 'es', name: 'Spanish', nativeName: 'Español' },
-    { code: 'fr', name: 'French', nativeName: 'Français' },
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
   ],
   getLanguageByCode: (code: string) =>
     ({
-      en: { code: 'en', name: 'English', nativeName: 'English' },
-      es: { code: 'es', name: 'Spanish', nativeName: 'Español' },
-      fr: { code: 'fr', name: 'French', nativeName: 'Français' },
+      en: { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+      es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+      fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
     }[code] || null),
   getLanguageByName: (_name: string) => null,
+  getLanguageFlag: (codeOrName: string) => {
+    const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷' };
+    return map[codeOrName.toLowerCase()] || '🌐';
+  },
 }));
 
 // ─── Component under test ─────────────────────────────────────────────────────
@@ -193,8 +197,7 @@ describe('LanguageSelectorModal', () => {
   it('renders subtitle with pack size info', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Fortress');
-    // The subtitle is hardcoded in the component
-    const subtitle = await findByText('123 Global Languages • On-Demand Packs (~25 KB)');
+    const subtitle = await findByText('123 Languages');
     expect(subtitle).toBeTruthy();
   });
 
@@ -216,7 +219,7 @@ describe('LanguageSelectorModal', () => {
     expect(allTab).toBeTruthy();
   });
 
-  it('shows Downloaded filter tab', async () => {
+  it('shows Downloaded tab with count', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Fortress');
     // downloadedCodesSet always includes 'en', so size >= 1
@@ -225,16 +228,16 @@ describe('LanguageSelectorModal', () => {
     expect(downloadedTab).toBeTruthy();
   });
 
-  it('shows language pair banner with origin (English) and destination (Spanish)', async () => {
+  it('shows language pair banner with origin (EN) and destination (ES)', async () => {
     const { findByText, findAllByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
     await findByText('Language Fortress');
-    // After loadSettings resolves: origin_lang='en' → "English" ; destination_lang='es' → "Español"
-    const originNames = await findAllByText('English');
-    expect(originNames.length).toBeGreaterThanOrEqual(1);
-    const destNames = await findAllByText('Español');
-    expect(destNames.length).toBeGreaterThanOrEqual(1);
+    // Banner displays uppercase codes EN and ES with flags
+    const originCodes = await findAllByText('EN');
+    expect(originCodes.length).toBeGreaterThanOrEqual(1);
+    const destCodes = await findAllByText('ES');
+    expect(destCodes.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows NATIVE / APP and I AM LEARNING labels in pair banner', async () => {
@@ -246,17 +249,17 @@ describe('LanguageSelectorModal', () => {
     expect(learningLabel).toBeTruthy();
   });
 
-  it('renders language list items from SUPPORTED_LANGUAGES', async () => {
+  it('renders language list items with language codes and native scripts', async () => {
     const { findByText, findAllByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
     await findByText('Language Fortress');
     // FlatList mock renders up to 10 items; we have en, es, fr
-    // "Spanish (ES)" appears in both the banner and the row item
-    const spanishRows = await findAllByText(/Spanish \(ES\)/);
-    expect(spanishRows.length).toBeGreaterThanOrEqual(1);
-    const frenchRow = await findByText(/French \(FR\)/);
-    expect(frenchRow).toBeTruthy();
+    // Language rows display code (ES, FR) and native script
+    const spanishCodes = await findAllByText('ES');
+    expect(spanishCodes.length).toBeGreaterThanOrEqual(1);
+    const frenchCodes = await findAllByText('FR');
+    expect(frenchCodes.length).toBeGreaterThanOrEqual(1);
     const francais = await findByText('Français');
     expect(francais).toBeTruthy();
   });

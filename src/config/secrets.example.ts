@@ -14,8 +14,9 @@ export const SECRETS: AppSecrets = {
   TOKEN_CONFIG: {
     INITIAL_TOKENS: 2,
     WORDS_PER_TOKEN: 10,
-    DAILY_PASS_WORDS: 5,
+    DAILY_PASS_WORDS: 2,
     MAX_DAILY_ADS: 3,
+    MAX_TOKENS_HELD: 2,
   },
 
   // Google AdMob Configuration

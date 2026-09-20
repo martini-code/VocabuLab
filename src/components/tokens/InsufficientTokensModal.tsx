@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
+import { TOKEN_CONFIG } from '../../config/secrets';
 import { adMobService } from '../../services/adMobService';
 import { SquireMascot } from '../mascot/Mascots';
 
@@ -200,10 +201,14 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                     })}
                   </Text>
                   <Text style={styles.limitReachedDesc}>
-                    {t('tokens.daily_ads_limit_reached_desc', {
-                      defaultValue:
-                        'You have watched all 3 ads for today. Reset occurs tomorrow or unlock infinite learning with Plus.',
-                    })}
+                    {wallet.tokens >= TOKEN_CONFIG.MAX_TOKENS_HELD
+                      ? t('tokens.token_pouch_full_desc', {
+                          defaultValue: `You are holding the maximum of ${TOKEN_CONFIG.MAX_TOKENS_HELD} tokens. Spend your current allowance or unlock infinite learning with Plus.`,
+                        })
+                      : t('tokens.daily_ads_limit_reached_desc', {
+                          defaultValue:
+                            'You have watched all 3 ads for today. Reset occurs tomorrow or unlock infinite learning with Plus.',
+                        })}
                   </Text>
                 </View>
 

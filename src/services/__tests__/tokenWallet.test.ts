@@ -38,6 +38,19 @@ describe('TokenWalletService (tokenWallet.ts)', () => {
         TOKEN_CONFIG.DAILY_PASS_WORDS + TOKEN_CONFIG.INITIAL_TOKENS * TOKEN_CONFIG.WORDS_PER_TOKEN;
       expect(status.totalWordsAllowance).toBe(expectedTotal);
       expect(status.adsWatchedToday).toBe(0);
+      expect(status.maxTokensHeld).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
+      // Since wallet starts with MAX_TOKENS_HELD (2 tokens), canWatchAd is false
+      expect(status.canWatchAd).toBe(false);
+    });
+
+    it('enables canWatchAd after consuming tokens below MAX_TOKENS_HELD', async () => {
+      tokenWallet.setMockDate('2026-09-17');
+      await tokenWallet.initTokenWallet();
+
+      // Consume daily pass (2 words) + 1 word from first broken token
+      await tokenWallet.consumeWordAllowance(TOKEN_CONFIG.DAILY_PASS_WORDS + 1);
+      const status = await tokenWallet.getWalletStatus();
+      expect(status.tokens).toBe(1);
       expect(status.canWatchAd).toBe(true);
     });
   });
@@ -158,53 +171,95 @@ describe('TokenWalletService (tokenWallet.ts)', () => {
     });
   });
 
-  describe('Rewarded Ad Limits & Daily Resets', () => {
-    it('awards +1 token per watched ad up to MAX_DAILY_ADS', async () => {
+  describe('Rewarded Ad Limits & Max Tokens Cap', () => {
+    it('rejects ad watch when user already holds MAX_TOKENS_HELD tokens', async () => {
       tokenWallet.setMockDate('2026-09-17');
       await tokenWallet.initTokenWallet();
 
-      for (let i = 0; i < TOKEN_CONFIG.MAX_DAILY_ADS; i++) {
-        const res = await tokenWallet.recordRewardedAdWatch();
-        expect(res.success).toBe(true);
-        expect(res.newTokens).toBe(TOKEN_CONFIG.INITIAL_TOKENS + i + 1);
-      }
+      const statusBefore = await tokenWallet.getWalletStatus();
+      expect(statusBefore.tokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
 
-      const status = await tokenWallet.getWalletStatus();
-      expect(status.adsWatchedToday).toBe(TOKEN_CONFIG.MAX_DAILY_ADS);
-      expect(status.canWatchAd).toBe(false);
-
-      // Next ad: should be rejected due to daily cap
-      const resOverflow = await tokenWallet.recordRewardedAdWatch();
-      expect(resOverflow.success).toBe(false);
-      expect(resOverflow.newTokens).toBe(TOKEN_CONFIG.INITIAL_TOKENS + TOKEN_CONFIG.MAX_DAILY_ADS);
+      // Attempting to watch ad when token pouch is full
+      const res = await tokenWallet.recordRewardedAdWatch();
+      expect(res.success).toBe(false);
+      expect(res.newTokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
     });
 
-    it('resets adsWatchedToday counter on a new calendar date while preserving earned tokens', async () => {
-      // Day 1: Watch max ads
+    it('awards +1 token when tokens < MAX_TOKENS_HELD and caps at MAX_TOKENS_HELD', async () => {
       tokenWallet.setMockDate('2026-09-17');
       await tokenWallet.initTokenWallet();
-      for (let i = 0; i < TOKEN_CONFIG.MAX_DAILY_ADS; i++) {
-        await tokenWallet.recordRewardedAdWatch();
-      }
+
+      // Consume down so tokens = 0
+      const totalWords =
+        TOKEN_CONFIG.DAILY_PASS_WORDS + TOKEN_CONFIG.INITIAL_TOKENS * TOKEN_CONFIG.WORDS_PER_TOKEN;
+      await tokenWallet.consumeWordAllowance(totalWords);
+
+      let status = await tokenWallet.getWalletStatus();
+      expect(status.tokens).toBe(0);
+      expect(status.canWatchAd).toBe(true);
+
+      // Ad 1 -> tokens = 1
+      const res1 = await tokenWallet.recordRewardedAdWatch();
+      expect(res1.success).toBe(true);
+      expect(res1.newTokens).toBe(1);
+
+      status = await tokenWallet.getWalletStatus();
+      expect(status.tokens).toBe(1);
+      expect(status.canWatchAd).toBe(true);
+
+      // Ad 2 -> tokens = 2 (MAX_TOKENS_HELD reached)
+      const res2 = await tokenWallet.recordRewardedAdWatch();
+      expect(res2.success).toBe(true);
+      expect(res2.newTokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
+
+      status = await tokenWallet.getWalletStatus();
+      expect(status.tokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
+      expect(status.canWatchAd).toBe(false); // Wallet full
+
+      // Ad 3 -> should be rejected because user is holding 2 tokens max
+      const res3 = await tokenWallet.recordRewardedAdWatch();
+      expect(res3.success).toBe(false);
+      expect(res3.newTokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
+    });
+
+    it('resets adsWatchedToday counter on a new calendar date while respecting MAX_TOKENS_HELD', async () => {
+      tokenWallet.setMockDate('2026-09-17');
+      await tokenWallet.initTokenWallet();
+
+      // Consume 1 token so tokens = 1
+      await tokenWallet.consumeWordAllowance(TOKEN_CONFIG.DAILY_PASS_WORDS + 1);
+      expect((await tokenWallet.getWalletStatus()).tokens).toBe(1);
+
+      // Day 1: Watch 1 ad -> tokens reaches MAX_TOKENS_HELD (2)
+      const resAd1 = await tokenWallet.recordRewardedAdWatch();
+      expect(resAd1.success).toBe(true);
+      expect(resAd1.newTokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
 
       const day1Status = await tokenWallet.getWalletStatus();
-      const expectedTokens = TOKEN_CONFIG.INITIAL_TOKENS + TOKEN_CONFIG.MAX_DAILY_ADS;
-      expect(day1Status.tokens).toBe(expectedTokens);
-      expect(day1Status.adsWatchedToday).toBe(TOKEN_CONFIG.MAX_DAILY_ADS);
-      expect(day1Status.canWatchAd).toBe(false);
+      expect(day1Status.tokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
+      expect(day1Status.adsWatchedToday).toBe(1);
+      expect(day1Status.canWatchAd).toBe(false); // Full at 2 tokens
 
       // Day 2: 2026-09-18
       tokenWallet.setMockDate('2026-09-18');
       const day2Status = await tokenWallet.getWalletStatus();
 
-      expect(day2Status.tokens).toBe(expectedTokens); // Preserved tokens
+      expect(day2Status.tokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD); // Preserved 2 tokens
       expect(day2Status.adsWatchedToday).toBe(0); // Reset ads count
-      expect(day2Status.canWatchAd).toBe(true); // Can watch ads again
+      expect(day2Status.canWatchAd).toBe(false); // Still full until consumed
 
-      // Should allow watching an ad on Day 2
+      // Consume words on Day 2 (daily pass + existing credits + 1) to break a token and free a slot
+      await tokenWallet.consumeWordAllowance(
+        TOKEN_CONFIG.DAILY_PASS_WORDS + day2Status.tokenWordCredits + 1
+      );
+      const afterConsume = await tokenWallet.getWalletStatus();
+      expect(afterConsume.tokens).toBe(1);
+      expect(afterConsume.canWatchAd).toBe(true);
+
+      // Should now allow watching an ad on Day 2
       const day2Ad = await tokenWallet.recordRewardedAdWatch();
       expect(day2Ad.success).toBe(true);
-      expect(day2Ad.newTokens).toBe(expectedTokens + 1);
+      expect(day2Ad.newTokens).toBe(TOKEN_CONFIG.MAX_TOKENS_HELD);
     });
   });
 
@@ -221,7 +276,8 @@ describe('TokenWalletService (tokenWallet.ts)', () => {
       expect(mockListener).toHaveBeenCalled();
 
       mockListener.mockClear();
-      await tokenWallet.consumeWordAllowance(2);
+      // Consume daily pass + 1 word to break a token
+      await tokenWallet.consumeWordAllowance(TOKEN_CONFIG.DAILY_PASS_WORDS + 1);
       expect(mockListener).toHaveBeenCalled();
 
       mockListener.mockClear();

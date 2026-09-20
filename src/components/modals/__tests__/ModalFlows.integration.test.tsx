@@ -181,19 +181,23 @@ jest.mock('../../../locales', () => ({
 
 jest.mock('../../../locales/languages', () => ({
   SUPPORTED_LANGUAGES: [
-    { code: 'en', name: 'English', nativeName: 'English' },
-    { code: 'es', name: 'Spanish', nativeName: 'Español' },
-    { code: 'fr', name: 'French', nativeName: 'Français' },
-    { code: 'de', name: 'German', nativeName: 'Deutsch' },
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+    { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
   ],
   getLanguageByCode: (code: string) =>
     ({
-      en: { code: 'en', name: 'English', nativeName: 'English' },
-      es: { code: 'es', name: 'Spanish', nativeName: 'Español' },
-      fr: { code: 'fr', name: 'French', nativeName: 'Français' },
-      de: { code: 'de', name: 'German', nativeName: 'Deutsch' },
+      en: { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+      es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+      fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+      de: { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
     }[code] || null),
   getLanguageByName: (_name: string) => null,
+  getLanguageFlag: (codeOrName: string) => {
+    const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪' };
+    return map[codeOrName.toLowerCase()] || '🌐';
+  },
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────

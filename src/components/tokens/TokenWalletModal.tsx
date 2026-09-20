@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
+import { TOKEN_CONFIG } from '../../config/secrets';
 import { adMobService } from '../../services/adMobService';
 import { SquireMascot } from '../mascot/Mascots';
 
@@ -177,7 +178,9 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                     {t('tokens.token_units', { defaultValue: 'Tokens' })}
                   </Text>
                 </View>
-                <Text style={styles.statCardValue}>{wallet.tokens}</Text>
+                <Text style={styles.statCardValue}>
+                  {wallet.tokens}/{TOKEN_CONFIG.MAX_TOKENS_HELD}
+                </Text>
                 <Text style={styles.statCardSub}>
                   {t('tokens.tokens_words_desc', {
                     count: wallet.tokens * 10,
@@ -194,7 +197,9 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                     {t('tokens.daily_scroll_title', { defaultValue: 'Daily Scroll' })}
                   </Text>
                 </View>
-                <Text style={styles.statCardValue}>{wallet.dailyPassWords}/5</Text>
+                <Text style={styles.statCardValue}>
+                  {wallet.dailyPassWords}/{TOKEN_CONFIG.DAILY_PASS_WORDS}
+                </Text>
                 <Text style={styles.statCardSub}>
                   {t('tokens.daily_scroll_desc', {
                     defaultValue: 'Free daily pass (non-cumulative)',
@@ -226,6 +231,10 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                     ? t('tokens.ads_remaining', {
                         count: adsRemaining,
                         defaultValue: `${adsRemaining} of ${wallet.maxDailyAds} rewarded ads left today`,
+                      })
+                    : wallet.tokens >= TOKEN_CONFIG.MAX_TOKENS_HELD
+                    ? t('tokens.wallet_full', {
+                        defaultValue: `Token capacity full (${TOKEN_CONFIG.MAX_TOKENS_HELD}/${TOKEN_CONFIG.MAX_TOKENS_HELD} max)`,
                       })
                     : t('tokens.ads_limit_reached', {
                         defaultValue: 'Daily ad limit reached (3/3 completed)',

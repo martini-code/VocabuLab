@@ -224,8 +224,8 @@ describe('ReviewSession Multi-Language Learning Tests', () => {
 
     // Total due: 5 (es) + 3 (zh-CN) = 8
     expect(await findByText('All Languages (8)')).toBeTruthy();
-    expect(await findByText('Spanish (5)')).toBeTruthy();
-    expect(await findByText('Mandarin (3)')).toBeTruthy();
+    expect(await findByText(/ES \(5\)/)).toBeTruthy();
+    expect(await findByText(/ZH-CN \(3\)/)).toBeTruthy();
   });
 
   it('loads all languages combined when "All Languages" scope is selected', async () => {

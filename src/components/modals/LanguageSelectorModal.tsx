@@ -28,6 +28,7 @@ import {
   LanguageOption,
   getLanguageByCode,
   getLanguageByName,
+  getLanguageFlag,
 } from '../../locales/languages';
 import { changeAppLanguage, getDeviceLanguage } from '../../locales';
 import {
@@ -157,8 +158,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
     if (lang.code === pair.origin_lang || lang.code === pair.destination_lang) {
       Alert.alert(
         t('language.cannot_delete', 'In-Use Language'),
-        `Cannot delete ${lang.name} because it is currently selected as your active ${
-          lang.code === pair.origin_lang ? 'Origin' : 'Study'
+        `Cannot delete ${lang.name} because it is currently selected as your active ${lang.code === pair.origin_lang ? 'Origin' : 'Study'
         } language.`
       );
       return;
@@ -328,7 +328,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                   {t('language.title', 'Language Fortress')}
                 </Text>
                 <Text style={styles.subtitle}>
-                  123 Global Languages • On-Demand Packs (~25 KB)
+                  123 Languages
                 </Text>
               </View>
             </View>
@@ -355,12 +355,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               <Text style={styles.pairHalfLabel}>
                 {t('language.origin_label', 'NATIVE / APP')}
               </Text>
-              <Text style={styles.pairHalfName} numberOfLines={1}>
-                {originOption.nativeName}
-              </Text>
-              <Text style={styles.pairHalfCode}>
-                {originOption.name} ({originOption.code.toUpperCase()})
-              </Text>
+              <View style={styles.pairFlagCodeRow}>
+                <Text style={styles.pairFlagEmoji}>{getLanguageFlag(originOption.code)}</Text>
+                <Text style={styles.pairHalfCodeOnly}>
+                  {originOption.code.toUpperCase()}
+                </Text>
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -383,12 +383,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               <Text style={styles.pairHalfLabel}>
                 {t('language.destination_label', 'I AM LEARNING')}
               </Text>
-              <Text style={styles.pairHalfName} numberOfLines={1}>
-                {destinationOption.nativeName}
-              </Text>
-              <Text style={styles.pairHalfCode}>
-                {destinationOption.name} ({destinationOption.code.toUpperCase()})
-              </Text>
+              <View style={styles.pairFlagCodeRow}>
+                <Text style={styles.pairFlagEmoji}>{getLanguageFlag(destinationOption.code)}</Text>
+                <Text style={styles.pairHalfCodeOnly}>
+                  {destinationOption.code.toUpperCase()}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -421,9 +421,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                       activeOpacity={0.8}
                     >
                       <View style={styles.enrolledTopRow}>
-                        <Text style={styles.enrolledLangName} numberOfLines={1}>
-                          {ep.destination_name}
-                        </Text>
+                        <View style={styles.enrolledFlagCodeRow}>
+                          <Text style={styles.enrolledFlagEmoji}>{getLanguageFlag(ep.destination_lang)}</Text>
+                          <Text style={styles.enrolledLangName} numberOfLines={1}>
+                            {ep.destination_lang.toUpperCase()}
+                          </Text>
+                        </View>
                         {isActive && (
                           <View style={styles.activePill}>
                             <Check size={10} color="#FFFFFF" />
@@ -432,7 +435,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                         )}
                       </View>
                       <Text style={styles.enrolledSubtext}>
-                        {ep.destination_lang.toUpperCase()} ➔ {ep.origin_lang.toUpperCase()}
+                        {getLanguageFlag(ep.destination_lang)} {ep.destination_lang.toUpperCase()} ➔ {getLanguageFlag(ep.origin_lang)} {ep.origin_lang.toUpperCase()}
                       </Text>
                       <View style={styles.enrolledStatsRow}>
                         <Text style={styles.enrolledStatBadge}>
@@ -573,32 +576,35 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
         isSelectedInCurrentMode && styles.langRowSelected,
       ]}
     >
-      <View style={styles.langNames}>
-        <View style={styles.nameRow}>
-          <Text
-            style={[
-              styles.nativeName,
-              isSelectedInCurrentMode && styles.nativeNameSelected,
-            ]}
-          >
-            {item.nativeName}
-          </Text>
+      <View style={styles.langRowLeft}>
+        <Text style={styles.listRowFlag}>{item.flag || getLanguageFlag(item.code)}</Text>
+        <View style={styles.langNames}>
+          <View style={styles.nameRow}>
+            <Text
+              style={[
+                styles.langCodeMain,
+                isSelectedInCurrentMode && styles.langCodeMainSelected,
+              ]}
+            >
+              {item.code.toUpperCase()}
+            </Text>
 
-          {isOrigin && (
-            <View style={styles.originTag}>
-              <Text style={styles.originTagText}>App (Origin)</Text>
-            </View>
-          )}
-          {isDest && (
-            <View style={styles.destTag}>
-              <Text style={styles.destTagText}>Study Target</Text>
-            </View>
-          )}
+            <Text style={styles.langNativeScript}>
+              {item.nativeName}
+            </Text>
+
+            {isOrigin && (
+              <View style={styles.originTag}>
+                <Text style={styles.originTagText}>App (Origin)</Text>
+              </View>
+            )}
+            {isDest && (
+              <View style={styles.destTag}>
+                <Text style={styles.destTagText}>Study Target</Text>
+              </View>
+            )}
+          </View>
         </View>
-
-        <Text style={styles.englishName}>
-          {item.name} ({item.code.toUpperCase()}) • ~25 KB
-        </Text>
       </View>
 
       {/* Actions / Status */}
@@ -1018,6 +1024,54 @@ const styles = StyleSheet.create({
   enrolledStatDue: {
     color: '#B45309',
     backgroundColor: '#FDE68A',
+  },
+  pairFlagCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  pairFlagEmoji: {
+    fontSize: 18,
+  },
+  pairHalfCodeOnly: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#78350F',
+    letterSpacing: 0.5,
+  },
+  enrolledFlagCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 1,
+  },
+  enrolledFlagEmoji: {
+    fontSize: 14,
+  },
+  langRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  listRowFlag: {
+    fontSize: 22,
+  },
+  langCodeMain: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#1E293B',
+    marginRight: 6,
+    letterSpacing: 0.5,
+  },
+  langCodeMainSelected: {
+    color: '#B45309',
+  },
+  langNativeScript: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
   },
 });
 

@@ -27,6 +27,7 @@ import { SquireMascot } from './src/components/mascot/Mascots';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
+import { getLanguageFlag } from './src/locales/languages';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
 import { TokenWalletModal } from './src/components/tokens/TokenWalletModal';
@@ -201,34 +202,21 @@ export default function App() {
         {/* Token Allowance Pill (Isolated component, granularly subscribed to wallet updates) */}
         <TokenPill onPress={() => setTokenWalletModalOpen(true)} />
 
-        {/* Destination Language Selector Pill (Only displays learning language) */}
+        {/* Destination Language Selector Pill (Displays flag and uppercase language code, without language name) */}
         <TouchableOpacity
           style={styles.statPill}
+          testID="top-language-pill"
           onPress={() => {
             setLanguageModalMode('destination');
             setLanguageModalOpen(true);
           }}
           activeOpacity={0.8}
         >
-          <Globe size={16} color="#78350F" />
+          <Text style={styles.flagEmoji}>
+            {getLanguageFlag(languagePair.destination_lang)}
+          </Text>
           <Text style={styles.statValue}>
             {languagePair.destination_lang.toUpperCase()}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Ad-Free Status / Upgrade Pill */}
-        <TouchableOpacity
-          style={[styles.statPill, isAdFree ? styles.adFreePillActive : styles.adFreePillFree]}
-          onPress={() => setAdFreeModalOpen(true)}
-          activeOpacity={0.8}
-        >
-          {isAdFree ? (
-            <ShieldCheck size={16} color="#047857" />
-          ) : (
-            <Sparkles size={16} color="#B45309" />
-          )}
-          <Text style={[styles.statValue, isAdFree ? styles.adFreeTextActive : styles.adFreeTextFree]}>
-            {isAdFree ? t('ad_free.status_active') : t('ad_free.go_ad_free')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -643,6 +631,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
+  },
+  flagEmoji: {
+    fontSize: 15,
+    marginRight: 4,
   },
   tokenPill: {
     borderColor: '#FDE68A',

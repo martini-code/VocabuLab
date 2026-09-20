@@ -3,6 +3,7 @@ export interface TokenConfig {
   WORDS_PER_TOKEN: number;
   DAILY_PASS_WORDS: number;
   MAX_DAILY_ADS: number;
+  MAX_TOKENS_HELD: number;
 }
 
 export interface AdMobConfig {
@@ -32,8 +33,9 @@ export const DEFAULT_SECRETS: AppSecrets = {
   TOKEN_CONFIG: {
     INITIAL_TOKENS: 2,
     WORDS_PER_TOKEN: 10,
-    DAILY_PASS_WORDS: 5,
+    DAILY_PASS_WORDS: 2,
     MAX_DAILY_ADS: 3,
+    MAX_TOKENS_HELD: 2,
   },
   ADMOB_CONFIG: {
     APP_ID: 'ca-app-pub-3940256099942544~1458002511', // Google sample app ID
