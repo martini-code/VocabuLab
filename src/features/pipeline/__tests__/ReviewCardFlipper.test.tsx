@@ -73,7 +73,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       const handleFlip = jest.fn();
       const handleSpeak = jest.fn();
 
-      const { getAllByText, getByText } = await render(
+      const { getAllByText, getByText, getByTestId, queryByText } = await render(
         <ReviewCardFlipper
           card={mockCard}
           isFlipped={false}
@@ -88,7 +88,8 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       expect(getAllByText('ES ➔ EN').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('A1').length).toBeGreaterThanOrEqual(1);
       expect(getByText('Tap scroll to reveal translation')).toBeTruthy();
-      expect(getByText('Pronounce')).toBeTruthy();
+      expect(getByTestId('pronounce-btn')).toBeTruthy();
+      expect(queryByText('Pronounce')).toBeNull();
     });
   });
 

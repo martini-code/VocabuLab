@@ -103,13 +103,15 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
             <TouchableOpacity
               style={styles.ttsButton}
               testID="pronounce-btn"
+              accessibilityLabel="Pronounce"
+              accessibilityRole="button"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               onPress={(e) => {
                 e.stopPropagation?.();
                 onSpeak(card.front_term, card.front_lang);
               }}
             >
-              <Volume2 size={16} color="#78350F" />
-              <Text style={styles.ttsLabel}>Pronounce</Text>
+              <Volume2 size={18} color="#78350F" />
             </TouchableOpacity>
           </View>
 
@@ -216,21 +218,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   ttsButton: {
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FEF3C7',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     marginTop: 12,
     borderWidth: 1.5,
     borderColor: '#F59E0B',
-  },
-  ttsLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#B45309',
-    marginLeft: 6,
   },
   divider: {
     height: 1.5,
