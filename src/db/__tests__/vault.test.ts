@@ -38,26 +38,30 @@ jest.mock('expo-sqlite', () => ({
 
 jest.mock('../schema', () => ({ USER_SCHEMA_SQL: '' }));
 
-jest.mock('../../locales/languages', () => ({
-  SUPPORTED_LANGUAGES: [
-    { code: 'en',    name: 'English',                  nativeName: 'English' },
-    { code: 'es',    name: 'Spanish',                  nativeName: 'Español' },
-    { code: 'pt-BR', name: 'Portuguese (Brazil)',       nativeName: 'Português (Brasil)' },
-    { code: 'zh',    name: 'Chinese (Simplified)',      nativeName: '中文 (简体)' },
-    { code: 'fr',    name: 'French',                   nativeName: 'Français' },
-    { code: 'fr-CA', name: 'French (Canada)',           nativeName: 'Français (Canada)' },
-    { code: 'no',    name: 'Norwegian (Bokmål)',        nativeName: 'Norsk (Bokmål)' },
-    { code: 'ku',    name: 'Kurdish (Kurmanji)',        nativeName: 'Kurmancî' },
-    { code: 'ckb',   name: 'Kurdish (Sorani)',          nativeName: 'کوردی سۆرانی' },
-    { code: 'ar',    name: 'Arabic',                   nativeName: 'العربية' },
-    { code: 'de',    name: 'German',                   nativeName: 'Deutsch' },
-    { code: 'it',    name: 'Italian',                  nativeName: 'Italiano' },
-    { code: 'ja',    name: 'Japanese',                 nativeName: '日本語' },
-    { code: 'ko',    name: 'Korean',                   nativeName: '한국어' },
-    { code: 'pt-PT', name: 'Portuguese (Portugal)',     nativeName: 'Português (Portugal)' },
-    { code: 'zh-TW', name: 'Chinese (Traditional)',    nativeName: '中文 (繁體)' },
-  ],
-}));
+jest.mock('../../locales/languages', () => {
+  const actual = jest.requireActual('../../locales/languages');
+  return {
+    ...actual,
+    SUPPORTED_LANGUAGES: [
+      { code: 'en',    name: 'English',                  nativeName: 'English', flag: '🇬🇧' },
+      { code: 'es',    name: 'Spanish',                  nativeName: 'Español', flag: '🇪🇸' },
+      { code: 'pt-BR', name: 'Portuguese (Brazil)',       nativeName: 'Português (Brasil)', flag: '🇧🇷' },
+      { code: 'zh',    name: 'Chinese (Simplified)',      nativeName: '中文 (简体)', flag: '🇨🇳' },
+      { code: 'fr',    name: 'French',                   nativeName: 'Français', flag: '🇫🇷' },
+      { code: 'fr-CA', name: 'French (Canada)',           nativeName: 'Français (Canada)', flag: '🇨🇦' },
+      { code: 'no',    name: 'Norwegian (Bokmål)',        nativeName: 'Norsk (Bokmål)', flag: '🇳🇴' },
+      { code: 'ku',    name: 'Kurdish (Kurmanji)',        nativeName: 'Kurmancî', flag: '🇮🇶' },
+      { code: 'ckb',   name: 'Kurdish (Sorani)',          nativeName: 'کوردی سۆرانی', flag: '🇮🇶' },
+      { code: 'ar',    name: 'Arabic',                   nativeName: 'العربية', flag: '🇸🇦' },
+      { code: 'de',    name: 'German',                   nativeName: 'Deutsch', flag: '🇩🇪' },
+      { code: 'it',    name: 'Italian',                  nativeName: 'Italiano', flag: '🇮🇹' },
+      { code: 'ja',    name: 'Japanese',                 nativeName: '日本語', flag: '🇯🇵' },
+      { code: 'ko',    name: 'Korean',                   nativeName: '한국어', flag: '🇰🇷' },
+      { code: 'pt-PT', name: 'Portuguese (Portugal)',     nativeName: 'Português (Portugal)', flag: '🇵🇹' },
+      { code: 'zh-TW', name: 'Chinese (Traditional)',    nativeName: '中文 (繁體)', flag: '🇹🇼' },
+    ],
+  };
+});
 
 jest.mock('../../locales', () => ({
   getDeviceLanguage: jest.fn().mockReturnValue('en'),

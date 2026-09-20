@@ -162,15 +162,56 @@ export function getLanguageFlag(codeOrName: string): string {
 }
 
 /**
- * Formats a language code cleanly with proper casing (e.g. 'Es', 'En', 'Pt-Br', 'Zh-Cn').
- * Avoids aggressive all-caps strings.
+ * Resolves any language code, English name, or native name into its canonical language code.
+ * E.g., 'French (Canada)' -> 'fr-CA', 'fr-ca' -> 'fr-CA', 'Spanish' -> 'es', 'Español' -> 'es'.
+ */
+export function resolveLanguageCode(codeOrName: string): string {
+  if (!codeOrName) return 'es';
+  const clean = codeOrName.trim().toLowerCase();
+
+  // 1. Exact match on language code (case-insensitive)
+  const byCode = SUPPORTED_LANGUAGES.find((l) => l.code.toLowerCase() === clean);
+  if (byCode) return byCode.code;
+
+  // 2. Exact match on English name
+  const byName = SUPPORTED_LANGUAGES.find((l) => l.name.toLowerCase() === clean);
+  if (byName) return byName.code;
+
+  // 3. Exact match on native name
+  const byNative = SUPPORTED_LANGUAGES.find((l) => l.nativeName.toLowerCase() === clean);
+  if (byNative) return byNative.code;
+
+  // 4. Handle common regional variants and families
+  if (clean.startsWith('fr') && (clean.includes('ca') || clean.includes('canada'))) return 'fr-CA';
+  if (clean.startsWith('pt') && (clean.includes('br') || clean.includes('brazil') || clean.includes('brasil'))) return 'pt-BR';
+  if (clean.startsWith('pt') && (clean.includes('pt') || clean.includes('portugal'))) return 'pt-PT';
+  if (clean.startsWith('zh') && (clean.includes('trad') || clean.includes('hant') || clean.includes('tw'))) return 'zh-TW';
+  if (clean.startsWith('zh')) return 'zh-CN';
+  if (clean.startsWith('ku') && (clean.includes('sor') || clean.includes('ckb'))) return 'ckb';
+  if (clean.startsWith('ku')) return 'ku';
+  if (clean.startsWith('no') || clean.startsWith('nb')) return 'no';
+
+  // 5. Starts-with or contains match on name
+  const byPrefix = SUPPORTED_LANGUAGES.find(
+    (l) => l.name.toLowerCase().startsWith(clean) || clean.startsWith(l.name.toLowerCase())
+  );
+  if (byPrefix) return byPrefix.code;
+
+  // 6. Base code match (e.g. 'en-US' -> 'en')
+  const base = clean.split(/[-_]/)[0];
+  const byBase = SUPPORTED_LANGUAGES.find((l) => l.code.toLowerCase() === base);
+  if (byBase) return byBase.code;
+
+  return codeOrName;
+}
+
+/**
+ * Formats a language code as ALL CAPS (e.g. 'ES', 'EN', 'PT-BR', 'FR-CA', 'ZH-CN').
+ * First resolves any language name or code variation to its canonical code.
  */
 export function formatLanguageCode(codeOrName: string): string {
   if (!codeOrName) return '';
-  const clean = codeOrName.trim();
-  return clean
-    .split(/[-_]/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join('-');
+  const code = resolveLanguageCode(codeOrName);
+  return code.toUpperCase();
 }
 

@@ -27,7 +27,7 @@ import {
 let staticDbInstance: SQLite.SQLiteDatabase | null = null;
 let userDbInstance: SQLite.SQLiteDatabase | null = null;
 
-import { SUPPORTED_LANGUAGES } from '../locales/languages';
+import { SUPPORTED_LANGUAGES, resolveLanguageCode } from '../locales/languages';
 import { getDeviceLanguage } from '../locales';
 
 const STATIC_DB_NAME = 'lexicon_v1.0.0.db';
@@ -334,11 +334,11 @@ export async function getEnrolledLanguagePairs(): Promise<EnrolledLanguagePair[]
 
   const addPair = (dest: string, orig: string) => {
     if (!dest) return;
-    const cleanDest = dest.trim();
-    const cleanOrig = orig ? orig.trim() : 'en';
-    const key = `${cleanDest.toLowerCase()}:${cleanOrig.toLowerCase()}`;
+    const canonDest = resolveLanguageCode(dest);
+    const canonOrig = resolveLanguageCode(orig || 'en');
+    const key = `${canonDest.toLowerCase()}:${canonOrig.toLowerCase()}`;
     if (!pairMap.has(key)) {
-      pairMap.set(key, { destination_lang: cleanDest, origin_lang: cleanOrig });
+      pairMap.set(key, { destination_lang: canonDest, origin_lang: canonOrig });
     }
   };
 
@@ -423,12 +423,14 @@ export async function enrollLanguagePair(pair: LanguagePairSettings): Promise<vo
     }
   }
 
-  const key = `${pair.destination_lang.toLowerCase()}:${pair.origin_lang.toLowerCase()}`;
+  const canonDest = resolveLanguageCode(pair.destination_lang);
+  const canonOrig = resolveLanguageCode(pair.origin_lang || 'en');
+  const key = `${canonDest.toLowerCase()}:${canonOrig.toLowerCase()}`;
   const exists = savedPairs.some(
-    (p) => `${p.destination_lang.toLowerCase()}:${p.origin_lang.toLowerCase()}` === key
+    (p) => `${resolveLanguageCode(p.destination_lang).toLowerCase()}:${resolveLanguageCode(p.origin_lang || 'en').toLowerCase()}` === key
   );
   if (!exists) {
-    savedPairs.push({ destination_lang: pair.destination_lang, origin_lang: pair.origin_lang });
+    savedPairs.push({ destination_lang: canonDest, origin_lang: canonOrig });
     await userDb.runAsync(
       "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);",
       [JSON.stringify(savedPairs), new Date().toISOString()]
@@ -453,9 +455,16 @@ export async function removeEnrolledLanguagePair(pairId: string): Promise<void> 
     }
   }
 
-  const filtered = savedPairs.filter(
-    (p) => `${p.destination_lang.toLowerCase()}:${p.origin_lang.toLowerCase()}` !== pairId.toLowerCase()
-  );
+  const parts = pairId.split(':');
+  const targetDest = resolveLanguageCode(parts[0]).toLowerCase();
+  const targetOrig = resolveLanguageCode(parts[1] || 'en').toLowerCase();
+  const targetKey = `${targetDest}:${targetOrig}`;
+
+  const filtered = savedPairs.filter((p) => {
+    const pDest = resolveLanguageCode(p.destination_lang).toLowerCase();
+    const pOrig = resolveLanguageCode(p.origin_lang || 'en').toLowerCase();
+    return `${pDest}:${pOrig}` !== targetKey;
+  });
   await userDb.runAsync(
     "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);",
     [JSON.stringify(filtered), new Date().toISOString()]

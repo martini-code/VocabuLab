@@ -198,12 +198,10 @@ jest.mock('../../../locales/languages', () => ({
     const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪' };
     return map[codeOrName.toLowerCase()] || '🌐';
   },
+  resolveLanguageCode: (codeOrName: string) => codeOrName || 'es',
   formatLanguageCode: (codeOrName: string) => {
     if (!codeOrName) return '';
-    return codeOrName
-      .split(/[-_]/)
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
-      .join('-');
+    return codeOrName.toUpperCase();
   },
 }));
 
