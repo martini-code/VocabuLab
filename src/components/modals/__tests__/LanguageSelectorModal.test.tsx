@@ -99,6 +99,38 @@ jest.mock('../../../db/vault', () => ({
     .mockResolvedValue({ origin_lang: 'en', destination_lang: 'es' }),
   setLanguagePairSettings: jest.fn().mockResolvedValue(undefined),
   getDownloadedLanguages: jest.fn().mockResolvedValue([]),
+  getEnrolledLanguagePairs: jest.fn().mockResolvedValue([
+    {
+      id: 'es:en',
+      origin_lang: 'en',
+      destination_lang: 'es',
+      origin_name: 'English',
+      destination_name: 'Spanish',
+      enrolled_at: '2026-09-01T00:00:00Z',
+      progress: {
+        totalCards: 25,
+        dueCards: 5,
+        newCards: 2,
+        masteredCards: 18,
+      },
+    },
+    {
+      id: 'fr:en',
+      origin_lang: 'en',
+      destination_lang: 'fr',
+      origin_name: 'English',
+      destination_name: 'French',
+      enrolled_at: '2026-09-05T00:00:00Z',
+      progress: {
+        totalCards: 10,
+        dueCards: 3,
+        newCards: 1,
+        masteredCards: 6,
+      },
+    },
+  ]),
+  enrollLanguagePair: jest.fn().mockResolvedValue(undefined),
+  removeEnrolledLanguagePair: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../../db/downloader', () => ({
@@ -237,5 +269,59 @@ describe('LanguageSelectorModal', () => {
       'Search by language, native name or code...'
     );
     expect(input).toBeTruthy();
+  });
+
+  it('renders enrolled learning languages carousel with live card and due counts', async () => {
+    const { findByTestId, findByText } = await render(
+      <LanguageSelectorModal {...defaultProps} />
+    );
+    await findByText('Language Fortress');
+
+    const enrolledSection = await findByTestId('enrolled-languages-section');
+    expect(enrolledSection).toBeTruthy();
+    expect(await findByText('Your Learning Languages (2)')).toBeTruthy();
+
+    // Verify Spanish enrolled card
+    const esCard = await findByTestId('enrolled-card-es');
+    expect(esCard).toBeTruthy();
+    expect(await findByText('25 cards')).toBeTruthy();
+    expect(await findByText('5 due')).toBeTruthy();
+    expect(await findByText('Active')).toBeTruthy();
+
+    // Verify French enrolled card
+    const frCard = await findByTestId('enrolled-card-fr');
+    expect(frCard).toBeTruthy();
+    expect(await findByText('10 cards')).toBeTruthy();
+    expect(await findByText('3 due')).toBeTruthy();
+  });
+
+  it('switches active language pair immediately when tapping an enrolled language card', async () => {
+    const onPairChanged = jest.fn();
+    const onClose = jest.fn();
+    const vaultModule = require('../../../db/vault');
+
+    const { findByTestId, findByText } = await render(
+      <LanguageSelectorModal
+        {...defaultProps}
+        onPairChanged={onPairChanged}
+        onClose={onClose}
+      />
+    );
+    await findByText('Language Fortress');
+
+    const frCard = await findByTestId('enrolled-card-fr');
+    await act(async () => {
+      fireEvent.press(frCard);
+    });
+
+    expect(vaultModule.setLanguagePairSettings).toHaveBeenCalledWith({
+      destination_lang: 'fr',
+      origin_lang: 'en',
+    });
+    expect(onPairChanged).toHaveBeenCalledWith({
+      destination_lang: 'fr',
+      origin_lang: 'en',
+    });
+    expect(onClose).toHaveBeenCalled();
   });
 });

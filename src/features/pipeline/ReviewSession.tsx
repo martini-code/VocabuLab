@@ -8,19 +8,19 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Rating, Grade } from 'ts-fsrs';
-import { CardWithDetails, MascotMood } from '../../types';
-import { getDueCards, getDeckCardsForReview, recordCardReview } from '../../db/vault';
+import { CardWithDetails, MascotMood, EnrolledLanguagePair } from '../../types';
+import { getDueCards, getDeckCardsForReview, recordCardReview, getEnrolledLanguagePairs } from '../../db/vault';
 import { getReviewOptions, gradeCardFSRS } from '../../services/fsrsService';
 import { speakWord } from '../../utils/tts';
 import { SquireMascot } from '../../components/mascot/Mascots';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
-import { Volume2, Layers, X, Zap } from 'lucide-react-native';
+import { Volume2, Layers, X, Zap, Globe } from 'lucide-react-native';
 import { srsManager } from '../../srs';
 import { ReviewCardFlipper } from './ReviewCardFlipper';
 import { ReviewSessionSummary, ReviewSessionWordSummary } from './ReviewSessionSummary';
-import { RandomDiscoveryModal } from '../../components/modals/RandomDiscoveryModal';
+import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -42,10 +42,12 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   onInsufficientTokens,
 }) => {
   const [cards, setCards] = useState<CardWithDetails[]>([]);
+  const [enrolledPairs, setEnrolledPairs] = useState<EnrolledLanguagePair[]>([]);
+  const [reviewScope, setReviewScope] = useState<string>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [randomModalOpen, setRandomModalOpen] = useState(false);
+  const [randomDiscoveryActive, setRandomDiscoveryActive] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
   const [sessionHistory, setSessionHistory] = useState<ReviewSessionWordSummary[]>([]);
@@ -54,12 +56,15 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
   useEffect(() => {
     setSessionHistory([]);
-    loadCards();
-  }, [deckFilter?.id, targetLang, originLang]);
+    loadCards(reviewScope);
+  }, [deckFilter?.id, targetLang, originLang, reviewScope]);
 
-  const loadCards = async () => {
+  const loadCards = async (scope: string = reviewScope) => {
     setLoading(true);
     try {
+      const pairs = await getEnrolledLanguagePairs();
+      setEnrolledPairs(pairs);
+
       let due: CardWithDetails[] = [];
       if (deckFilter) {
         due = await getDueCards(deckFilter.id, targetLang, originLang);
@@ -67,7 +72,8 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           due = await getDeckCardsForReview(deckFilter.id, targetLang, originLang);
         }
       } else {
-        due = await getDueCards(undefined, targetLang, originLang);
+        const langToQuery = scope === 'all' ? 'all' : scope;
+        due = await getDueCards(undefined, langToQuery, originLang);
       }
       setCards(due);
     } catch (err) {
@@ -189,8 +195,81 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
   // Session Victory / Empty Queue State (When no cards were due to begin with)
   if (!currentCard || currentIndex >= cards.length) {
+    if (randomDiscoveryActive) {
+      return (
+        <RandomDiscoveryView
+          onExit={() => {
+            setRandomDiscoveryActive(false);
+            loadCards();
+          }}
+          targetLang={targetLang}
+          originLang={originLang}
+          onInsufficientTokens={onInsufficientTokens}
+          onWordLearned={() => {
+            loadCards();
+          }}
+        />
+      );
+    }
+
+    const allDueTotal = enrolledPairs.reduce((sum, p) => sum + (p.progress.dueCards || 0), 0);
+
     return (
       <ScrollView contentContainerStyle={styles.victoryContainer}>
+        {/* Multi-Language Scope Filter Pills */}
+        {!deckFilter && enrolledPairs.length >= 2 && (
+          <View style={styles.scopeSelectorContainer} testID="review-scope-selector-empty">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scopeScroll}
+            >
+              <TouchableOpacity
+                testID="scope-pill-all-empty"
+                style={[
+                  styles.scopePill,
+                  reviewScope === 'all' && styles.scopePillActive,
+                ]}
+                onPress={() => setReviewScope('all')}
+              >
+                <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
+                <Text
+                  style={[
+                    styles.scopePillText,
+                    reviewScope === 'all' && styles.scopePillTextActive,
+                  ]}
+                >
+                  All Languages ({allDueTotal})
+                </Text>
+              </TouchableOpacity>
+
+              {enrolledPairs.map((p) => {
+                const isSelected = reviewScope === p.destination_lang;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    testID={`scope-pill-${p.destination_lang}-empty`}
+                    style={[
+                      styles.scopePill,
+                      isSelected && styles.scopePillActive,
+                    ]}
+                    onPress={() => setReviewScope(p.destination_lang)}
+                  >
+                    <Text
+                      style={[
+                        styles.scopePillText,
+                        isSelected && styles.scopePillTextActive,
+                      ]}
+                    >
+                      {p.destination_name} ({p.progress.dueCards})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         <View style={styles.victoryCard}>
           <SquireMascot mood="victorious" size={130} />
           <Text style={styles.victoryTitle}>
@@ -224,7 +303,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             title="DISCOVER 10 RANDOM WORDS"
             subtitle="Scout unlearned vocabulary across random decks"
             color="amber"
-            onPress={() => setRandomModalOpen(true)}
+            onPress={() => setRandomDiscoveryActive(true)}
             style={{ width: '100%', marginTop: 12 }}
           />
 
@@ -235,24 +314,12 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             style={{ width: '100%', marginTop: 12 }}
           />
         </View>
-        <RandomDiscoveryModal
-          visible={randomModalOpen}
-          onClose={() => {
-            setRandomModalOpen(false);
-            loadCards();
-          }}
-          targetLang={targetLang}
-          originLang={originLang}
-          onInsufficientTokens={onInsufficientTokens}
-          onWordLearned={() => {
-            loadCards();
-          }}
-        />
       </ScrollView>
     );
   }
 
   const reviewOptions = getReviewOptions(currentCard);
+  const allDueTotal = enrolledPairs.reduce((sum, p) => sum + (p.progress.dueCards || 0), 0);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -274,6 +341,60 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               <Text style={styles.clearFilterText}>All Decks</Text>
             </TouchableOpacity>
           )}
+        </View>
+      )}
+
+      {/* Multi-Language Scope Filter Pills */}
+      {!deckFilter && enrolledPairs.length >= 2 && (
+        <View style={styles.scopeSelectorContainer} testID="review-scope-selector">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scopeScroll}
+          >
+            <TouchableOpacity
+              testID="scope-pill-all"
+              style={[
+                styles.scopePill,
+                reviewScope === 'all' && styles.scopePillActive,
+              ]}
+              onPress={() => setReviewScope('all')}
+            >
+              <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
+              <Text
+                style={[
+                  styles.scopePillText,
+                  reviewScope === 'all' && styles.scopePillTextActive,
+                ]}
+              >
+                All Languages ({allDueTotal})
+              </Text>
+            </TouchableOpacity>
+
+            {enrolledPairs.map((p) => {
+              const isSelected = reviewScope === p.destination_lang;
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  testID={`scope-pill-${p.destination_lang}`}
+                  style={[
+                    styles.scopePill,
+                    isSelected && styles.scopePillActive,
+                  ]}
+                  onPress={() => setReviewScope(p.destination_lang)}
+                >
+                  <Text
+                    style={[
+                      styles.scopePillText,
+                      isSelected && styles.scopePillTextActive,
+                    ]}
+                  >
+                    {p.destination_name} ({p.progress.dueCards})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
       )}
 
@@ -650,5 +771,45 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
+  },
+  scopeSelectorContainer: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    marginBottom: 8,
+  },
+  scopeScroll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  scopePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    gap: 6,
+  },
+  scopePillActive: {
+    backgroundColor: '#B45309',
+    borderColor: '#78350F',
+    shadowColor: '#78350F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  scopePillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#78350F',
+  },
+  scopePillTextActive: {
+    color: '#FFFFFF',
   },
 });

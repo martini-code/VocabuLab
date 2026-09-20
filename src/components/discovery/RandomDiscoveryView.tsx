@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
   FlatList,
   Dimensions,
@@ -12,7 +11,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import {
-  X,
+  ArrowLeft,
   Dices,
   ChevronLeft,
   ChevronRight,
@@ -20,6 +19,7 @@ import {
   Check,
   Plus,
   Layers,
+  X,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { ParchmentCard } from '../ui/ParchmentCard';
@@ -30,21 +30,19 @@ import { getRandomUnlearnedWords, addWordToQueue } from '../../db/vault';
 import { tokenWallet } from '../../services/tokenWallet';
 import { MasteryWordItem } from '../../types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = Math.min(SCREEN_WIDTH - 48, 360);
+const SCREEN_WIDTH = typeof Dimensions?.get === 'function' ? Dimensions.get('window')?.width || 375 : 375;
+const CARD_WIDTH = Math.min(SCREEN_WIDTH - 48, 380);
 
-interface RandomDiscoveryModalProps {
-  visible: boolean;
-  onClose: () => void;
+export interface RandomDiscoveryViewProps {
+  onExit: () => void;
   targetLang?: string;
   originLang?: string;
   onInsufficientTokens?: (requiredWords: number) => void;
   onWordLearned?: (lexemeId: number) => void;
 }
 
-export const RandomDiscoveryModal: React.FC<RandomDiscoveryModalProps> = ({
-  visible,
-  onClose,
+export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
+  onExit,
   targetLang = 'es',
   originLang = 'en',
   onInsufficientTokens,
@@ -52,44 +50,49 @@ export const RandomDiscoveryModal: React.FC<RandomDiscoveryModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [cards, setCards] = useState<MasteryWordItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [queuedCardIds, setQueuedCardIds] = useState<Set<number>>(new Set());
   const flatListRef = useRef<FlatList<MasteryWordItem>>(null);
 
-  // Fetch 10 random unlearned words when opened; reset when closed (ephemeral guarantee)
+  // Fetch 10 random unlearned words on mount
   useEffect(() => {
-    if (visible) {
-      loadRandomWords();
-    } else {
-      // Forget the list completely when the user leaves
+    let isMounted = true;
+
+    const fetchWords = async () => {
+      setLoading(true);
+      try {
+        const words = await getRandomUnlearnedWords(10, targetLang, originLang);
+        if (isMounted) {
+          setCards(words);
+          setCurrentIndex(0);
+          setQueuedCardIds(new Set());
+        }
+      } catch (err) {
+        console.warn('[RandomDiscoveryView] Error loading random words:', err);
+        if (isMounted) setCards([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchWords();
+
+    // Clean up: Forget list completely when component unmounts
+    return () => {
+      isMounted = false;
       setCards([]);
       setCurrentIndex(0);
       setQueuedCardIds(new Set());
-    }
-  }, [visible, targetLang, originLang]);
+    };
+  }, [targetLang, originLang]);
 
-  const loadRandomWords = async () => {
-    setLoading(true);
-    try {
-      const words = await getRandomUnlearnedWords(10, targetLang, originLang);
-      setCards(words);
-      setCurrentIndex(0);
-      setQueuedCardIds(new Set());
-    } catch (err) {
-      console.warn('[RandomDiscoveryModal] Error loading random words:', err);
-      setCards([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    // Forget list on close
+  const handleExit = () => {
+    // Forget list immediately on exit
     setCards([]);
     setCurrentIndex(0);
     setQueuedCardIds(new Set());
-    onClose();
+    onExit();
   };
 
   const handleLearnCard = async (card: MasteryWordItem) => {
@@ -113,7 +116,7 @@ export const RandomDiscoveryModal: React.FC<RandomDiscoveryModalProps> = ({
       setQueuedCardIds((prev) => new Set(prev).add(card.front_lexeme_id));
       onWordLearned?.(card.front_lexeme_id);
     } catch (e) {
-      console.warn('[RandomDiscoveryModal] Failed to learn card:', e);
+      console.warn('[RandomDiscoveryView] Failed to learn card:', e);
     }
   };
 
@@ -218,237 +221,259 @@ export const RandomDiscoveryModal: React.FC<RandomDiscoveryModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={handleClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerTitleRow}>
-              <Dices size={22} color="#B45309" style={{ marginRight: 8 }} />
-              <View>
-                <Text style={styles.modalTitle}>
-                  {t('random_discovery.title', { defaultValue: 'Random Discovery' })}
-                </Text>
-                <Text style={styles.modalSubtitle}>
-                  {t('random_discovery.subtitle', {
-                    defaultValue: '10 unlearned words from across the realm',
-                  })}
-                </Text>
-              </View>
-            </View>
+    <View style={styles.container} testID="random-discovery-view">
+      {/* In-Page Navigation & Header Banner */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.exitBtn}
+          onPress={handleExit}
+          testID="exit-random-discovery-btn"
+          accessibilityLabel="Exit Discovery"
+        >
+          <ArrowLeft size={16} color="#78350F" style={{ marginRight: 4 }} />
+          <Text style={styles.exitBtnText}>Exit Discovery</Text>
+        </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={handleClose}
-              testID="close-random-modal"
-              accessibilityLabel="Close"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <X size={20} color="#78350F" />
-            </TouchableOpacity>
+        <View style={styles.headerTitleGroup}>
+          <View style={styles.titleWithIcon}>
+            <Dices size={18} color="#B45309" style={{ marginRight: 6 }} />
+            <Text style={styles.viewTitle}>
+              {t('random_discovery.title', { defaultValue: 'Random Discovery' })}
+            </Text>
           </View>
+          <Text style={styles.viewSubtitle}>
+            {t('random_discovery.subtitle', {
+              defaultValue: '10 unlearned words from across the realm',
+            })}
+          </Text>
+        </View>
 
-          {/* Body Content */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#B45309" />
-              <Text style={styles.loadingText}>
-                {t('random_discovery.loading', {
-                  defaultValue: 'Scouting random words across the realm...',
-                })}
-              </Text>
-            </View>
-          ) : cards.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>
-                {t('random_discovery.empty_title', {
-                  defaultValue: 'All Words Conquered',
-                })}
-              </Text>
-              <Text style={styles.emptyDesc}>
-                {t('random_discovery.empty_desc', {
-                  defaultValue:
-                    'You have learned all available vocabulary in the kingdom!',
-                })}
-              </Text>
-              <ChunkyButton
-                title="Close"
-                color="wood"
-                onPress={handleClose}
-                style={{ marginTop: 16, width: 160 }}
-              />
-            </View>
-          ) : (
-            <View style={styles.carouselContainer}>
-              {/* Counter Badge */}
-              <View style={styles.counterRow}>
-                <View style={styles.counterBadge}>
-                  <Text style={styles.counterText}>
-                    {t('random_discovery.counter', {
-                      current: currentIndex + 1,
-                      total: cards.length,
-                      defaultValue: `Card ${currentIndex + 1} of ${cards.length}`,
-                    })}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Horizontal Scroll Carousel */}
-              <FlatList
-                ref={flatListRef}
-                data={cards}
-                keyExtractor={(item) => `random_${item.front_lexeme_id}`}
-                renderItem={renderCardItem}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={handleScrollEnd}
-                contentContainerStyle={styles.flatListContent}
-                snapToInterval={CARD_WIDTH + 16}
-                snapToAlignment="center"
-                decelerationRate="fast"
-                getItemLayout={(_, index) => ({
-                  length: CARD_WIDTH + 16,
-                  offset: (CARD_WIDTH + 16) * index,
-                  index,
-                })}
-              />
-
-              {/* Navigation Arrows */}
-              <View style={styles.navigationRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.navBtn,
-                    currentIndex === 0 && styles.navBtnDisabled,
-                  ]}
-                  disabled={currentIndex === 0}
-                  onPress={() => navigateTo(currentIndex - 1)}
-                  testID="prev-card-btn"
-                  accessibilityLabel="Previous Word"
-                >
-                  <ChevronLeft
-                    size={20}
-                    color={currentIndex === 0 ? '#CBD5E1' : '#78350F'}
-                  />
-                  <Text
-                    style={[
-                      styles.navBtnText,
-                      currentIndex === 0 && styles.navBtnTextDisabled,
-                    ]}
-                  >
-                    Prev
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.navBtn,
-                    currentIndex === cards.length - 1 && styles.navBtnDisabled,
-                  ]}
-                  disabled={currentIndex === cards.length - 1}
-                  onPress={() => navigateTo(currentIndex + 1)}
-                  testID="next-card-btn"
-                  accessibilityLabel="Next Word"
-                >
-                  <Text
-                    style={[
-                      styles.navBtnText,
-                      currentIndex === cards.length - 1 && styles.navBtnTextDisabled,
-                    ]}
-                  >
-                    Next
-                  </Text>
-                  <ChevronRight
-                    size={20}
-                    color={
-                      currentIndex === cards.length - 1 ? '#CBD5E1' : '#78350F'
-                    }
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+        <View style={styles.counterBadge}>
+          <Text style={styles.counterText}>
+            {cards.length > 0 ? `${currentIndex + 1} / ${cards.length}` : '0 / 0'}
+          </Text>
         </View>
       </View>
-    </Modal>
+
+      {/* Ephemeral Notice Banner */}
+      <View style={styles.ephemeralBanner}>
+        <Text style={styles.ephemeralText}>
+          ⚡ Ephemeral scout: this list is forgotten once you leave this screen.
+        </Text>
+      </View>
+
+      {/* Main Content Area */}
+      {loading ? (
+        <View style={styles.centerBox}>
+          <ActivityIndicator size="large" color="#B45309" />
+          <Text style={styles.loadingText}>
+            {t('random_discovery.loading', {
+              defaultValue: 'Scouting random words across the realm...',
+            })}
+          </Text>
+        </View>
+      ) : cards.length === 0 ? (
+        <View style={styles.centerBox}>
+          <Text style={styles.emptyTitle}>
+            {t('random_discovery.empty_title', {
+              defaultValue: 'All Words Conquered',
+            })}
+          </Text>
+          <Text style={styles.emptyDesc}>
+            {t('random_discovery.empty_desc', {
+              defaultValue:
+                'You have learned all available vocabulary in the kingdom!',
+            })}
+          </Text>
+          <ChunkyButton
+            title="Back to Decks"
+            color="wood"
+            onPress={handleExit}
+            style={{ marginTop: 20, width: 180 }}
+          />
+        </View>
+      ) : (
+        <View style={styles.carouselSection}>
+          {/* Horizontal Scroll Carousel */}
+          <FlatList
+            ref={flatListRef}
+            data={cards}
+            keyExtractor={(item) => `random_view_${item.front_lexeme_id}`}
+            renderItem={renderCardItem}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleScrollEnd}
+            contentContainerStyle={styles.flatListContent}
+            snapToInterval={CARD_WIDTH + 16}
+            snapToAlignment="center"
+            decelerationRate="fast"
+            getItemLayout={(_, index) => ({
+              length: CARD_WIDTH + 16,
+              offset: (CARD_WIDTH + 16) * index,
+              index,
+            })}
+          />
+
+          {/* Quick Navigation Steppers */}
+          <View style={styles.navigationRow}>
+            <TouchableOpacity
+              style={[
+                styles.navBtn,
+                currentIndex === 0 && styles.navBtnDisabled,
+              ]}
+              disabled={currentIndex === 0}
+              onPress={() => navigateTo(currentIndex - 1)}
+              testID="prev-card-btn"
+              accessibilityLabel="Previous Word"
+            >
+              <ChevronLeft
+                size={18}
+                color={currentIndex === 0 ? '#CBD5E1' : '#78350F'}
+              />
+              <Text
+                style={[
+                  styles.navBtnText,
+                  currentIndex === 0 && styles.navBtnTextDisabled,
+                ]}
+              >
+                Previous
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.navBtn,
+                currentIndex === cards.length - 1 && styles.navBtnDisabled,
+              ]}
+              disabled={currentIndex === cards.length - 1}
+              onPress={() => navigateTo(currentIndex + 1)}
+              testID="next-card-btn"
+              accessibilityLabel="Next Word"
+            >
+              <Text
+                style={[
+                  styles.navBtnText,
+                  currentIndex === cards.length - 1 && styles.navBtnTextDisabled,
+                ]}
+              >
+                Next
+              </Text>
+              <ChevronRight
+                size={18}
+                color={
+                  currentIndex === cards.length - 1 ? '#CBD5E1' : '#78350F'
+                }
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalContainer: {
-    width: '100%',
-    maxWidth: 420,
     backgroundColor: '#FEFCE8',
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#D97706',
-    paddingVertical: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
+    paddingHorizontal: 12,
+    paddingTop: 8,
   },
-  header: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#FDE68A',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  headerTitleRow: {
+  exitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#D97706',
   },
-  modalTitle: {
-    fontSize: 18,
+  exitBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#78350F',
+  },
+  headerTitleGroup: {
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  titleWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewTitle: {
+    fontSize: 15,
     fontWeight: '900',
     color: '#78350F',
     letterSpacing: -0.3,
   },
-  modalSubtitle: {
-    fontSize: 12,
+  viewSubtitle: {
+    fontSize: 11,
     fontWeight: '600',
     color: '#92400E',
     marginTop: 1,
   },
-  closeBtn: {
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: '#FDE68A',
-    marginLeft: 12,
+  counterBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
   },
-  loadingContainer: {
+  counterText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#B45309',
+  },
+  ephemeralBanner: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  ephemeralText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#B45309',
+    textAlign: 'center',
+  },
+  centerBox: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
+    paddingHorizontal: 24,
   },
   loadingText: {
     fontSize: 14,
     fontWeight: '700',
     color: '#78350F',
     marginTop: 14,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 24,
   },
   emptyTitle: {
     fontSize: 18,
@@ -463,28 +488,15 @@ const styles = StyleSheet.create({
     marginTop: 6,
     lineHeight: 18,
   },
-  carouselContainer: {
+  carouselSection: {
+    flex: 1,
     alignItems: 'center',
-    paddingTop: 12,
-  },
-  counterRow: {
-    marginBottom: 10,
-  },
-  counterBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#F59E0B',
-  },
-  counterText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#B45309',
+    justifyContent: 'space-between',
+    paddingBottom: 16,
   },
   flatListContent: {
     paddingHorizontal: 8,
+    alignItems: 'center',
   },
   cardWrapper: {
     marginHorizontal: 8,
@@ -492,7 +504,7 @@ const styles = StyleSheet.create({
   cardContent: {
     width: '100%',
     padding: 16,
-    minHeight: 320,
+    minHeight: 330,
     justifyContent: 'space-between',
   },
   cardHeaderRow: {
@@ -587,7 +599,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 24,
-    marginTop: 14,
+    marginTop: 12,
   },
   navBtn: {
     flexDirection: 'row',

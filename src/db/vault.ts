@@ -20,6 +20,8 @@ import {
   CEFRLevel,
   DownloadedLanguage,
   LanguagePairSettings,
+  EnrolledLanguagePair,
+  LanguagePairProgress,
 } from '../types';
 
 let staticDbInstance: SQLite.SQLiteDatabase | null = null;
@@ -295,6 +297,168 @@ export async function setLanguagePairSettings(pair: LanguagePairSettings): Promi
   await userDb.runAsync(
     "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('language_pair', ?, ?);",
     [JSON.stringify(pair), new Date().toISOString()]
+  );
+  // Auto-enroll the new active pair
+  await enrollLanguagePair(pair);
+}
+
+/**
+ * Returns all enrolled language pairs along with their real-time progress.
+ * Merges Settings saved_language_pairs with current active pair and any distinct
+ * (target_lang, origin_lang) found in User_Cards to guarantee complete continuity.
+ */
+export async function getEnrolledLanguagePairs(): Promise<EnrolledLanguagePair[]> {
+  const userDb = await getUserDb();
+  const currentPair = await getLanguagePairSettings();
+
+  // 1. Read stored pairs from Settings
+  let savedPairs: LanguagePairSettings[] = [];
+  const row = await userDb.getFirstAsync<{ value: string }>(
+    "SELECT value FROM Settings WHERE key = 'saved_language_pairs';"
+  );
+  if (row) {
+    try {
+      savedPairs = JSON.parse(row.value);
+    } catch {
+      savedPairs = [];
+    }
+  }
+
+  // 2. Scan User_Cards for any cards already created in other language pairs
+  const distinctCardLangs = await userDb.getAllAsync<{ target_lang: string; origin_lang: string | null }>(
+    'SELECT DISTINCT target_lang, origin_lang FROM User_Cards;'
+  );
+
+  // 3. Collect unique language pairs
+  const pairMap = new Map<string, { destination_lang: string; origin_lang: string }>();
+
+  const addPair = (dest: string, orig: string) => {
+    if (!dest) return;
+    const cleanDest = dest.trim();
+    const cleanOrig = orig ? orig.trim() : 'en';
+    const key = `${cleanDest.toLowerCase()}:${cleanOrig.toLowerCase()}`;
+    if (!pairMap.has(key)) {
+      pairMap.set(key, { destination_lang: cleanDest, origin_lang: cleanOrig });
+    }
+  };
+
+  // Current active pair
+  addPair(currentPair.destination_lang, currentPair.origin_lang);
+
+  // Stored pairs
+  for (const sp of savedPairs) {
+    addPair(sp.destination_lang, sp.origin_lang);
+  }
+
+  // Scan from existing cards
+  for (const d of distinctCardLangs) {
+    addPair(d.target_lang, d.origin_lang || currentPair.origin_lang || 'en');
+  }
+
+  // 4. Calculate progress for each pair
+  const now = new Date().toISOString();
+  const result: EnrolledLanguagePair[] = [];
+
+  for (const [key, p] of pairMap.entries()) {
+    const destName = resolveLanguageName(p.destination_lang);
+    const origName = resolveLanguageName(p.origin_lang);
+
+    const totalRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);',
+      [destName, p.destination_lang]
+    );
+    const dueRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ?;',
+      [destName, p.destination_lang, now]
+    );
+    const newRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (reps = 0 OR state = 0);',
+      [destName, p.destination_lang]
+    );
+    const masteredRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (stability >= 21 OR reps >= 3);',
+      [destName, p.destination_lang]
+    );
+
+    result.push({
+      id: key,
+      origin_lang: p.origin_lang,
+      destination_lang: p.destination_lang,
+      origin_name: origName,
+      destination_name: destName,
+      enrolled_at: now,
+      progress: {
+        totalCards: totalRow?.count || 0,
+        dueCards: dueRow?.count || 0,
+        newCards: newRow?.count || 0,
+        masteredCards: masteredRow?.count || 0,
+      },
+    });
+  }
+
+  // Persist updated list to settings
+  const normalizedList = Array.from(pairMap.values());
+  await userDb.runAsync(
+    "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);",
+    [JSON.stringify(normalizedList), now]
+  );
+
+  return result;
+}
+
+/**
+ * Enrolls a new language pair into saved_language_pairs.
+ */
+export async function enrollLanguagePair(pair: LanguagePairSettings): Promise<void> {
+  const userDb = await getUserDb();
+  let savedPairs: LanguagePairSettings[] = [];
+  const row = await userDb.getFirstAsync<{ value: string }>(
+    "SELECT value FROM Settings WHERE key = 'saved_language_pairs';"
+  );
+  if (row) {
+    try {
+      savedPairs = JSON.parse(row.value);
+    } catch {
+      savedPairs = [];
+    }
+  }
+
+  const key = `${pair.destination_lang.toLowerCase()}:${pair.origin_lang.toLowerCase()}`;
+  const exists = savedPairs.some(
+    (p) => `${p.destination_lang.toLowerCase()}:${p.origin_lang.toLowerCase()}` === key
+  );
+  if (!exists) {
+    savedPairs.push({ destination_lang: pair.destination_lang, origin_lang: pair.origin_lang });
+    await userDb.runAsync(
+      "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);",
+      [JSON.stringify(savedPairs), new Date().toISOString()]
+    );
+  }
+}
+
+/**
+ * Removes an enrolled language pair from saved_language_pairs.
+ */
+export async function removeEnrolledLanguagePair(pairId: string): Promise<void> {
+  const userDb = await getUserDb();
+  let savedPairs: LanguagePairSettings[] = [];
+  const row = await userDb.getFirstAsync<{ value: string }>(
+    "SELECT value FROM Settings WHERE key = 'saved_language_pairs';"
+  );
+  if (row) {
+    try {
+      savedPairs = JSON.parse(row.value);
+    } catch {
+      savedPairs = [];
+    }
+  }
+
+  const filtered = savedPairs.filter(
+    (p) => `${p.destination_lang.toLowerCase()}:${p.origin_lang.toLowerCase()}` !== pairId.toLowerCase()
+  );
+  await userDb.runAsync(
+    "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);",
+    [JSON.stringify(filtered), new Date().toISOString()]
   );
 }
 
@@ -1110,10 +1274,137 @@ export async function getDueCards(
 ): Promise<CardWithDetails[]> {
   const userDb = await getUserDb();
   const staticDb = await getStaticDb();
-  const langName = resolveLanguageName(targetLang);
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const origLangName = resolveLanguageName(effectiveOrigin);
   const now = new Date().toISOString();
+
+  // Multi-Language Review Mode ('all')
+  if (targetLang === 'all') {
+    const userCards = await userDb.getAllAsync<{
+      id: string;
+      card_id: number;
+      target_lang: string;
+      origin_lang?: string;
+      due_date: string;
+      state: number;
+      stability: number;
+      difficulty: number;
+      elapsed_days: number;
+      scheduled_days: number;
+      reps: number;
+      lapses: number;
+      updated_at: string;
+    }>(
+      'SELECT id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at FROM User_Cards WHERE due_date <= ? ORDER BY due_date ASC LIMIT ?;',
+      [now, limit]
+    );
+
+    if (userCards.length === 0) {
+      return [];
+    }
+
+    const cardIds = Array.from(new Set(userCards.map((uc) => uc.card_id)));
+    const placeholders = cardIds.map(() => '?').join(',');
+
+    let filterSlice: number | undefined;
+    let filterRealDeckId: number | undefined;
+    if (filterDeckId) {
+      const parsed = parseDeckIdentifier(filterDeckId);
+      filterRealDeckId = parsed.realDeckId;
+      filterSlice = parsed.difficultySlice;
+    }
+
+    const staticRows = await staticDb.getAllAsync<{
+      card_id: number;
+      deck_id: number;
+      primary_term: string;
+      pos: string;
+      definition: string;
+      cili_id: string;
+      difficulty: number;
+    }>(
+      `SELECT c.card_id, c.deck_id, c.primary_term, c.pos, c.definition, c.cili_id, c.difficulty
+       FROM cards c
+       WHERE c.card_id IN (${placeholders});`,
+      cardIds
+    );
+    const staticMap = new Map<number, (typeof staticRows)[0]>();
+    staticRows.forEach((r) => staticMap.set(r.card_id, r));
+
+    // Group user cards by distinct pair
+    const groups = new Map<string, typeof userCards>();
+    for (const uc of userCards) {
+      const pairKey = `${uc.target_lang}:${uc.origin_lang || effectiveOrigin}`;
+      if (!groups.has(pairKey)) groups.set(pairKey, []);
+      groups.get(pairKey)!.push(uc);
+    }
+
+    const result: CardWithDetails[] = [];
+
+    for (const [key, cardsInGroup] of groups.entries()) {
+      const [tLang, oLang] = key.split(':');
+      const destLangName = resolveLanguageName(tLang);
+      const origLangName = resolveLanguageName(oLang);
+      const groupCardIds = Array.from(new Set(cardsInGroup.map((c) => c.card_id)));
+
+      const { destMap, origMap, defMap } = await loadCardTranslationsForPair(groupCardIds, destLangName, origLangName);
+
+      const destCandidateList = getCandidateLanguageNames(tLang);
+      const origCandidateList = getCandidateLanguageNames(oLang);
+      const isDestEnglish = destCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+      const isOrigEnglish = origCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+
+      for (const uc of cardsInGroup) {
+        const sCard = staticMap.get(uc.card_id);
+        if (!sCard) continue;
+
+        if (filterRealDeckId !== undefined && sCard.deck_id !== filterRealDeckId) continue;
+        if (filterSlice !== undefined && sCard.difficulty !== filterSlice) continue;
+
+        const cefr = difficultyToCefr(sCard.difficulty);
+        const frontTerm = destMap.get(sCard.card_id);
+        const backTerm = origMap.get(sCard.card_id);
+
+        if (!isDestEnglish && !frontTerm) continue;
+        if (!isOrigEnglish && !backTerm) continue;
+
+        const effectiveFront = frontTerm || sCard.primary_term;
+        const effectiveBack = backTerm || sCard.primary_term;
+        const definition = defMap.get(sCard.card_id) || sCard.definition || '';
+
+        result.push({
+          id: uc.id,
+          card_id: uc.card_id,
+          target_lang: uc.target_lang,
+          front_lexeme_id: uc.card_id,
+          back_lexeme_id: uc.card_id,
+          due_date: uc.due_date,
+          state: uc.state,
+          stability: uc.stability,
+          difficulty: uc.difficulty,
+          elapsed_days: uc.elapsed_days,
+          scheduled_days: uc.scheduled_days,
+          reps: uc.reps,
+          lapses: uc.lapses,
+          updated_at: uc.updated_at,
+          front_term: effectiveFront,
+          front_lang: uc.target_lang,
+          front_pos: sCard.pos || null,
+          front_cefr: cefr,
+          back_term: effectiveBack,
+          back_lang: uc.origin_lang || effectiveOrigin,
+          back_pos: sCard.pos || null,
+          back_cefr: cefr,
+          concept_desc: definition,
+        });
+      }
+    }
+
+    result.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+    return result;
+  }
+
+  const langName = resolveLanguageName(targetLang);
+  const origLangName = resolveLanguageName(effectiveOrigin);
 
   // 1. Get due user cards
   const userCards = await userDb.getAllAsync<{
@@ -2544,32 +2835,61 @@ export async function getProgressOverview(
  */
 export async function getVaultStats(targetLang = 'es'): Promise<VaultStats> {
   const userDb = await getUserDb();
-  const langName = resolveLanguageName(targetLang);
   const now = new Date().toISOString();
 
-  const totalRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);',
-    [langName, targetLang]
-  );
-  const totalCards = totalRow?.count || 0;
+  let totalCards = 0;
+  let dueCards = 0;
+  let newCards = 0;
+  let masteredCards = 0;
 
-  const dueRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ?;',
-    [langName, targetLang, now]
-  );
-  const dueCards = dueRow?.count || 0;
+  if (targetLang === 'all') {
+    const totalRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards;'
+    );
+    totalCards = totalRow?.count || 0;
 
-  const newRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (reps = 0 OR state = 0);',
-    [langName, targetLang]
-  );
-  const newCards = newRow?.count || 0;
+    const dueRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE due_date <= ?;',
+      [now]
+    );
+    dueCards = dueRow?.count || 0;
 
-  const masteredRow = await userDb.getFirstAsync<{ count: number }>(
-    'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (stability >= 21 OR reps >= 3);',
-    [langName, targetLang]
-  );
-  const masteredCards = masteredRow?.count || 0;
+    const newRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE reps = 0 OR state = 0;'
+    );
+    newCards = newRow?.count || 0;
+
+    const masteredRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE stability >= 21 OR reps >= 3;'
+    );
+    masteredCards = masteredRow?.count || 0;
+  } else {
+    const langName = resolveLanguageName(targetLang);
+
+    const totalRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);',
+      [langName, targetLang]
+    );
+    totalCards = totalRow?.count || 0;
+
+    const dueRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND due_date <= ?;',
+      [langName, targetLang, now]
+    );
+    dueCards = dueRow?.count || 0;
+
+    const newRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (reps = 0 OR state = 0);',
+      [langName, targetLang]
+    );
+    newCards = newRow?.count || 0;
+
+    const masteredRow = await userDb.getFirstAsync<{ count: number }>(
+      'SELECT count(*) as count FROM User_Cards WHERE (target_lang = ? OR target_lang = ?) AND (stability >= 21 OR reps >= 3);',
+      [langName, targetLang]
+    );
+    masteredCards = masteredRow?.count || 0;
+  }
 
   // Streak calculation
   const logs = await userDb.getAllAsync<{ reviewed_at: string }>(

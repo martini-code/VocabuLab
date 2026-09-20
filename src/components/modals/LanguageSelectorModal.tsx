@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
+  ScrollView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -33,12 +34,15 @@ import {
   getLanguagePairSettings,
   setLanguagePairSettings,
   getDownloadedLanguages,
+  getEnrolledLanguagePairs,
+  enrollLanguagePair,
+  removeEnrolledLanguagePair,
 } from '../../db/vault';
 import {
   downloadLanguagePack,
   deleteLanguagePack,
 } from '../../db/downloader';
-import { DownloadedLanguage, LanguagePairSettings } from '../../types';
+import { DownloadedLanguage, LanguagePairSettings, EnrolledLanguagePair } from '../../types';
 
 interface LanguageSelectorModalProps {
   visible: boolean;
@@ -68,6 +72,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
     };
   });
   const [downloadedLangs, setDownloadedLangs] = useState<DownloadedLanguage[]>([]);
+  const [enrolledPairs, setEnrolledPairs] = useState<EnrolledLanguagePair[]>([]);
   const [downloadingCode, setDownloadingCode] = useState<string | null>(null);
   const [deletingCode, setDeletingCode] = useState<string | null>(null);
 
@@ -87,6 +92,8 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
       setPair(currentPair);
       const list = await getDownloadedLanguages();
       setDownloadedLangs(list);
+      const enrolled = await getEnrolledLanguagePairs();
+      setEnrolledPairs(enrolled);
     } catch (error) {
       console.warn('[LanguageModal] Error loading settings:', error);
     }
@@ -203,11 +210,27 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
 
     setPair(updatedPair);
     await setLanguagePairSettings(updatedPair);
+    await enrollLanguagePair(updatedPair);
+    const updated = await getEnrolledLanguagePairs();
+    setEnrolledPairs(updated);
 
     if (onPairChanged) {
       onPairChanged(updatedPair);
     }
 
+    onClose();
+  };
+
+  const handleSelectEnrolledPair = async (p: EnrolledLanguagePair) => {
+    const newPair: LanguagePairSettings = {
+      destination_lang: p.destination_lang,
+      origin_lang: p.origin_lang,
+    };
+    setPair(newPair);
+    await setLanguagePairSettings(newPair);
+    if (onPairChanged) {
+      onPairChanged(newPair);
+    }
     onClose();
   };
 
@@ -368,6 +391,68 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Enrolled Language Pairs Carousel */}
+          {enrolledPairs.length > 0 && (
+            <View style={styles.enrolledSection} testID="enrolled-languages-section">
+              <View style={styles.enrolledHeaderRow}>
+                <Text style={styles.enrolledSectionTitle}>
+                  {t('language.enrolled_title', 'Your Learning Languages')} ({enrolledPairs.length})
+                </Text>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.enrolledScroll}
+              >
+                {enrolledPairs.map((ep) => {
+                  const isActive =
+                    ep.destination_lang.toLowerCase() === pair.destination_lang.toLowerCase() &&
+                    ep.origin_lang.toLowerCase() === pair.origin_lang.toLowerCase();
+                  return (
+                    <TouchableOpacity
+                      key={ep.id}
+                      testID={`enrolled-card-${ep.destination_lang}`}
+                      style={[
+                        styles.enrolledCard,
+                        isActive && styles.enrolledCardActive,
+                      ]}
+                      onPress={() => handleSelectEnrolledPair(ep)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.enrolledTopRow}>
+                        <Text style={styles.enrolledLangName} numberOfLines={1}>
+                          {ep.destination_name}
+                        </Text>
+                        {isActive && (
+                          <View style={styles.activePill}>
+                            <Check size={10} color="#FFFFFF" />
+                            <Text style={styles.activePillText}>Active</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.enrolledSubtext}>
+                        {ep.destination_lang.toUpperCase()} ➔ {ep.origin_lang.toUpperCase()}
+                      </Text>
+                      <View style={styles.enrolledStatsRow}>
+                        <Text style={styles.enrolledStatBadge}>
+                          {ep.progress.totalCards} cards
+                        </Text>
+                        <Text
+                          style={[
+                            styles.enrolledStatBadge,
+                            ep.progress.dueCards > 0 && styles.enrolledStatDue,
+                          ]}
+                        >
+                          {ep.progress.dueCards} due
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Mode Selector Notice */}
           <View style={styles.modeNoticeBar}>
@@ -850,6 +935,89 @@ const styles = StyleSheet.create({
     backgroundColor: '#D97706',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  enrolledSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FFFBEB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FDE68A',
+  },
+  enrolledHeaderRow: {
+    marginBottom: 8,
+  },
+  enrolledSectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#92400E',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  enrolledScroll: {
+    gap: 10,
+  },
+  enrolledCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    minWidth: 150,
+  },
+  enrolledCardActive: {
+    borderColor: '#B45309',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 2,
+  },
+  enrolledTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+  },
+  enrolledLangName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E293B',
+    flexShrink: 1,
+  },
+  activePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#059669',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  activePillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  enrolledSubtext: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  enrolledStatsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 8,
+  },
+  enrolledStatBadge: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  enrolledStatDue: {
+    color: '#B45309',
+    backgroundColor: '#FDE68A',
   },
 });
 

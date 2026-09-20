@@ -164,6 +164,9 @@ jest.mock('../../../db/vault', () => ({
       size_bytes: 25000,
     },
   ]),
+  getEnrolledLanguagePairs: jest.fn().mockResolvedValue([]),
+  enrollLanguagePair: jest.fn().mockResolvedValue(undefined),
+  removeEnrolledLanguagePair: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../../db/downloader', () => ({

@@ -215,3 +215,20 @@ export interface LanguagePairSettings {
   destination_lang: string; // e.g. 'en' (Target study language on front of card)
 }
 
+export interface LanguagePairProgress {
+  totalCards: number;
+  dueCards: number;
+  newCards: number;
+  masteredCards: number;
+}
+
+export interface EnrolledLanguagePair {
+  id: string; // e.g. 'es:en'
+  origin_lang: string;
+  destination_lang: string;
+  origin_name: string;
+  destination_name: string;
+  enrolled_at: string;
+  progress: LanguagePairProgress;
+}
+

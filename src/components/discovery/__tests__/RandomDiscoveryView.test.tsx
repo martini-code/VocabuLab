@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react-native/pure';
-import { RandomDiscoveryModal } from '../RandomDiscoveryModal';
+import { RandomDiscoveryView } from '../RandomDiscoveryView';
 import * as vaultModule from '../../../db/vault';
 import { tokenWallet } from '../../../services/tokenWallet';
 import * as ttsModule from '../../../utils/tts';
@@ -46,8 +46,6 @@ jest.mock('react-native', () => {
       create: (s: any) => s,
       flatten: (s: any) => (Array.isArray(s) ? Object.assign({}, ...s) : s || {}),
     },
-    Modal: ({ visible, children }: any) =>
-      visible ? React.createElement('View', { testID: 'modal-overlay' }, children) : null,
     ActivityIndicator: () => React.createElement('View', { testID: 'activity-indicator' }),
   };
 });
@@ -58,6 +56,7 @@ jest.mock('lucide-react-native', () => {
   const icon = (name: string) => (props: any) =>
     React.createElement('View', { testID: `icon-${name}`, ...props });
   return {
+    ArrowLeft: icon('ArrowLeft'),
     X: icon('X'),
     Dices: icon('Dices'),
     ChevronLeft: icon('ChevronLeft'),
@@ -122,7 +121,7 @@ const mock10Words: MasteryWordItem[] = Array.from({ length: 10 }, (_, i) => ({
   stage: 'available',
 }));
 
-describe('RandomDiscoveryModal', () => {
+describe('RandomDiscoveryView', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (vaultModule.getRandomUnlearnedWords as jest.Mock).mockResolvedValue(mock10Words);
@@ -132,11 +131,10 @@ describe('RandomDiscoveryModal', () => {
     await cleanup();
   });
 
-  it('renders 10 random unlearned words when visible', async () => {
+  it('renders 10 random unlearned words directly in page', async () => {
     const result = await render(
-      <RandomDiscoveryModal
-        visible={true}
-        onClose={jest.fn()}
+      <RandomDiscoveryView
+        onExit={jest.fn()}
         targetLang="es"
         originLang="en"
       />
@@ -147,13 +145,13 @@ describe('RandomDiscoveryModal', () => {
     expect(result.getByText('Palabra_1')).toBeTruthy();
     expect(result.getByText('Word_1')).toBeTruthy();
     expect(result.getAllByText('Castle Grounds • Great Hall').length).toBe(10);
+    expect(result.getByText('Exit Discovery')).toBeTruthy();
   });
 
   it('pronounce button contains only the speaker icon without "pronounce" text label', async () => {
     const result = await render(
-      <RandomDiscoveryModal
-        visible={true}
-        onClose={jest.fn()}
+      <RandomDiscoveryView
+        onExit={jest.fn()}
         targetLang="es"
         originLang="en"
       />
@@ -169,16 +167,15 @@ describe('RandomDiscoveryModal', () => {
     });
     expect(ttsModule.speakWord).toHaveBeenCalledWith('Palabra_1', 'es');
 
-    // Verify the text "Pronounce" is NOT inside the button
+    // Verify the text "Pronounce" is NOT inside the button or card
     expect(result.queryByText('Pronounce')).toBeNull();
   });
 
   it('allows opting in to learn a word and updates button state', async () => {
     const handleWordLearned = jest.fn();
     const result = await render(
-      <RandomDiscoveryModal
-        visible={true}
-        onClose={jest.fn()}
+      <RandomDiscoveryView
+        onExit={jest.fn()}
         targetLang="es"
         originLang="en"
         onWordLearned={handleWordLearned}
@@ -206,9 +203,8 @@ describe('RandomDiscoveryModal', () => {
     (tokenWallet.canLearnWords as jest.Mock).mockResolvedValueOnce(false);
     const handleInsufficientTokens = jest.fn();
     const result = await render(
-      <RandomDiscoveryModal
-        visible={true}
-        onClose={jest.fn()}
+      <RandomDiscoveryView
+        onExit={jest.fn()}
         targetLang="es"
         originLang="en"
         onInsufficientTokens={handleInsufficientTokens}
@@ -224,12 +220,11 @@ describe('RandomDiscoveryModal', () => {
     expect(vaultModule.addWordToQueue).not.toHaveBeenCalled();
   });
 
-  it('forgets the list of 10 words completely when closed', async () => {
-    const handleClose = jest.fn();
+  it('forgets the list of 10 words completely when exiting', async () => {
+    const handleExit = jest.fn();
     const result = await render(
-      <RandomDiscoveryModal
-        visible={true}
-        onClose={handleClose}
+      <RandomDiscoveryView
+        onExit={handleExit}
         targetLang="es"
         originLang="en"
       />
@@ -237,20 +232,19 @@ describe('RandomDiscoveryModal', () => {
 
     expect(result.getByText('Palabra_1')).toBeTruthy();
 
-    const closeBtn = result.getByTestId('close-random-modal');
+    const exitBtn = result.getByTestId('exit-random-discovery-btn');
     await act(async () => {
-      fireEvent.press(closeBtn);
+      fireEvent.press(exitBtn);
     });
 
-    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleExit).toHaveBeenCalledTimes(1);
   });
 
   it('displays empty state when all words have been learned', async () => {
     (vaultModule.getRandomUnlearnedWords as jest.Mock).mockResolvedValueOnce([]);
     const result = await render(
-      <RandomDiscoveryModal
-        visible={true}
-        onClose={jest.fn()}
+      <RandomDiscoveryView
+        onExit={jest.fn()}
         targetLang="es"
         originLang="en"
       />

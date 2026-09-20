@@ -79,7 +79,7 @@ import { DeckIcon } from '../../components/icons/DeckIcon';
 import { speakWord } from '../../utils/tts';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet } from '../../services/tokenWallet';
-import { RandomDiscoveryModal } from '../../components/modals/RandomDiscoveryModal';
+import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
 
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
@@ -442,7 +442,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const [deckCards, setDeckCards] = useState<DeckCardDetail[]>([]);
   const [loadingDeckCards, setLoadingDeckCards] = useState(false);
   const [addingAllDeck, setAddingAllDeck] = useState(false);
-  const [randomModalOpen, setRandomModalOpen] = useState(false);
+  const [randomDiscoveryActive, setRandomDiscoveryActive] = useState(false);
 
   // Tab 2: Difficulty (CEFR / Tiers) State
   const [loadingDifficulty, setLoadingDifficulty] = useState(false);
@@ -701,15 +701,24 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
       <View style={styles.topTabBar}>
         <TouchableOpacity
           activeOpacity={0.8}
-          style={[styles.tabButton, activeTab === 'decks' && styles.tabButtonActive]}
-          onPress={() => setActiveTab('decks')}
+          style={[
+            styles.tabButton,
+            activeTab === 'decks' && !randomDiscoveryActive && styles.tabButtonActive,
+          ]}
+          onPress={() => {
+            setActiveTab('decks');
+            setRandomDiscoveryActive(false);
+          }}
         >
           <Layers
             size={16}
-            color={activeTab === 'decks' ? '#B45309' : '#64748B'}
+            color={activeTab === 'decks' && !randomDiscoveryActive ? '#B45309' : '#64748B'}
           />
           <Text
-            style={[styles.tabButtonText, activeTab === 'decks' && styles.tabButtonTextActive]}
+            style={[
+              styles.tabButtonText,
+              activeTab === 'decks' && !randomDiscoveryActive && styles.tabButtonTextActive,
+            ]}
           >
             {t('explore.tab_decks')}
           </Text>
@@ -717,20 +726,24 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
         <TouchableOpacity
           activeOpacity={0.8}
-          style={[styles.tabButton, activeTab === 'difficulty' && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === 'difficulty' && !randomDiscoveryActive && styles.tabButtonActive,
+          ]}
           onPress={() => {
             setActiveTab('difficulty');
+            setRandomDiscoveryActive(false);
             loadDifficultyData();
           }}
         >
           <TrendingUp
             size={16}
-            color={activeTab === 'difficulty' ? '#B45309' : '#64748B'}
+            color={activeTab === 'difficulty' && !randomDiscoveryActive ? '#B45309' : '#64748B'}
           />
           <Text
             style={[
               styles.tabButtonText,
-              activeTab === 'difficulty' && styles.tabButtonTextActive,
+              activeTab === 'difficulty' && !randomDiscoveryActive && styles.tabButtonTextActive,
             ]}
           >
             {t('explore.tab_difficulty')}
@@ -739,56 +752,78 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
         <TouchableOpacity
           activeOpacity={0.8}
-          style={[styles.tabButton, activeTab === 'mastery' && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === 'mastery' && !randomDiscoveryActive && styles.tabButtonActive,
+          ]}
           onPress={() => {
             setActiveTab('mastery');
+            setRandomDiscoveryActive(false);
             loadMasteryData(masteryStage);
           }}
         >
           <Brain
             size={16}
-            color={activeTab === 'mastery' ? '#B45309' : '#64748B'}
+            color={activeTab === 'mastery' && !randomDiscoveryActive ? '#B45309' : '#64748B'}
           />
           <Text
-            style={[styles.tabButtonText, activeTab === 'mastery' && styles.tabButtonTextActive]}
+            style={[
+              styles.tabButtonText,
+              activeTab === 'mastery' && !randomDiscoveryActive && styles.tabButtonTextActive,
+            ]}
           >
             {t('explore.tab_mastery')}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Role & Question Header Banner */}
-      <View style={styles.headerBanner}>
-        {activeTab === 'decks' && (
-          <>
-            <View style={styles.bannerRow}>
-              <View style={styles.roleTag}>
-                <Text style={styles.roleTagText}>{t('explore.tab_decks_role')}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.randomDiscoveryBtn}
-                onPress={() => setRandomModalOpen(true)}
-                activeOpacity={0.8}
-                testID="open-random-discovery-btn"
-              >
-                <Dices size={14} color="#78350F" style={{ marginRight: 5 }} />
-                <Text style={styles.randomDiscoveryBtnText}>
-                  {t('random_discovery.btn_discover', { defaultValue: '10 Random Words' })}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.questionTitle}>{t('explore.tab_decks_question')}</Text>
-          </>
-        )}
-        {activeTab === 'mastery' && (
-          <>
-            <View style={styles.roleTag}>
-              <Text style={styles.roleTagText}>{t('explore.tab_mastery_role')}</Text>
-            </View>
-            <Text style={styles.questionTitle}>{t('explore.tab_mastery_question')}</Text>
-          </>
-        )}
-      </View>
+      {randomDiscoveryActive ? (
+        <RandomDiscoveryView
+          onExit={() => setRandomDiscoveryActive(false)}
+          targetLang={targetLang}
+          originLang={originLang}
+          onInsufficientTokens={onInsufficientTokens}
+          onWordLearned={(lexemeId) => {
+            setLocallyQueuedWordIds((prev) => new Set(prev).add(lexemeId));
+            getMasterySummary(targetLang).then(setMasterySummary);
+            getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage).then(setThemes);
+            getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage).then(setMapDecks);
+          }}
+        />
+      ) : (
+        <>
+          {/* Role & Question Header Banner */}
+          <View style={styles.headerBanner}>
+            {activeTab === 'decks' && (
+              <>
+                <View style={styles.bannerRow}>
+                  <View style={styles.roleTag}>
+                    <Text style={styles.roleTagText}>{t('explore.tab_decks_role')}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.randomDiscoveryBtn}
+                    onPress={() => setRandomDiscoveryActive(true)}
+                    activeOpacity={0.8}
+                    testID="open-random-discovery-btn"
+                  >
+                    <Dices size={14} color="#78350F" style={{ marginRight: 5 }} />
+                    <Text style={styles.randomDiscoveryBtnText}>
+                      {t('random_discovery.btn_discover', { defaultValue: '10 Random Words' })}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.questionTitle}>{t('explore.tab_decks_question')}</Text>
+              </>
+            )}
+            {activeTab === 'mastery' && (
+              <>
+                <View style={styles.roleTag}>
+                  <Text style={styles.roleTagText}>{t('explore.tab_mastery_role')}</Text>
+                </View>
+                <Text style={styles.questionTitle}>{t('explore.tab_mastery_question')}</Text>
+              </>
+            )}
+          </View>
 
       {/* TAB 1: DECKS (THEMES) */}
       {activeTab === 'decks' && (
@@ -984,6 +1019,8 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           )}
         </View>
       )}
+    </>
+  )}
 
       {/* DECK WORD INSPECTOR MODAL */}
       <Modal
@@ -1077,21 +1114,6 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           </View>
         </View>
       </Modal>
-
-      {/* RANDOM 10 WORDS DISCOVERY CAROUSEL MODAL */}
-      <RandomDiscoveryModal
-        visible={randomModalOpen}
-        onClose={() => setRandomModalOpen(false)}
-        targetLang={targetLang}
-        originLang={originLang}
-        onInsufficientTokens={onInsufficientTokens}
-        onWordLearned={(lexemeId) => {
-          setLocallyQueuedWordIds((prev) => new Set(prev).add(lexemeId));
-          getMasterySummary(targetLang).then(setMasterySummary);
-          getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage).then(setThemes);
-          getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage).then(setMapDecks);
-        }}
-      />
     </View>
   );
 };

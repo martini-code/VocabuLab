@@ -855,5 +855,128 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       expect(randomCards).toHaveLength(2);
     });
   });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // 10. Simultaneous Language Learning Pairs & Multi-Language Review Queue
+  // ───────────────────────────────────────────────────────────────────────────
+  describe('Simultaneous Language Learning Pairs & Multi-Language Review Queue', () => {
+    it('stores and maintains independent progress for simultaneous language pairs', () => {
+      const now = new Date().toISOString();
+      const insertUserCard = userDb.prepare(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+      );
+
+      // Add 3 Spanish cards (1 due, 1 mastered, 1 new)
+      insertUserCard.run('card_1_Spanish', 1, 'Spanish', 'English', '2026-01-01T00:00:00Z', 1, 5.0, 3.0, 1, 3, 2, 0, now);
+      insertUserCard.run('card_2_Spanish', 2, 'Spanish', 'English', '2026-12-31T00:00:00Z', 2, 25.0, 2.0, 30, 30, 5, 0, now);
+      insertUserCard.run('card_3_Spanish', 3, 'Spanish', 'English', '2026-01-01T00:00:00Z', 0, 0.0, 0.0, 0, 0, 0, 0, now);
+
+      // Add 2 Mandarin cards (both due, none mastered)
+      insertUserCard.run('card_1_Mandarin', 1, 'Mandarin', 'English', '2026-01-02T00:00:00Z', 1, 2.0, 5.0, 1, 1, 1, 0, now);
+      insertUserCard.run('card_2_Mandarin', 2, 'Mandarin', 'English', '2026-01-03T00:00:00Z', 1, 3.0, 4.0, 2, 2, 2, 0, now);
+
+      // Check Spanish stats
+      const esTotal = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish';").get().count;
+      const esDue = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish' AND due_date <= ?;").get(now).count;
+      const esMastered = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish' AND (stability >= 21 OR reps >= 3);").get().count;
+
+      expect(esTotal).toBe(3);
+      expect(esDue).toBe(2);
+      expect(esMastered).toBe(1);
+
+      // Check Mandarin stats
+      const zhTotal = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin';").get().count;
+      const zhDue = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin' AND due_date <= ?;").get(now).count;
+      const zhMastered = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin' AND (stability >= 21 OR reps >= 3);").get().count;
+
+      expect(zhTotal).toBe(2);
+      expect(zhDue).toBe(2);
+      expect(zhMastered).toBe(0);
+    });
+
+    it('queries due cards across all languages ordered by due_date for combined review', () => {
+      const now = new Date().toISOString();
+      const insertUserCard = userDb.prepare(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+      );
+
+      // Spanish due at 09:00
+      insertUserCard.run('card_10_Spanish', 10, 'Spanish', 'English', '2026-01-01T09:00:00Z', 1, 3.0, 3.0, 1, 1, 1, 0, now);
+      // Mandarin due at 08:00 (should come first)
+      insertUserCard.run('card_10_Mandarin', 10, 'Mandarin', 'English', '2026-01-01T08:00:00Z', 1, 2.0, 4.0, 1, 1, 1, 0, now);
+      // Spanish due at 10:00
+      insertUserCard.run('card_11_Spanish', 11, 'Spanish', 'English', '2026-01-01T10:00:00Z', 1, 4.0, 2.0, 2, 2, 2, 0, now);
+
+      // Combined multi-language query
+      const dueRows = userDb
+        .prepare('SELECT id, card_id, target_lang, due_date FROM User_Cards WHERE due_date <= ? ORDER BY due_date ASC;')
+        .all(now);
+
+      expect(dueRows).toHaveLength(3);
+      expect(dueRows[0].id).toBe('card_10_Mandarin');
+      expect(dueRows[1].id).toBe('card_10_Spanish');
+      expect(dueRows[2].id).toBe('card_11_Spanish');
+    });
+
+    it('grading a card in Language A does not modify Language B cards sharing the same card_id', () => {
+      const now = new Date().toISOString();
+      const insertUserCard = userDb.prepare(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+      );
+
+      // Same card_id (42) learned in both Spanish and Mandarin
+      insertUserCard.run('card_42_Spanish', 42, 'Spanish', 'English', '2026-01-01T00:00:00Z', 1, 4.0, 3.0, 1, 2, 2, 0, now);
+      insertUserCard.run('card_42_Mandarin', 42, 'Mandarin', 'English', '2026-01-01T00:00:00Z', 1, 1.5, 6.0, 1, 1, 1, 0, now);
+
+      // Grade the Spanish card: advance stability to 12.0 and reps to 3
+      const updateFSRS = userDb.prepare(
+        `UPDATE User_Cards SET
+          due_date = ?, state = ?, stability = ?, difficulty = ?, elapsed_days = ?,
+          scheduled_days = ?, reps = ?, lapses = ?, updated_at = ?
+        WHERE id = ?;`
+      );
+      updateFSRS.run('2026-01-15T00:00:00Z', 2, 12.0, 2.8, 2, 14, 3, 0, now, 'card_42_Spanish');
+
+      // Verify Spanish card updated
+      const esCard = userDb.prepare("SELECT * FROM User_Cards WHERE id = 'card_42_Spanish';").get();
+      expect(esCard.stability).toBe(12.0);
+      expect(esCard.reps).toBe(3);
+      expect(esCard.due_date).toBe('2026-01-15T00:00:00Z');
+
+      // Verify Mandarin card remained completely untouched
+      const zhCard = userDb.prepare("SELECT * FROM User_Cards WHERE id = 'card_42_Mandarin';").get();
+      expect(zhCard.stability).toBe(1.5);
+      expect(zhCard.reps).toBe(1);
+      expect(zhCard.due_date).toBe('2026-01-01T00:00:00Z');
+    });
+
+    it('persists and retrieves saved_language_pairs in Settings', () => {
+      const pairs = [
+        { destination_lang: 'es', origin_lang: 'en' },
+        { destination_lang: 'zh-CN', origin_lang: 'en' },
+        { destination_lang: 'fr', origin_lang: 'en' },
+      ];
+      const now = new Date().toISOString();
+
+      userDb
+        .prepare("INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);")
+        .run(JSON.stringify(pairs), now);
+
+      const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'saved_language_pairs';").get();
+      expect(row).toBeDefined();
+      const retrieved = JSON.parse(row.value);
+      expect(retrieved).toHaveLength(3);
+      expect(retrieved[1].destination_lang).toBe('zh-CN');
+    });
+  });
 });
 
