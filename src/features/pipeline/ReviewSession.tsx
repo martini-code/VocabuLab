@@ -21,7 +21,7 @@ import { srsManager } from '../../srs';
 import { ReviewCardFlipper } from './ReviewCardFlipper';
 import { ReviewSessionSummary, ReviewSessionWordSummary } from './ReviewSessionSummary';
 import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
-import { getLanguageFlag } from '../../locales/languages';
+import { getLanguageFlag, formatLanguageCode } from '../../locales/languages';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -262,7 +262,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                         isSelected && styles.scopePillTextActive,
                       ]}
                     >
-                      {getLanguageFlag(p.destination_lang)} {p.destination_lang.toUpperCase()} ({p.progress.dueCards})
+                      {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)} ({p.progress.dueCards})
                     </Text>
                   </TouchableOpacity>
                 );
@@ -390,7 +390,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                       isSelected && styles.scopePillTextActive,
                     ]}
                   >
-                    {getLanguageFlag(p.destination_lang)} {p.destination_lang.toUpperCase()} ({p.progress.dueCards})
+                    {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)} ({p.progress.dueCards})
                   </Text>
                 </TouchableOpacity>
               );

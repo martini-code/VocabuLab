@@ -15,6 +15,7 @@ import { WizardOwlMascot } from '../../components/mascot/Mascots';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { tokenWallet } from '../../services/tokenWallet';
+import { formatLanguageCode } from '../../locales/languages';
 
 interface FastSearchProps {
   onInsufficientTokens?: (requiredWords: number) => void;
@@ -35,7 +36,7 @@ const SearchResultCard = React.memo<SearchResultCardProps>(
           <View style={{ flex: 1 }}>
             <Text style={styles.term}>{item.term}</Text>
             <Text style={styles.langAndPos}>
-              {item.language.toUpperCase()} • {item.pos || 'noun'}
+              {formatLanguageCode(item.language)} • {item.pos || 'noun'}
             </Text>
           </View>
           <ShieldBadge level={item.cefr_level} size="sm" />

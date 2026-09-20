@@ -85,7 +85,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       // Verify front term and metadata are present
       expect(getAllByText('biblioteca').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('[noun]').length).toBeGreaterThanOrEqual(1);
-      expect(getAllByText('ES ➔ EN').length).toBeGreaterThanOrEqual(1);
+      expect(getAllByText('Es ➔ En').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('A1').length).toBeGreaterThanOrEqual(1);
       expect(getByText('Tap scroll to reveal translation')).toBeTruthy();
       expect(getByTestId('pronounce-btn')).toBeTruthy();

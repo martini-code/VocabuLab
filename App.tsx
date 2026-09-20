@@ -27,7 +27,7 @@ import { SquireMascot } from './src/components/mascot/Mascots';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
-import { getLanguageFlag } from './src/locales/languages';
+import { getLanguageFlag, formatLanguageCode } from './src/locales/languages';
 import { LanguageSelectorModal } from './src/components/modals/LanguageSelectorModal';
 import { AdFreeModal } from './src/components/modals/AdFreeModal';
 import { TokenWalletModal } from './src/components/tokens/TokenWalletModal';
@@ -216,7 +216,7 @@ export default function App() {
             {getLanguageFlag(languagePair.destination_lang)}
           </Text>
           <Text style={styles.statValue}>
-            {languagePair.destination_lang.toUpperCase()}
+            {formatLanguageCode(languagePair.destination_lang)}
           </Text>
         </TouchableOpacity>
       </View>
@@ -347,7 +347,7 @@ export default function App() {
                 }}
               >
                 <Text style={[styles.treasuryActionText, { color: '#1D4ED8' }]}>
-                  APP ORIGIN: {languagePair.origin_lang.toUpperCase()}
+                  App Origin: {formatLanguageCode(languagePair.origin_lang)}
                 </Text>
               </TouchableOpacity>
 
@@ -359,7 +359,7 @@ export default function App() {
                 }}
               >
                 <Text style={styles.treasuryActionText}>
-                  STUDY TARGET: {languagePair.destination_lang.toUpperCase()}
+                  Study Target: {formatLanguageCode(languagePair.destination_lang)}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -368,7 +368,7 @@ export default function App() {
             <View style={styles.deckTitlePrefCard}>
               <View style={styles.deckTitlePrefHeader}>
                 <Languages size={18} color="#92400E" />
-                <Text style={styles.deckTitlePrefTitle}>DECK & TOPIC TITLES</Text>
+                <Text style={styles.deckTitlePrefTitle}>Deck & Topic Titles</Text>
               </View>
               <Text style={styles.deckTitlePrefSubtitle}>
                 Choose the display language for categories, decks, and subdecks.
@@ -392,7 +392,7 @@ export default function App() {
                       deckTitleLanguage === 'origin' && styles.deckTitleToggleTextActive,
                     ]}
                   >
-                    NATIVE ({languagePair.origin_lang.toUpperCase()})
+                    Native ({formatLanguageCode(languagePair.origin_lang)})
                   </Text>
                 </TouchableOpacity>
 
@@ -414,7 +414,7 @@ export default function App() {
                       deckTitleLanguage === 'target' && styles.deckTitleToggleTextActive,
                     ]}
                   >
-                    IMMERSION ({languagePair.destination_lang.toUpperCase()})
+                    Immersion ({formatLanguageCode(languagePair.destination_lang)})
                   </Text>
                 </TouchableOpacity>
               </View>

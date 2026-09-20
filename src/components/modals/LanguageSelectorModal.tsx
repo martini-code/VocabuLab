@@ -29,6 +29,7 @@ import {
   getLanguageByCode,
   getLanguageByName,
   getLanguageFlag,
+  formatLanguageCode,
 } from '../../locales/languages';
 import { changeAppLanguage, getDeviceLanguage } from '../../locales';
 import {
@@ -353,12 +354,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               activeOpacity={0.8}
             >
               <Text style={styles.pairHalfLabel}>
-                {t('language.origin_label', 'NATIVE / APP')}
+                {t('language.origin_label', 'Native / App')}
               </Text>
               <View style={styles.pairFlagCodeRow}>
                 <Text style={styles.pairFlagEmoji}>{getLanguageFlag(originOption.code)}</Text>
                 <Text style={styles.pairHalfCodeOnly}>
-                  {originOption.code.toUpperCase()}
+                  {formatLanguageCode(originOption.code)}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -381,12 +382,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               activeOpacity={0.8}
             >
               <Text style={styles.pairHalfLabel}>
-                {t('language.destination_label', 'I AM LEARNING')}
+                {t('language.destination_label', 'I am learning')}
               </Text>
               <View style={styles.pairFlagCodeRow}>
                 <Text style={styles.pairFlagEmoji}>{getLanguageFlag(destinationOption.code)}</Text>
                 <Text style={styles.pairHalfCodeOnly}>
-                  {destinationOption.code.toUpperCase()}
+                  {formatLanguageCode(destinationOption.code)}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -424,7 +425,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                         <View style={styles.enrolledFlagCodeRow}>
                           <Text style={styles.enrolledFlagEmoji}>{getLanguageFlag(ep.destination_lang)}</Text>
                           <Text style={styles.enrolledLangName} numberOfLines={1}>
-                            {ep.destination_lang.toUpperCase()}
+                            {formatLanguageCode(ep.destination_lang)}
                           </Text>
                         </View>
                         {isActive && (
@@ -434,8 +435,8 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                           </View>
                         )}
                       </View>
-                      <Text style={styles.enrolledSubtext}>
-                        {getLanguageFlag(ep.destination_lang)} {ep.destination_lang.toUpperCase()} ➔ {getLanguageFlag(ep.origin_lang)} {ep.origin_lang.toUpperCase()}
+                      <Text style={styles.enrolledSubtext} numberOfLines={1} ellipsizeMode="tail">
+                        {getLanguageFlag(ep.destination_lang)} {formatLanguageCode(ep.destination_lang)} ➔ {getLanguageFlag(ep.origin_lang)} {formatLanguageCode(ep.origin_lang)}
                       </Text>
                       <View style={styles.enrolledStatsRow}>
                         <Text style={styles.enrolledStatBadge}>
@@ -527,13 +528,13 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           <FlatList
             data={filteredLanguages}
             keyExtractor={languageKeyExtractor}
+            style={styles.langFlatList}
             contentContainerStyle={styles.listContent}
             keyboardShouldPersistTaps="handled"
-            initialNumToRender={15}
-            maxToRenderPerBatch={15}
-            updateCellsBatchingPeriod={50}
-            windowSize={5}
-            removeClippedSubviews={true}
+            initialNumToRender={20}
+            maxToRenderPerBatch={20}
+            windowSize={11}
+            removeClippedSubviews={false}
             renderItem={renderLanguageItem}
           />
         </View>
@@ -585,12 +586,9 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
                 styles.langCodeMain,
                 isSelectedInCurrentMode && styles.langCodeMainSelected,
               ]}
+              numberOfLines={1}
             >
-              {item.code.toUpperCase()}
-            </Text>
-
-            <Text style={styles.langNativeScript}>
-              {item.nativeName}
+              {formatLanguageCode(item.code)}
             </Text>
 
             {isOrigin && (
@@ -604,6 +602,19 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
               </View>
             )}
           </View>
+
+          {item.nativeName ? (
+            <Text
+              style={[
+                styles.langNativeScript,
+                isSelectedInCurrentMode && styles.langNativeScriptSelected,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.nativeName}
+            </Text>
+          ) : null}
         </View>
       </View>
 
@@ -663,17 +674,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#D97706',
     borderBottomWidth: 0,
-    maxHeight: '88%',
-    minHeight: '65%',
+    height: '93%',
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingTop: 14,
+    paddingBottom: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 12,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#FDE68A',
   },
@@ -720,11 +730,12 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FDE68A',
     padding: 8,
-    marginTop: 12,
+    marginTop: 8,
     gap: 6,
   },
   pairHalf: {
     flex: 1,
+    minWidth: 0,
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 8,
@@ -777,7 +788,7 @@ const styles = StyleSheet.create({
   },
   filterTabBar: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 8,
     gap: 8,
   },
   filterTab: {
@@ -813,8 +824,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     height: 40,
-    marginTop: 10,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 6,
     gap: 8,
   },
   searchInput: {
@@ -822,8 +833,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1E293B',
   },
+  langFlatList: {
+    flex: 1,
+  },
   listContent: {
     paddingVertical: 4,
+    paddingBottom: 36,
     gap: 6,
   },
   langRow: {
@@ -836,6 +851,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     paddingVertical: 10,
+    minHeight: 56,
   },
   langRowSelected: {
     backgroundColor: '#FFFBEB',
@@ -844,11 +860,15 @@ const styles = StyleSheet.create({
   },
   langNames: {
     flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexWrap: 'nowrap',
+    minWidth: 0,
   },
   nativeName: {
     fontSize: 14,
@@ -865,6 +885,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderWidth: 1,
     borderColor: '#BFDBFE',
+    flexShrink: 0,
   },
   originTagText: {
     fontSize: 9,
@@ -878,6 +899,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderWidth: 1,
     borderColor: '#A7F3D0',
+    flexShrink: 0,
   },
   destTagText: {
     fontSize: 9,
@@ -893,6 +915,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 0,
   },
   downloadedGroup: {
     flexDirection: 'row',
@@ -944,7 +967,7 @@ const styles = StyleSheet.create({
   },
   enrolledSection: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 6,
     backgroundColor: '#FFFBEB',
     borderBottomWidth: 1,
     borderBottomColor: '#FDE68A',
@@ -956,8 +979,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#92400E',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   enrolledScroll: {
     gap: 10,
@@ -968,7 +990,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    minWidth: 150,
+    minWidth: 155,
   },
   enrolledCardActive: {
     borderColor: '#B45309',
@@ -1030,6 +1052,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginTop: 4,
+    minWidth: 0,
   },
   pairFlagEmoji: {
     fontSize: 18,
@@ -1039,6 +1062,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#78350F',
     letterSpacing: 0.5,
+    flexShrink: 1,
   },
   enrolledFlagCodeRow: {
     flexDirection: 'row',
@@ -1054,6 +1078,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    minWidth: 0,
+    marginRight: 8,
   },
   listRowFlag: {
     fontSize: 22,
@@ -1062,7 +1088,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
     color: '#1E293B',
-    marginRight: 6,
     letterSpacing: 0.5,
   },
   langCodeMainSelected: {
@@ -1072,6 +1097,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#64748B',
+    marginTop: 2,
+  },
+  langNativeScriptSelected: {
+    color: '#92400E',
   },
 });
 

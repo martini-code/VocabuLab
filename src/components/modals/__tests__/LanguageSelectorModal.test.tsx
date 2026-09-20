@@ -148,17 +148,27 @@ jest.mock('../../../locales/languages', () => ({
     { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
     { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
     { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+    { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
   ],
   getLanguageByCode: (code: string) =>
     ({
       en: { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
       es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
       fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+      'pt-br': { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
+      'pt-BR': { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
     }[code] || null),
   getLanguageByName: (_name: string) => null,
   getLanguageFlag: (codeOrName: string) => {
-    const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷' };
+    const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', 'pt-br': '🇧🇷', 'pt-BR': '🇧🇷' };
     return map[codeOrName.toLowerCase()] || '🌐';
+  },
+  formatLanguageCode: (codeOrName: string) => {
+    if (!codeOrName) return '';
+    return codeOrName
+      .split(/[-_]/)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+      .join('-');
   },
 }));
 
@@ -228,24 +238,24 @@ describe('LanguageSelectorModal', () => {
     expect(downloadedTab).toBeTruthy();
   });
 
-  it('shows language pair banner with origin (EN) and destination (ES)', async () => {
+  it('shows language pair banner with origin (En) and destination (Es)', async () => {
     const { findByText, findAllByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
     await findByText('Language Fortress');
-    // Banner displays uppercase codes EN and ES with flags
-    const originCodes = await findAllByText('EN');
+    // Banner displays clean codes En and Es with flags
+    const originCodes = await findAllByText('En');
     expect(originCodes.length).toBeGreaterThanOrEqual(1);
-    const destCodes = await findAllByText('ES');
+    const destCodes = await findAllByText('Es');
     expect(destCodes.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows NATIVE / APP and I AM LEARNING labels in pair banner', async () => {
+  it('shows Native / App and I am learning labels in pair banner', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Fortress');
-    const nativeLabel = await findByText('NATIVE / APP');
+    const nativeLabel = await findByText('Native / App');
     expect(nativeLabel).toBeTruthy();
-    const learningLabel = await findByText('I AM LEARNING');
+    const learningLabel = await findByText('I am learning');
     expect(learningLabel).toBeTruthy();
   });
 
@@ -255,10 +265,10 @@ describe('LanguageSelectorModal', () => {
     );
     await findByText('Language Fortress');
     // FlatList mock renders up to 10 items; we have en, es, fr
-    // Language rows display code (ES, FR) and native script
-    const spanishCodes = await findAllByText('ES');
+    // Language rows display clean code (Es, Fr) and native script
+    const spanishCodes = await findAllByText('Es');
     expect(spanishCodes.length).toBeGreaterThanOrEqual(1);
-    const frenchCodes = await findAllByText('FR');
+    const frenchCodes = await findAllByText('Fr');
     expect(frenchCodes.length).toBeGreaterThanOrEqual(1);
     const francais = await findByText('Français');
     expect(francais).toBeTruthy();
@@ -326,5 +336,20 @@ describe('LanguageSelectorModal', () => {
       origin_lang: 'en',
     });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('renders long regional languages like Pt-Br with both clean code and native name', async () => {
+    const { findByText, findAllByText } = await render(
+      <LanguageSelectorModal {...defaultProps} />
+    );
+    await findByText('Language Fortress');
+
+    // Code is displayed cleanly as Pt-Br
+    const ptCodes = await findAllByText('Pt-Br');
+    expect(ptCodes.length).toBeGreaterThanOrEqual(1);
+
+    // Native script is displayed on its own line
+    const ptNative = await findByText('Português (Brasil)');
+    expect(ptNative).toBeTruthy();
   });
 });

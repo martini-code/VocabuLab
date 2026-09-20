@@ -224,8 +224,8 @@ describe('ReviewSession Multi-Language Learning Tests', () => {
 
     // Total due: 5 (es) + 3 (zh-CN) = 8
     expect(await findByText('All Languages (8)')).toBeTruthy();
-    expect(await findByText(/ES \(5\)/)).toBeTruthy();
-    expect(await findByText(/ZH-CN \(3\)/)).toBeTruthy();
+    expect(await findByText(/Es \(5\)/)).toBeTruthy();
+    expect(await findByText(/Zh-Cn \(3\)/)).toBeTruthy();
   });
 
   it('loads all languages combined when "All Languages" scope is selected', async () => {
@@ -257,11 +257,11 @@ describe('ReviewSession Multi-Language Learning Tests', () => {
       <ReviewSession targetLang="es" originLang="en" />
     );
 
-    // Front & back cards show term and language pair tag ES ➔ EN
+    // Front & back cards show term and language pair tag Es ➔ En
     const termMatches = await findAllByText('Hola');
     expect(termMatches.length).toBeGreaterThanOrEqual(1);
 
-    const langTagMatches = await findAllByText(/ES.*EN/);
+    const langTagMatches = await findAllByText(/Es.*En/);
     expect(langTagMatches.length).toBeGreaterThanOrEqual(1);
   });
 });

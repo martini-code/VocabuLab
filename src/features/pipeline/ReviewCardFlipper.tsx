@@ -12,6 +12,7 @@ import { Volume2 } from 'lucide-react-native';
 import { CardWithDetails } from '../../types';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { formatLanguageCode } from '../../locales/languages';
 
 interface ReviewCardFlipperProps {
   card: CardWithDetails;
@@ -89,7 +90,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
           <View style={styles.cardHeaderRow}>
             <ShieldBadge level={card.front_cefr} size="md" />
             <Text style={styles.langTag}>
-              {card.front_lang.toUpperCase()} ➔ {card.back_lang.toUpperCase()}
+              {formatLanguageCode(card.front_lang)} ➔ {formatLanguageCode(card.back_lang)}
             </Text>
           </View>
 
@@ -132,7 +133,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
           <View style={styles.cardHeaderRow}>
             <ShieldBadge level={card.front_cefr} size="md" />
             <Text style={styles.langTag}>
-              {card.front_lang.toUpperCase()} ➔ {card.back_lang.toUpperCase()}
+              {formatLanguageCode(card.front_lang)} ➔ {formatLanguageCode(card.back_lang)}
             </Text>
           </View>
 

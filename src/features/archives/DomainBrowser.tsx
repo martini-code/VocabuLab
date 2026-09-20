@@ -17,6 +17,7 @@ import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { tokenWallet } from '../../services/tokenWallet';
+import { formatLanguageCode } from '../../locales/languages';
 
 const CEFR_LEVELS: (CEFRLevel | 'ALL')[] = ['ALL', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
@@ -239,7 +240,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
         <View style={styles.wordInfo}>
           <Text style={styles.wordTerm}>{item.term}</Text>
           <Text style={styles.wordPos}>
-            {item.language.toUpperCase()} • {item.pos || 'noun'}
+            {formatLanguageCode(item.language)} • {item.pos || 'noun'}
           </Text>
         </View>
         <ShieldBadge level={item.cefr_level} size="sm" />

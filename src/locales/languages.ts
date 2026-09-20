@@ -160,3 +160,17 @@ export function getLanguageFlag(codeOrName: string): string {
     SUPPORTED_LANGUAGES.find((l) => l.name.toLowerCase() === clean);
   return match?.flag || '🌐';
 }
+
+/**
+ * Formats a language code cleanly with proper casing (e.g. 'Es', 'En', 'Pt-Br', 'Zh-Cn').
+ * Avoids aggressive all-caps strings.
+ */
+export function formatLanguageCode(codeOrName: string): string {
+  if (!codeOrName) return '';
+  const clean = codeOrName.trim();
+  return clean
+    .split(/[-_]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join('-');
+}
+
