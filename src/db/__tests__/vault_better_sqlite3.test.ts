@@ -771,5 +771,89 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       expect(trans.subcategory_translation).toBe('Miembros');
     });
   });
+
+  describe('Random Unlearned Words Query (ORDER BY RANDOM() LIMIT 10)', () => {
+    beforeEach(() => {
+      // Seed 20 cards across 2 decks
+      const insertDeck = staticDb.prepare(
+        'INSERT OR REPLACE INTO decks (deck_id, category, subcategory, difficulty, description) VALUES (?, ?, ?, ?, ?);'
+      );
+      insertDeck.run(1, 'basics', 'greetings', 1, 'Basic greetings');
+      insertDeck.run(2, 'food', 'fruits', 2, 'Common fruits');
+
+      const insertCard = staticDb.prepare(
+        'INSERT OR REPLACE INTO cards (card_id, deck_id, primary_term, pos, cili_id, difficulty) VALUES (?, ?, ?, ?, ?, ?);'
+      );
+      for (let i = 1; i <= 20; i++) {
+        insertCard.run(i, i <= 10 ? 1 : 2, `term_${i}`, 'n', `c_${i}`, 1);
+      }
+
+      // Queue 5 cards in User_Cards for Spanish
+      const insertUserCard = userDb.prepare(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, datetime('now'), 0, 0, 0, 0, 0, 0, 0, datetime('now'));`
+      );
+      for (let i = 1; i <= 5; i++) {
+        insertUserCard.run(`card_${i}_Spanish`, i, 'Spanish', 'English');
+      }
+    });
+
+    it('excludes cards already queued in User_Cards for target language', () => {
+      const queuedRows = userDb
+        .prepare('SELECT card_id FROM User_Cards WHERE target_lang IN (?, ?);')
+        .all('Spanish', 'es');
+      const queuedIds = queuedRows.map((r: any) => r.card_id);
+      expect(queuedIds).toHaveLength(5);
+
+      const placeholders = queuedIds.map(() => '?').join(',');
+      const query = `
+        SELECT c.card_id, c.deck_id, c.primary_term, d.category, d.subcategory
+        FROM cards c
+        JOIN decks d ON d.deck_id = c.deck_id
+        WHERE c.card_id NOT IN (${placeholders})
+        ORDER BY RANDOM()
+        LIMIT 10;
+      `;
+      const randomCards = staticDb.prepare(query).all(...queuedIds);
+
+      expect(randomCards).toHaveLength(10);
+      for (const card of randomCards) {
+        expect(queuedIds).not.toContain(card.card_id);
+      }
+    });
+
+    it('returns fewer cards if remaining unlearned pool is smaller than limit', () => {
+      // Queue cards 6 through 18
+      const insertUserCard = userDb.prepare(
+        `INSERT OR REPLACE INTO User_Cards (
+          id, card_id, target_lang, origin_lang, due_date, state, stability, difficulty,
+          elapsed_days, scheduled_days, reps, lapses, updated_at
+        ) VALUES (?, ?, ?, ?, datetime('now'), 0, 0, 0, 0, 0, 0, 0, datetime('now'));`
+      );
+      for (let i = 6; i <= 18; i++) {
+        insertUserCard.run(`card_${i}_Spanish`, i, 'Spanish', 'English');
+      }
+
+      const queuedRows = userDb
+        .prepare('SELECT card_id FROM User_Cards WHERE target_lang IN (?, ?);')
+        .all('Spanish', 'es');
+      const queuedIds = queuedRows.map((r: any) => r.card_id);
+      expect(queuedIds).toHaveLength(18);
+
+      const placeholders = queuedIds.map(() => '?').join(',');
+      const query = `
+        SELECT c.card_id
+        FROM cards c
+        WHERE c.card_id NOT IN (${placeholders})
+        ORDER BY RANDOM()
+        LIMIT 10;
+      `;
+      const randomCards = staticDb.prepare(query).all(...queuedIds);
+      // Only cards 19 and 20 remain
+      expect(randomCards).toHaveLength(2);
+    });
+  });
 });
 

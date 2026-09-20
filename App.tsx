@@ -245,6 +245,7 @@ export default function App() {
             onClearDeckFilter={() => setDeckFilter(null)}
             targetLang={languagePair.destination_lang}
             originLang={languagePair.origin_lang}
+            onInsufficientTokens={handleInsufficientTokens}
           />
         )}
         {activeTab === 'archives' && (

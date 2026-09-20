@@ -23,6 +23,7 @@ import {
   Clock,
   Sparkles,
   PlusCircle,
+  Dices,
   X,
   Play,
   ChevronRight,
@@ -78,6 +79,7 @@ import { DeckIcon } from '../../components/icons/DeckIcon';
 import { speakWord } from '../../utils/tts';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet } from '../../services/tokenWallet';
+import { RandomDiscoveryModal } from '../../components/modals/RandomDiscoveryModal';
 
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
@@ -440,6 +442,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   const [deckCards, setDeckCards] = useState<DeckCardDetail[]>([]);
   const [loadingDeckCards, setLoadingDeckCards] = useState(false);
   const [addingAllDeck, setAddingAllDeck] = useState(false);
+  const [randomModalOpen, setRandomModalOpen] = useState(false);
 
   // Tab 2: Difficulty (CEFR / Tiers) State
   const [loadingDifficulty, setLoadingDifficulty] = useState(false);
@@ -758,8 +761,21 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
       <View style={styles.headerBanner}>
         {activeTab === 'decks' && (
           <>
-            <View style={styles.roleTag}>
-              <Text style={styles.roleTagText}>{t('explore.tab_decks_role')}</Text>
+            <View style={styles.bannerRow}>
+              <View style={styles.roleTag}>
+                <Text style={styles.roleTagText}>{t('explore.tab_decks_role')}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.randomDiscoveryBtn}
+                onPress={() => setRandomModalOpen(true)}
+                activeOpacity={0.8}
+                testID="open-random-discovery-btn"
+              >
+                <Dices size={14} color="#78350F" style={{ marginRight: 5 }} />
+                <Text style={styles.randomDiscoveryBtnText}>
+                  {t('random_discovery.btn_discover', { defaultValue: '10 Random Words' })}
+                </Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.questionTitle}>{t('explore.tab_decks_question')}</Text>
           </>
@@ -1061,6 +1077,21 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           </View>
         </View>
       </Modal>
+
+      {/* RANDOM 10 WORDS DISCOVERY CAROUSEL MODAL */}
+      <RandomDiscoveryModal
+        visible={randomModalOpen}
+        onClose={() => setRandomModalOpen(false)}
+        targetLang={targetLang}
+        originLang={originLang}
+        onInsufficientTokens={onInsufficientTokens}
+        onWordLearned={(lexemeId) => {
+          setLocallyQueuedWordIds((prev) => new Set(prev).add(lexemeId));
+          getMasterySummary(targetLang).then(setMasterySummary);
+          getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage).then(setThemes);
+          getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage).then(setMapDecks);
+        }}
+      />
     </View>
   );
 };
@@ -1118,6 +1149,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
+  },
+  bannerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  randomDiscoveryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#D97706',
+  },
+  randomDiscoveryBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#78350F',
   },
   roleTag: {
     alignSelf: 'flex-start',

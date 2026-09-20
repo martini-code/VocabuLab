@@ -536,5 +536,16 @@
     "daily_ads_limit_reached_desc": "You have watched all 3 ads for today. Reset occurs tomorrow or unlock infinite learning with Plus.",
     "upgrade_to_plus_cta": "Upgrade to Plus",
     "inspect_mediation": "Inspect AdMob Mediation"
+  },
+  "random_discovery": {
+    "title": "Random Discovery",
+    "subtitle": "10 unlearned words from across the realm",
+    "btn_discover": "Discover 10 Random Words",
+    "counter": "Card {{current}} of {{total}}",
+    "learn_word": "Learn Word",
+    "learned": "Learned",
+    "empty_title": "All Words Conquered",
+    "empty_desc": "You have learned all available vocabulary in the kingdom!",
+    "loading": "Scouting random words across the realm..."
   }
 }

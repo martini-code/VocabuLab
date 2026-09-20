@@ -20,6 +20,7 @@ import { Volume2, Layers, X, Zap } from 'lucide-react-native';
 import { srsManager } from '../../srs';
 import { ReviewCardFlipper } from './ReviewCardFlipper';
 import { ReviewSessionSummary, ReviewSessionWordSummary } from './ReviewSessionSummary';
+import { RandomDiscoveryModal } from '../../components/modals/RandomDiscoveryModal';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -28,6 +29,7 @@ interface ReviewSessionProps {
   onClearDeckFilter?: () => void;
   targetLang?: string;
   originLang?: string;
+  onInsufficientTokens?: (requiredWords: number) => void;
 }
 
 export const ReviewSession: React.FC<ReviewSessionProps> = ({
@@ -37,11 +39,13 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   onClearDeckFilter,
   targetLang,
   originLang,
+  onInsufficientTokens,
 }) => {
   const [cards, setCards] = useState<CardWithDetails[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [randomModalOpen, setRandomModalOpen] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
   const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
   const [sessionHistory, setSessionHistory] = useState<ReviewSessionWordSummary[]>([]);
@@ -217,12 +221,33 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           />
 
           <ChunkyButton
+            title="DISCOVER 10 RANDOM WORDS"
+            subtitle="Scout unlearned vocabulary across random decks"
+            color="amber"
+            onPress={() => setRandomModalOpen(true)}
+            style={{ width: '100%', marginTop: 12 }}
+          />
+
+          <ChunkyButton
             title="REFRESH TRAINING QUEUE"
             color="wood"
             onPress={loadCards}
             style={{ width: '100%', marginTop: 12 }}
           />
         </View>
+        <RandomDiscoveryModal
+          visible={randomModalOpen}
+          onClose={() => {
+            setRandomModalOpen(false);
+            loadCards();
+          }}
+          targetLang={targetLang}
+          originLang={originLang}
+          onInsufficientTokens={onInsufficientTokens}
+          onWordLearned={() => {
+            loadCards();
+          }}
+        />
       </ScrollView>
     );
   }

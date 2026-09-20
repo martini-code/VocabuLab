@@ -1872,6 +1872,97 @@ export async function addAvailableWordsToQueue(
 }
 
 /**
+ * Fetches a random selection of unlearned cards (not present in User_Cards for targetLang)
+ * across random decks and subdecks.
+ */
+export async function getRandomUnlearnedWords(
+  limit = 10,
+  targetLang = 'es',
+  originLang?: string,
+  titleLangPreference?: DeckTitleLanguageMode
+): Promise<MasteryWordItem[]> {
+  const staticDb = await getStaticDb();
+  const userDb = await getUserDb();
+  const langName = resolveLanguageName(targetLang);
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
+
+  // 1. Get all card IDs already queued/learned for this language
+  const queuedRows = await userDb.getAllAsync<{ card_id: number }>(
+    'SELECT card_id FROM User_Cards WHERE target_lang IN (?, ?);',
+    [langName, targetLang]
+  );
+  const queuedIds = queuedRows.map((r) => r.card_id);
+
+  let query = `
+    SELECT 
+      c.card_id,
+      c.deck_id,
+      c.primary_term,
+      c.pos,
+      c.cili_id,
+      c.difficulty,
+      d.category,
+      d.subcategory
+    FROM cards c
+    JOIN decks d ON d.deck_id = c.deck_id
+  `;
+  const params: any[] = [];
+  if (queuedIds.length > 0) {
+    const placeholders = queuedIds.map(() => '?').join(',');
+    query += ` WHERE c.card_id NOT IN (${placeholders})`;
+    params.push(...queuedIds);
+  }
+  query += ' ORDER BY RANDOM() LIMIT ?;';
+  params.push(limit);
+
+  const randomCards = await staticDb.getAllAsync<{
+    card_id: number;
+    deck_id: number;
+    primary_term: string;
+    pos: string;
+    cili_id: string;
+    difficulty: number;
+    category: string;
+    subcategory: string;
+  }>(query, params);
+
+  if (randomCards.length === 0) return [];
+
+  const cardIds = randomCards.map((c) => c.card_id);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+  const allDeckIds = Array.from(new Set(randomCards.map((c) => c.deck_id)));
+  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
+
+  return randomCards.map((c) => {
+    const frontTerm = destMap.get(c.card_id) || c.primary_term;
+    const backTerm = origMap.get(c.card_id) || c.primary_term;
+    const definition = defMap.get(c.card_id) || '';
+    const dt = deckTransMap.get(c.deck_id);
+    const deckName = dt?.subcategory_translation || capitalizeTitle(c.subcategory);
+    const themeName = dt?.category_translation || capitalizeTitle(c.category);
+
+    return {
+      concept_id: c.cili_id || `c_${c.card_id}`,
+      concept_desc: definition,
+      front_lexeme_id: c.card_id,
+      front_term: frontTerm,
+      front_lang: targetLang,
+      front_pos: c.pos || null,
+      front_cefr: difficultyToCefr(c.difficulty),
+      back_lexeme_id: c.card_id,
+      back_term: backTerm,
+      back_lang: effectiveOrigin,
+      deck_name: deckName,
+      theme_name: themeName,
+      is_queued: false,
+      stage: 'available',
+    };
+  });
+}
+
+/**
  * Updates a card's FSRS spaced repetition state after user grading.
  */
 export async function updateCardFSRS(
