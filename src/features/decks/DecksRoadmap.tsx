@@ -73,6 +73,7 @@ import {
   getMasteryWords,
   addAvailableWordsToQueue,
   DeckTitleLanguageMode,
+  searchLexemesFTS,
 } from '../../db/vault';
 import { DifficultyProgressionMap } from './DifficultyProgressionMap';
 import { DeckIcon } from '../../components/icons/DeckIcon';
@@ -80,6 +81,7 @@ import { speakWord } from '../../utils/tts';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet } from '../../services/tokenWallet';
 import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
+import { SearchResultCard } from '../search/FastSearch';
 
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
@@ -462,6 +464,33 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   // Local word queue state tracking for instantaneous UI response
   const [locallyQueuedWordIds, setLocallyQueuedWordIds] = useState<Set<number>>(new Set());
 
+  // Search State in Decks Tab
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = useCallback(
+    async (text: string) => {
+      setSearchQuery(text);
+      if (!text.trim()) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const res = await searchLexemesFTS(text, targetLang);
+        setSearchResults(res);
+      } catch (err) {
+        console.warn('[DecksRoadmap] Error searching lexemes:', err);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [targetLang]
+  );
+
   // Initial Load
   useEffect(() => {
     loadAllData();
@@ -697,6 +726,25 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   return (
     <View style={styles.container}>
+      {/* Top Header Row with Screen Title and Refactored 10 Random Words Action Pill */}
+      <View style={styles.topHeaderRow}>
+        <View style={styles.topHeaderLeft}>
+          <Text style={styles.topHeaderTitle}>KINGDOM ARCHIVES</Text>
+          <Text style={styles.topHeaderSubtitle}>Curated decks & vocabulary roadmap</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.randomDiscoveryPill}
+          onPress={() => setRandomDiscoveryActive(true)}
+          activeOpacity={0.8}
+          testID="open-random-discovery-btn"
+        >
+          <Dices size={15} color="#78350F" style={{ marginRight: 5 }} />
+          <Text style={styles.randomDiscoveryPillText}>
+            {t('random_discovery.btn_discover', { defaultValue: '10 Random Words' })}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 3-Tab Segmented Switcher */}
       <View style={styles.topTabBar}>
         <TouchableOpacity
@@ -792,55 +840,90 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         />
       ) : (
         <>
-          {/* Role & Question Header Banner */}
-          <View style={styles.headerBanner}>
-            {activeTab === 'decks' && (
-              <>
-                <View style={styles.bannerRow}>
-                  <View style={styles.roleTag}>
-                    <Text style={styles.roleTagText}>{t('explore.tab_decks_role')}</Text>
-                  </View>
+          {/* Search Bar in lieu of the old exploration card on Decks tab */}
+          {activeTab === 'decks' && (
+            <View style={styles.searchBarWrapper}>
+              <View style={styles.searchBarContainer}>
+                <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder={t('search.placeholder', { defaultValue: 'Search kingdom vocabulary, runes, or meanings...' })}
+                  placeholderTextColor="#78350F88"
+                  value={searchQuery}
+                  onChangeText={handleSearch}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  testID="decks-search-input"
+                />
+                {searchQuery.length > 0 && (
                   <TouchableOpacity
-                    style={styles.randomDiscoveryBtn}
-                    onPress={() => setRandomDiscoveryActive(true)}
-                    activeOpacity={0.8}
-                    testID="open-random-discovery-btn"
+                    onPress={() => handleSearch('')}
+                    style={styles.clearSearchBtn}
+                    testID="clear-decks-search-btn"
                   >
-                    <Dices size={14} color="#78350F" style={{ marginRight: 5 }} />
-                    <Text style={styles.randomDiscoveryBtnText}>
-                      {t('random_discovery.btn_discover', { defaultValue: '10 Random Words' })}
-                    </Text>
+                    <X size={16} color="#78350F" />
                   </TouchableOpacity>
-                </View>
-                <Text style={styles.questionTitle}>{t('explore.tab_decks_question')}</Text>
-              </>
-            )}
-            {activeTab === 'mastery' && (
-              <>
-                <View style={styles.roleTag}>
-                  <Text style={styles.roleTagText}>{t('explore.tab_mastery_role')}</Text>
-                </View>
-                <Text style={styles.questionTitle}>{t('explore.tab_mastery_question')}</Text>
-              </>
-            )}
-          </View>
+                )}
+              </View>
+            </View>
+          )}
 
-      {/* TAB 1: DECKS (THEMES) */}
-      {activeTab === 'decks' && (
-        <FlatList
-          data={themes}
-          keyExtractor={themeKeyExtractor}
-          renderItem={renderThemeGroup}
-          style={styles.tabContent}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={5}
-          maxToRenderPerBatch={5}
-          updateCellsBatchingPeriod={50}
-          windowSize={5}
-          removeClippedSubviews={true}
-        />
-      )}
+          {activeTab === 'mastery' && (
+            <View style={styles.headerBanner}>
+              <View style={styles.roleTag}>
+                <Text style={styles.roleTagText}>{t('explore.tab_mastery_role')}</Text>
+              </View>
+              <Text style={styles.questionTitle}>{t('explore.tab_mastery_question')}</Text>
+            </View>
+          )}
+
+          {/* TAB 1: DECKS (THEMES) OR SEARCH RESULTS */}
+          {activeTab === 'decks' && (
+            searchQuery.trim().length > 0 ? (
+              <FlatList
+                data={searchResults}
+                keyExtractor={(item) => `search_${item.id}`}
+                renderItem={({ item }) => (
+                  <SearchResultCard
+                    item={item}
+                    isQueued={locallyQueuedWordIds.has(item.id)}
+                    onLearn={() => handleAddWord(item.id, item.id, item.concept_id || `c_${item.id}`)}
+                    onSpeak={(term, lang) => speakWord(term, lang)}
+                  />
+                )}
+                style={styles.tabContent}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.searchEmptyContainer}>
+                    <Sparkles size={40} color="#D97706" style={{ marginBottom: 10 }} />
+                    <Text style={styles.searchEmptyTitle}>
+                      {isSearching ? 'Searching kingdom scrolls...' : 'No matching scrolls found'}
+                    </Text>
+                    <Text style={styles.searchEmptySubtitle}>
+                      {isSearching
+                        ? 'Inquiring the ancient dictionary archives...'
+                        : 'Try inquiring with another word stem or CEFR rune.'}
+                    </Text>
+                  </View>
+                }
+              />
+            ) : (
+              <FlatList
+                data={themes}
+                keyExtractor={themeKeyExtractor}
+                renderItem={renderThemeGroup}
+                style={styles.tabContent}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
+                initialNumToRender={5}
+                maxToRenderPerBatch={5}
+                updateCellsBatchingPeriod={50}
+                windowSize={5}
+                removeClippedSubviews={true}
+              />
+            )
+          )}
 
       {/* TAB 2: DIFFICULTY (CEFR / TIERS) */}
       {activeTab === 'difficulty' && (
@@ -1410,22 +1493,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 12,
-    height: 42,
-    marginBottom: 12,
-  },
-  searchBarInput: {
-    flex: 1,
-    fontSize: 13,
-    color: '#1E293B',
-  },
   wordItemCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -1751,4 +1818,97 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
+  topHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  topHeaderLeft: {
+    flex: 1,
+  },
+  topHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#1E293B',
+    letterSpacing: 0.5,
+  },
+  topHeaderSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  randomDiscoveryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#D97706',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    gap: 5,
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  randomDiscoveryPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#78350F',
+  },
+  searchBarWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#D97706',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    shadowColor: '#78350F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#451A03',
+    fontWeight: '600',
+    paddingVertical: 0,
+  },
+  clearSearchBtn: {
+    padding: 4,
+  },
+  searchEmptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  searchEmptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#78350F',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  searchEmptySubtitle: {
+    fontSize: 13,
+    color: '#92400E',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });
+

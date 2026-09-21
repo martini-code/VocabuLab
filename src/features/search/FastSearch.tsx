@@ -21,14 +21,14 @@ interface FastSearchProps {
   onInsufficientTokens?: (requiredWords: number) => void;
 }
 
-interface SearchResultCardProps {
+export interface SearchResultCardProps {
   item: any;
   isQueued: boolean;
   onLearn: (item: any) => void;
   onSpeak: (term: string, lang: string) => void;
 }
 
-const SearchResultCard = React.memo<SearchResultCardProps>(
+export const SearchResultCard = React.memo<SearchResultCardProps>(
   ({ item, isQueued, onLearn, onSpeak }) => {
     return (
       <ParchmentCard style={styles.resultCard}>

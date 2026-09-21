@@ -21,7 +21,6 @@ import { syncDatabaseFromR2, ensureDefaultLanguagePairInstalled } from './src/db
 import { VaultStats, LanguagePairSettings } from './src/types';
 import { ReviewSession } from './src/features/pipeline/ReviewSession';
 import { DecksRoadmap } from './src/features/decks/DecksRoadmap';
-import { FastSearch } from './src/features/search/FastSearch';
 import { ProgressScreen } from './src/features/progress/ProgressScreen';
 import { SquireMascot } from './src/components/mascot/Mascots';
 import './src/locales';
@@ -43,7 +42,6 @@ import { configureAudioSession } from './src/utils/tts';
 import {
   Swords,
   Library,
-  Search as SearchIcon,
   Activity,
   Coins,
   Flame,
@@ -56,7 +54,7 @@ import {
   Languages,
 } from 'lucide-react-native';
 
-type TabType = 'pipeline' | 'archives' | 'search' | 'chronicles' | 'treasury';
+type TabType = 'pipeline' | 'archives' | 'chronicles' | 'treasury';
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -91,6 +89,7 @@ export default function App() {
   const [rewardedAdOnClose, setRewardedAdOnClose] = useState<(() => void) | null>(null);
   const [mockProfileModalOpen, setMockProfileModalOpen] = useState(false);
   const [deckTitleLanguage, setDeckTitleLanguage] = useState<DeckTitleLanguageMode>('origin');
+  const [isReviewInProgress, setIsReviewInProgress] = useState(false);
 
   useEffect(() => {
     bootstrapKeep();
@@ -186,54 +185,61 @@ export default function App() {
       <StatusBar barStyle="dark-content" backgroundColor="#FEFCE8" />
 
       {/* Top Medieval Stats Header (Vector Icons - Strictly No Emojis) */}
-      <View style={styles.topStatsBar}>
-        {/* Streak Flame */}
-        <View style={styles.statPill}>
-          <Flame size={16} color="#DC2626" />
-          <Text style={styles.statValue}>{stats.streakDays}</Text>
+      {!isReviewInProgress && (
+        <View style={styles.topStatsBar}>
+          {/* Streak Flame */}
+          <View style={styles.statPill}>
+            <Flame size={16} color="#DC2626" />
+            <Text style={styles.statValue}>{stats.streakDays}</Text>
+          </View>
+
+          {/* Due Cards Shield */}
+          <View style={styles.statPill}>
+            <Shield size={16} color="#0D9488" />
+            <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
+          </View>
+
+          {/* Token Allowance Pill (Isolated component, granularly subscribed to wallet updates) */}
+          <TokenPill onPress={() => setTokenWalletModalOpen(true)} />
+
+          {/* Destination Language Selector Pill (Displays flag and uppercase language code, without language name) */}
+          <TouchableOpacity
+            style={styles.statPill}
+            testID="top-language-pill"
+            onPress={() => {
+              setLanguageModalMode('destination');
+              setLanguageModalOpen(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.flagEmoji}>
+              {getLanguageFlag(languagePair.destination_lang)}
+            </Text>
+            <Text style={styles.statValue}>
+              {formatLanguageCode(languagePair.destination_lang)}
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Due Cards Shield */}
-        <View style={styles.statPill}>
-          <Shield size={16} color="#0D9488" />
-          <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
-        </View>
-
-        {/* Token Allowance Pill (Isolated component, granularly subscribed to wallet updates) */}
-        <TokenPill onPress={() => setTokenWalletModalOpen(true)} />
-
-        {/* Destination Language Selector Pill (Displays flag and uppercase language code, without language name) */}
-        <TouchableOpacity
-          style={styles.statPill}
-          testID="top-language-pill"
-          onPress={() => {
-            setLanguageModalMode('destination');
-            setLanguageModalOpen(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.flagEmoji}>
-            {getLanguageFlag(languagePair.destination_lang)}
-          </Text>
-          <Text style={styles.statValue}>
-            {formatLanguageCode(languagePair.destination_lang)}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      )}
 
       {/* Main View Area */}
       <View style={styles.contentArea}>
         {activeTab === 'pipeline' && (
           <ReviewSession
             onSessionComplete={() => {
+              setIsReviewInProgress(false);
               refreshStats();
             }}
-            onExploreArchives={() => setActiveTab('archives')}
+            onExploreArchives={() => {
+              setIsReviewInProgress(false);
+              setActiveTab('archives');
+            }}
             deckFilter={deckFilter}
             onClearDeckFilter={() => setDeckFilter(null)}
             targetLang={languagePair.destination_lang}
             originLang={languagePair.origin_lang}
             onInsufficientTokens={handleInsufficientTokens}
+            onReviewActiveChange={setIsReviewInProgress}
           />
         )}
         {activeTab === 'archives' && (
@@ -241,11 +247,13 @@ export default function App() {
             onStudyDeck={(deckId, deckName) => {
               setDeckFilter({ id: deckId, name: deckName });
               refreshStats();
+              setIsReviewInProgress(false);
               setActiveTab('pipeline');
             }}
             onStartReview={() => {
               setDeckFilter(null);
               refreshStats();
+              setIsReviewInProgress(false);
               setActiveTab('pipeline');
             }}
             targetLang={languagePair.destination_lang}
@@ -253,9 +261,6 @@ export default function App() {
             deckTitleLanguage={deckTitleLanguage}
             onInsufficientTokens={handleInsufficientTokens}
           />
-        )}
-        {activeTab === 'search' && (
-          <FastSearch onInsufficientTokens={handleInsufficientTokens} />
         )}
         {activeTab === 'chronicles' && <ProgressScreen />}
         {activeTab === 'treasury' && (
@@ -438,77 +443,65 @@ export default function App() {
       </View>
 
       {/* Medieval Cartoon Bottom Tab Bar */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            refreshStats();
-            setActiveTab('pipeline');
-          }}
-          style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
-        >
-          <Swords size={20} color={activeTab === 'pipeline' ? '#B45309' : '#64748B'} />
-          <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
-            {t('nav.training')}
-          </Text>
-        </TouchableOpacity>
+      {!isReviewInProgress && (
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              refreshStats();
+              setActiveTab('pipeline');
+            }}
+            style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
+          >
+            <Swords size={20} color={activeTab === 'pipeline' ? '#B45309' : '#64748B'} />
+            <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
+              {t('nav.training')}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            refreshStats();
-            setActiveTab('archives');
-          }}
-          style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
-        >
-          <Library size={20} color={activeTab === 'archives' ? '#B45309' : '#64748B'} />
-          <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
-            {t('nav.decks')}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              refreshStats();
+              setActiveTab('archives');
+            }}
+            style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
+          >
+            <Library size={20} color={activeTab === 'archives' ? '#B45309' : '#64748B'} />
+            <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
+              {t('nav.decks')}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            refreshStats();
-            setActiveTab('search');
-          }}
-          style={[styles.navItem, activeTab === 'search' && styles.navItemActive]}
-        >
-          <SearchIcon size={20} color={activeTab === 'search' ? '#B45309' : '#64748B'} />
-          <Text style={[styles.navLabel, activeTab === 'search' && styles.navLabelActive]}>
-            {t('nav.search')}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              refreshStats();
+              setActiveTab('chronicles');
+            }}
+            style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
+          >
+            <Activity size={20} color={activeTab === 'chronicles' ? '#B45309' : '#64748B'} />
+            <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
+              {t('nav.chronicles')}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            refreshStats();
-            setActiveTab('chronicles');
-          }}
-          style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
-        >
-          <Activity size={20} color={activeTab === 'chronicles' ? '#B45309' : '#64748B'} />
-          <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
-            {t('nav.chronicles')}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            refreshStats();
-            setActiveTab('treasury');
-          }}
-          style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
-        >
-          <Coins size={20} color={activeTab === 'treasury' ? '#B45309' : '#64748B'} />
-          <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
-            {t('nav.treasury')}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              refreshStats();
+              setActiveTab('treasury');
+            }}
+            style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
+          >
+            <Coins size={20} color={activeTab === 'treasury' ? '#B45309' : '#64748B'} />
+            <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
+              {t('nav.treasury')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Language Selector Modal (123 Languages & Offline Packs) */}
       <LanguageSelectorModal

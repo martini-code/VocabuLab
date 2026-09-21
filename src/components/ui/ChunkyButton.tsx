@@ -12,6 +12,7 @@ interface ChunkyButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  testID?: string;
 }
 
 const COLOR_MAP: Record<
@@ -65,11 +66,13 @@ export const ChunkyButton: React.FC<ChunkyButtonProps> = ({
   style,
   textStyle,
   icon,
+  testID,
 }) => {
   const palette = COLOR_MAP[color];
 
   return (
     <Pressable
+      testID={testID}
       disabled={disabled}
       onPress={onPress}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

@@ -252,16 +252,57 @@ describe('ReviewSession Multi-Language Learning Tests', () => {
     expect(vaultModule.getDueCards).toHaveBeenCalledWith(undefined, 'es', 'en');
   });
 
-  it('renders card with correct language tags in mixed review session', async () => {
-    const { findAllByText } = await render(
-      <ReviewSession targetLang="es" originLang="en" />
+  it('renders card with correct language tags after pressing Begin Review', async () => {
+    const onReviewActiveChange = jest.fn();
+    const { findByTestId, findAllByText, findByText } = await render(
+      <ReviewSession targetLang="es" originLang="en" onReviewActiveChange={onReviewActiveChange} />
     );
 
-    // Front & back cards show term and language pair tag ES ➔ EN
+    // Staging screen displays language and cards due data above Begin Review button
+    expect(await findByText('DAILY REVIEW')).toBeTruthy();
+    expect(await findByText('Cards Due')).toBeTruthy();
+    const beginButton = await findByTestId('begin-review-button');
+    expect(beginButton).toBeTruthy();
+
+    // Press Begin Review to enter fullscreen review session
+    await act(async () => {
+      fireEvent.press(beginButton);
+    });
+
+    expect(onReviewActiveChange).toHaveBeenCalledWith(true);
+
+    // Fullscreen review shows progress indicator and 'X' exit button
+    expect(await findByTestId('close-review-button')).toBeTruthy();
+    expect(await findByText('1 / 2')).toBeTruthy();
+
+    // Front card shows term and language pair tag ES ➔ EN
     const termMatches = await findAllByText('Hola');
     expect(termMatches.length).toBeGreaterThanOrEqual(1);
 
     const langTagMatches = await findAllByText(/ES.*EN/);
     expect(langTagMatches.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('exits active review and returns to staging when tapping the X button', async () => {
+    const onReviewActiveChange = jest.fn();
+    const { findByTestId, findByText } = await render(
+      <ReviewSession targetLang="es" originLang="en" onReviewActiveChange={onReviewActiveChange} />
+    );
+
+    // Enter review
+    const beginButton = await findByTestId('begin-review-button');
+    await act(async () => {
+      fireEvent.press(beginButton);
+    });
+    expect(onReviewActiveChange).toHaveBeenCalledWith(true);
+
+    // Exit review via X button
+    const closeButton = await findByTestId('close-review-button');
+    await act(async () => {
+      fireEvent.press(closeButton);
+    });
+
+    expect(onReviewActiveChange).toHaveBeenCalledWith(false);
+    expect(await findByTestId('begin-review-button')).toBeTruthy();
   });
 });

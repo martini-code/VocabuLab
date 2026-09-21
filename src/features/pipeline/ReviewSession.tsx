@@ -31,6 +31,7 @@ interface ReviewSessionProps {
   targetLang?: string;
   originLang?: string;
   onInsufficientTokens?: (requiredWords: number) => void;
+  onReviewActiveChange?: (active: boolean) => void;
 }
 
 export const ReviewSession: React.FC<ReviewSessionProps> = ({
@@ -41,12 +42,14 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   targetLang,
   originLang,
   onInsufficientTokens,
+  onReviewActiveChange,
 }) => {
   const [cards, setCards] = useState<CardWithDetails[]>([]);
   const [enrolledPairs, setEnrolledPairs] = useState<EnrolledLanguagePair[]>([]);
   const [reviewScope, setReviewScope] = useState<string>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isReviewActive, setIsReviewActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [randomDiscoveryActive, setRandomDiscoveryActive] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
@@ -55,8 +58,16 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
   const activeAlgorithm = srsManager.getActiveAlgorithm();
 
+  const setReviewActiveState = (active: boolean) => {
+    setIsReviewActive(active);
+    if (onReviewActiveChange) {
+      onReviewActiveChange(active);
+    }
+  };
+
   useEffect(() => {
     setSessionHistory([]);
+    setReviewActiveState(false);
     loadCards(reviewScope);
   }, [deckFilter?.id, targetLang, originLang, reviewScope]);
 
@@ -182,12 +193,17 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         deckName={deckFilter?.name}
         onDone={() => {
           setSessionHistory([]);
+          setReviewActiveState(false);
           if (onSessionComplete) onSessionComplete();
           loadCards();
         }}
-        onExploreArchives={onExploreArchives}
+        onExploreArchives={() => {
+          setReviewActiveState(false);
+          if (onExploreArchives) onExploreArchives();
+        }}
         onTrainAgain={() => {
           setSessionHistory([]);
+          setReviewActiveState(false);
           loadCards();
         }}
       />
@@ -322,170 +338,279 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const reviewOptions = getReviewOptions(currentCard);
   const allDueTotal = enrolledPairs.reduce((sum, p) => sum + (p.progress.dueCards || 0), 0);
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Deck Focus Banner if filtered */}
-      {deckFilter && (
-        <View style={styles.deckFilterBanner}>
-          <View style={styles.deckFilterLeft}>
-            <Layers size={16} color="#78350F" />
-            <Text style={styles.deckFilterText} numberOfLines={1}>
-              Deck Focus: {deckFilter.name}
-            </Text>
+  // ─── Review Staging Screen ──────────────────────────────────────────────────
+  if (!isReviewActive) {
+    let displayFlag = '🌐';
+    let displayLangText = 'All Languages';
+
+    if (deckFilter) {
+      displayFlag = getLanguageFlag(targetLang || 'es');
+      displayLangText = formatLanguageCode(targetLang || 'es');
+    } else if (reviewScope !== 'all') {
+      displayFlag = getLanguageFlag(reviewScope);
+      displayLangText = formatLanguageCode(reviewScope);
+    }
+
+    return (
+      <ScrollView contentContainerStyle={styles.stagingContainer} showsVerticalScrollIndicator={false}>
+        {/* Deck Focus Banner if filtered */}
+        {deckFilter && (
+          <View style={styles.deckFilterBanner}>
+            <View style={styles.deckFilterLeft}>
+              <Layers size={16} color="#78350F" />
+              <Text style={styles.deckFilterText} numberOfLines={1}>
+                Deck Focus: {deckFilter.name}
+              </Text>
+            </View>
+            {onClearDeckFilter && (
+              <TouchableOpacity
+                style={styles.clearFilterBtn}
+                onPress={onClearDeckFilter}
+              >
+                <X size={14} color="#78350F" />
+                <Text style={styles.clearFilterText}>All Decks</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          {onClearDeckFilter && (
-            <TouchableOpacity
-              style={styles.clearFilterBtn}
-              onPress={onClearDeckFilter}
+        )}
+
+        {/* Multi-Language Scope Filter Pills */}
+        {!deckFilter && enrolledPairs.length >= 2 && (
+          <View style={styles.scopeSelectorContainer} testID="review-scope-selector">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scopeScroll}
             >
-              <X size={14} color="#78350F" />
-              <Text style={styles.clearFilterText}>All Decks</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                testID="scope-pill-all"
+                style={[
+                  styles.scopePill,
+                  reviewScope === 'all' && styles.scopePillActive,
+                ]}
+                onPress={() => setReviewScope('all')}
+              >
+                <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
+                <Text
+                  style={[
+                    styles.scopePillText,
+                    reviewScope === 'all' && styles.scopePillTextActive,
+                  ]}
+                >
+                  All Languages ({allDueTotal})
+                </Text>
+              </TouchableOpacity>
+
+              {enrolledPairs.map((p) => {
+                const isSelected = reviewScope === p.destination_lang;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    testID={`scope-pill-${p.destination_lang}`}
+                    style={[
+                      styles.scopePill,
+                      isSelected && styles.scopePillActive,
+                    ]}
+                    onPress={() => setReviewScope(p.destination_lang)}
+                  >
+                    <Text
+                      style={[
+                        styles.scopePillText,
+                        isSelected && styles.scopePillTextActive,
+                      ]}
+                    >
+                      {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)} ({p.progress.dueCards})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Staging Information Card */}
+        <View style={styles.stagingCard}>
+          <SquireMascot mood={mascotMood} size={105} />
+          <Text style={styles.stagingTitle}>
+            {deckFilter ? 'DECK REVIEW' : 'DAILY REVIEW'}
+          </Text>
+          <Text style={styles.stagingSubtitle}>
+            {deckFilter
+              ? `Prepare thy memory to master cards in "${deckFilter.name}".`
+              : 'Sharpen thy vocabulary scrolls with spaced repetition.'}
+          </Text>
+
+          {/* Staging Data Summary Box */}
+          <View style={styles.stagingDataBox}>
+            <View style={styles.stagingDataRow}>
+              <Text style={styles.stagingDataLabel}>Language</Text>
+              <View style={styles.stagingDataBadge}>
+                <Text style={styles.stagingDataBadgeText}>
+                  {displayFlag} {displayLangText}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.stagingDataRow}>
+              <Text style={styles.stagingDataLabel}>Cards Due</Text>
+              <View style={styles.stagingDataBadge}>
+                <Text style={styles.stagingDataBadgeText}>
+                  {cards.length} {cards.length === 1 ? 'card' : 'cards'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.stagingDataRow}>
+              <Text style={styles.stagingDataLabel}>Algorithm</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Zap size={14} color="#D97706" />
+                <Text style={styles.stagingDataEngineText}>{activeAlgorithm.meta.shortName}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Begin Review Button */}
+          <ChunkyButton
+            title="BEGIN REVIEW"
+            subtitle={`${cards.length} ${cards.length === 1 ? 'card' : 'cards'} ready to review`}
+            color="green"
+            onPress={() => setReviewActiveState(true)}
+            testID="begin-review-button"
+            style={{ width: '100%', marginTop: 14 }}
+          />
+
+          {deckFilter && onClearDeckFilter && (
+            <ChunkyButton
+              title="TRAIN ALL KINGDOM DECKS"
+              subtitle="Return to general training queue"
+              color="wood"
+              onPress={onClearDeckFilter}
+              style={{ width: '100%', marginTop: 12 }}
+            />
+          )}
+
+          <ChunkyButton
+            title="DISCOVER 10 RANDOM WORDS"
+            subtitle="Scout unlearned vocabulary across random decks"
+            color="amber"
+            onPress={() => setRandomDiscoveryActive(true)}
+            style={{ width: '100%', marginTop: 12 }}
+          />
+
+          {onExploreArchives && (
+            <ChunkyButton
+              title="EXPLORE THE ARCHIVES"
+              subtitle="Browse progressive difficulty decks"
+              color="wood"
+              onPress={onExploreArchives}
+              style={{ width: '100%', marginTop: 12 }}
+            />
           )}
         </View>
-      )}
+      </ScrollView>
+    );
+  }
 
-      {/* Multi-Language Scope Filter Pills */}
-      {!deckFilter && enrolledPairs.length >= 2 && (
-        <View style={styles.scopeSelectorContainer} testID="review-scope-selector">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scopeScroll}
-          >
-            <TouchableOpacity
-              testID="scope-pill-all"
+  // ─── Active Fullscreen Review Page ──────────────────────────────────────────
+  return (
+    <View style={styles.activeContainer}>
+      {/* Top Header Row: Progress Bar on Left, 'X' Exit Button on Right */}
+      <View style={styles.activeReviewTopBar}>
+        <View style={styles.topProgressContainer}>
+          <View style={styles.topProgressBarTrack}>
+            <View
               style={[
-                styles.scopePill,
-                reviewScope === 'all' && styles.scopePillActive,
+                styles.topProgressBarFill,
+                { width: `${((currentIndex + 1) / cards.length) * 100}%` },
               ]}
-              onPress={() => setReviewScope('all')}
-            >
-              <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
-              <Text
-                style={[
-                  styles.scopePillText,
-                  reviewScope === 'all' && styles.scopePillTextActive,
-                ]}
-              >
-                All Languages ({allDueTotal})
-              </Text>
-            </TouchableOpacity>
-
-            {enrolledPairs.map((p) => {
-              const isSelected = reviewScope === p.destination_lang;
-              return (
-                <TouchableOpacity
-                  key={p.id}
-                  testID={`scope-pill-${p.destination_lang}`}
-                  style={[
-                    styles.scopePill,
-                    isSelected && styles.scopePillActive,
-                  ]}
-                  onPress={() => setReviewScope(p.destination_lang)}
-                >
-                  <Text
-                    style={[
-                      styles.scopePillText,
-                      isSelected && styles.scopePillTextActive,
-                    ]}
-                  >
-                    {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)} ({p.progress.dueCards})
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Top Training Arena Header & Mascot */}
-      <View style={styles.mascotSpeechRow}>
-        <SquireMascot mood={mascotMood} size={90} />
-        <View style={styles.speechBubble}>
-          <Text style={styles.speechText}>{mascotQuote}</Text>
-          <View style={styles.speechTail} />
-        </View>
-      </View>
-
-      {/* Progress Indicator & Algorithm Selector Badge */}
-      <View style={styles.progressRow}>
-        <View style={styles.progressBarBackground}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${((currentIndex + 1) / cards.length) * 100}%` },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {currentIndex + 1} / {cards.length}
-        </Text>
-        <View style={styles.algorithmChip}>
-          <Zap size={12} color="#D97706" />
-          <Text style={styles.algorithmChipText}>{activeAlgorithm.meta.shortName}</Text>
-        </View>
-      </View>
-
-      {/* Spaced Repetition Card with Reanimated 3D UI Worklet Flip */}
-      <ReviewCardFlipper
-        card={currentCard}
-        isFlipped={isFlipped}
-        onFlip={handleFlip}
-        onSpeak={speakWord}
-      />
-
-      {/* FSRS Grading Actions Bar */}
-      {isFlipped ? (
-        <View style={styles.gradingSection}>
-          <Text style={styles.gradeSectionTitle}>HOW WELL DID THOU RECALL?</Text>
-          <View style={styles.gradingButtonsGrid}>
-            {/* Again (Crimson) */}
-            <ChunkyButton
-              title="AGAIN"
-              subtitle={reviewOptions[0]?.intervalText || '10m'}
-              color="crimson"
-              onPress={() => handleGrade(Rating.Again)}
-              style={styles.gradeButton}
-            />
-
-            {/* Hard (Amber) */}
-            <ChunkyButton
-              title="HARD"
-              subtitle={reviewOptions[1]?.intervalText || '1d'}
-              color="amber"
-              onPress={() => handleGrade(Rating.Hard)}
-              style={styles.gradeButton}
-            />
-
-            {/* Good (Green) */}
-            <ChunkyButton
-              title="GOOD"
-              subtitle={reviewOptions[2]?.intervalText || '4d'}
-              color="green"
-              onPress={() => handleGrade(Rating.Good)}
-              style={styles.gradeButton}
-            />
-
-            {/* Easy (Royal Blue) */}
-            <ChunkyButton
-              title="EASY"
-              subtitle={reviewOptions[3]?.intervalText || '12d'}
-              color="blue"
-              onPress={() => handleGrade(Rating.Easy)}
-              style={styles.gradeButton}
             />
           </View>
+          <Text style={styles.topProgressText}>
+            {currentIndex + 1} / {cards.length}
+          </Text>
         </View>
-      ) : (
-        <ChunkyButton
-          title="REVEAL SCROLL"
-          color="amber"
-          onPress={handleFlip}
-          style={{ width: '100%', marginTop: 15 }}
+
+        <TouchableOpacity
+          testID="close-review-button"
+          accessibilityLabel="Exit review"
+          onPress={() => {
+            setReviewActiveState(false);
+            loadCards();
+          }}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.closeReviewButton}
+        >
+          <X size={20} color="#78350F" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Centralized Review Cards Area */}
+      <ScrollView
+        contentContainerStyle={styles.activeCenterContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <ReviewCardFlipper
+          card={currentCard}
+          isFlipped={isFlipped}
+          onFlip={handleFlip}
+          onSpeak={speakWord}
         />
-      )}
-    </ScrollView>
+
+        {/* Actions directly below the centered card */}
+        {isFlipped ? (
+          <View style={styles.gradingSection}>
+            <Text style={styles.gradeSectionTitle}>HOW WELL DID THOU RECALL?</Text>
+            <View style={styles.gradingButtonsGrid}>
+              {/* Again (Crimson) */}
+              <ChunkyButton
+                title="AGAIN"
+                subtitle={reviewOptions[0]?.intervalText || '10m'}
+                color="crimson"
+                onPress={() => handleGrade(Rating.Again)}
+                style={styles.gradeButton}
+              />
+
+              {/* Hard (Amber) */}
+              <ChunkyButton
+                title="HARD"
+                subtitle={reviewOptions[1]?.intervalText || '1d'}
+                color="amber"
+                onPress={() => handleGrade(Rating.Hard)}
+                style={styles.gradeButton}
+              />
+
+              {/* Good (Green) */}
+              <ChunkyButton
+                title="GOOD"
+                subtitle={reviewOptions[2]?.intervalText || '4d'}
+                color="green"
+                onPress={() => handleGrade(Rating.Good)}
+                style={styles.gradeButton}
+              />
+
+              {/* Easy (Royal Blue) */}
+              <ChunkyButton
+                title="EASY"
+                subtitle={reviewOptions[3]?.intervalText || '12d'}
+                color="blue"
+                onPress={() => handleGrade(Rating.Easy)}
+                style={styles.gradeButton}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.activeActionContainer}>
+            <ChunkyButton
+              title="REVEAL SCROLL"
+              subtitle="Tap card or button to reveal"
+              color="wood"
+              onPress={handleFlip}
+              style={{ width: '100%', maxWidth: 360 }}
+            />
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -812,5 +937,142 @@ const styles = StyleSheet.create({
   },
   scopePillTextActive: {
     color: '#FFFFFF',
+  },
+  stagingContainer: {
+    flexGrow: 1,
+    padding: 16,
+    paddingBottom: 36,
+    alignItems: 'center',
+  },
+  stagingCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderBottomWidth: 6,
+    borderBottomColor: '#CBD5E1',
+    padding: 22,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 420,
+    marginTop: 8,
+  },
+  stagingTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#1E293B',
+    marginTop: 10,
+    letterSpacing: 0.5,
+  },
+  stagingSubtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 14,
+    lineHeight: 18,
+  },
+  stagingDataBox: {
+    width: '100%',
+    backgroundColor: '#FAF5ED',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#E5D5BC',
+    padding: 14,
+    marginVertical: 10,
+    gap: 10,
+  },
+  stagingDataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stagingDataLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#78350F',
+  },
+  stagingDataBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  stagingDataBadgeText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#78350F',
+  },
+  stagingDataEngineText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#B45309',
+  },
+  activeContainer: {
+    flex: 1,
+    backgroundColor: '#FAF5ED',
+    width: '100%',
+  },
+  activeReviewTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+    width: '100%',
+  },
+  topProgressContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 14,
+    gap: 10,
+  },
+  topProgressBarTrack: {
+    flex: 1,
+    height: 10,
+    backgroundColor: '#E5D5BC',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  topProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#D97706',
+    borderRadius: 5,
+  },
+  topProgressText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#78350F',
+    minWidth: 44,
+    textAlign: 'right',
+  },
+  closeReviewButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeCenterContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    width: '100%',
+  },
+  activeActionContainer: {
+    width: '100%',
+    maxWidth: 360,
+    marginTop: 20,
+    alignItems: 'center',
   },
 });
