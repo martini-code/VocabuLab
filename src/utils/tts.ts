@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as Speech from 'expo-speech';
+import { resolveLanguageCode } from '../locales/languages';
 
 // Audio session configuration state
 let isAudioSessionConfigured = false;
@@ -47,78 +48,138 @@ export async function configureAudioSession(): Promise<void> {
 }
 
 // Map of 2-letter ISO / short language codes to standard BCP-47 speech tags
-const LANGUAGE_CODE_MAP: Record<string, string> = {
-  en: 'en-US',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  de: 'de-DE',
-  ja: 'ja-JP',
-  it: 'it-IT',
-  pt: 'pt-BR',
-  'pt-br': 'pt-BR',
-  'pt-pt': 'pt-PT',
-  zh: 'zh-CN',
-  'zh-cn': 'zh-CN',
-  'zh-tw': 'zh-TW',
-  ru: 'ru-RU',
-  ko: 'ko-KR',
-  ar: 'ar-SA',
-  nl: 'nl-NL',
-  pl: 'pl-PL',
-  tr: 'tr-TR',
-  sv: 'sv-SE',
-  uk: 'uk-UA',
-  vi: 'vi-VN',
-  el: 'el-GR',
-  cs: 'cs-CZ',
-  da: 'da-DK',
-  fi: 'fi-FI',
-  he: 'he-IL',
-  hi: 'hi-IN',
-  hu: 'hu-HU',
-  id: 'id-ID',
-  nb: 'nb-NO',
-  no: 'nb-NO',
-  ro: 'ro-RO',
-  sk: 'sk-SK',
-  th: 'th-TH',
-  ca: 'ca-ES',
-  bg: 'bg-BG',
-  hr: 'hr-HR',
-  ms: 'ms-MY',
-  fa: 'fa-IR',
-  ur: 'ur-PK',
-  bn: 'bn-BD',
-  ta: 'ta-IN',
-  te: 'te-IN',
-  mr: 'mr-IN',
-  gu: 'gu-IN',
-  kn: 'kn-IN',
-  ml: 'ml-IN',
+export const LANGUAGE_CODE_MAP: Record<string, string> = {
   af: 'af-ZA',
   sq: 'sq-AL',
   am: 'am-ET',
+  ar: 'ar-SA',
   hy: 'hy-AM',
+  as: 'as-IN',
+  ay: 'ay-BO',
   az: 'az-AZ',
+  bm: 'bm-ML',
   eu: 'eu-ES',
   be: 'be-BY',
+  bn: 'bn-BD',
+  bho: 'bho-IN',
   bs: 'bs-BA',
+  bg: 'bg-BG',
+  my: 'my-MM',
+  yue: 'yue-HK',
+  ca: 'ca-ES',
+  ceb: 'ceb-PH',
+  ny: 'ny-MW',
+  zh: 'zh-CN',
+  'zh-cn': 'zh-CN',
+  'zh-tw': 'zh-TW',
+  hr: 'hr-HR',
+  cs: 'cs-CZ',
+  da: 'da-DK',
+  nl: 'nl-NL',
+  en: 'en-US',
+  eo: 'eo',
+  et: 'et-EE',
+  ee: 'ee-GH',
+  fi: 'fi-FI',
+  fr: 'fr-FR',
+  'fr-ca': 'fr-CA',
+  gl: 'gl-ES',
   ka: 'ka-GE',
+  de: 'de-DE',
+  el: 'el-GR',
+  gn: 'gn-PY',
+  gu: 'gu-IN',
+  ht: 'ht-HT',
+  ha: 'ha-NG',
+  haw: 'haw-US',
+  he: 'he-IL',
+  hi: 'hi-IN',
+  hmn: 'hmn',
+  hu: 'hu-HU',
   is: 'is-IS',
+  ig: 'ig-NG',
+  id: 'id-ID',
   ga: 'ga-IE',
+  it: 'it-IT',
+  ja: 'ja-JP',
+  jv: 'jv-ID',
+  kn: 'kn-IN',
+  kk: 'kk-KZ',
+  km: 'km-KH',
+  rw: 'rw-RW',
+  ko: 'ko-KR',
+  ku: 'ku-TR',
+  ckb: 'ckb-IQ',
+  ky: 'ky-KG',
+  lo: 'lo-LA',
+  la: 'la',
   lv: 'lv-LV',
+  ln: 'ln-CD',
   lt: 'lt-LT',
+  lg: 'lg-UG',
   mk: 'mk-MK',
+  mai: 'mai-IN',
+  mg: 'mg-MG',
+  ml: 'ml-IN',
+  ms: 'ms-MY',
   mt: 'mt-MT',
+  mr: 'mr-IN',
+  mn: 'mn-MN',
+  ne: 'ne-NP',
+  nb: 'nb-NO',
+  no: 'nb-NO',
+  or: 'or-IN',
+  om: 'om-ET',
+  ps: 'ps-AF',
+  fa: 'fa-IR',
+  pl: 'pl-PL',
+  pt: 'pt-BR',
+  'pt-br': 'pt-BR',
+  'pt-pt': 'pt-PT',
+  pa: 'pa-IN',
+  qu: 'qu-PE',
+  ro: 'ro-RO',
+  ru: 'ru-RU',
+  sa: 'sa-IN',
+  gd: 'gd-GB',
   sr: 'sr-RS',
+  st: 'st-ZA',
+  sn: 'sn-ZW',
+  sd: 'sd-PK',
+  si: 'si-LK',
+  sk: 'sk-SK',
   sl: 'sl-SI',
+  so: 'so-SO',
+  es: 'es-ES',
+  su: 'su-ID',
   sw: 'sw-KE',
+  sv: 'sv-SE',
   tl: 'fil-PH',
   fil: 'fil-PH',
+  tg: 'tg-TJ',
+  ta: 'ta-IN',
+  tt: 'tt-RU',
+  te: 'te-IN',
+  th: 'th-TH',
+  ti: 'ti-ET',
+  tn: 'tn-ZA',
+  tr: 'tr-TR',
+  tk: 'tk-TM',
+  ak: 'ak-GH',
+  uk: 'uk-UA',
+  ur: 'ur-PK',
+  ug: 'ug-CN',
+  uz: 'uz-UZ',
+  vi: 'vi-VN',
+  cy: 'cy-GB',
+  xh: 'xh-ZA',
+  yi: 'yi',
+  yo: 'yo-NG',
+  zu: 'zu-ZA',
 };
 
 // Common language names mapped to BCP-47 codes
-const LANGUAGE_NAME_MAP: Record<string, string> = {
+export const LANGUAGE_NAME_MAP: Record<string, string> = {
   english: 'en-US',
   spanish: 'es-ES',
   french: 'fr-FR',
@@ -158,7 +219,86 @@ const LANGUAGE_NAME_MAP: Record<string, string> = {
   farsi: 'fa-IR',
   tagalog: 'fil-PH',
   filipino: 'fil-PH',
+  latin: 'la',
+  latīna: 'la',
+  basque: 'eu-ES',
+  euskara: 'eu-ES',
+  esperanto: 'eo',
+  sanskrit: 'sa-IN',
+  galician: 'gl-ES',
 };
+
+/**
+ * Phonetic fallback mapping for languages that typically lack dedicated voices
+ * in standard iOS / Android TTS distributions.
+ * Without these fallbacks, OS synthesizers fall back to the default device locale (often English),
+ * creating jarring, incorrect English accents for ancient or regional languages.
+ */
+export const PHONETIC_FALLBACK_MAP: Record<string, string[]> = {
+  // Latin -> Italian (gold standard classical/ecclesiastical pronunciation) or Spanish
+  la: ['it-IT', 'it', 'es-ES', 'es'],
+  // Basque (Euskara) -> Spanish (matches Iberian 5-vowel system and phonetic articulation)
+  eu: ['es-ES', 'es'],
+  // Esperanto -> Italian, Spanish
+  eo: ['it-IT', 'es-ES'],
+  // Galician -> Portuguese, Spanish
+  gl: ['pt-PT', 'es-ES', 'pt-BR'],
+  // Sanskrit -> Hindi
+  sa: ['hi-IN', 'hi'],
+  // Yiddish -> German
+  yi: ['de-DE', 'de'],
+  // Haitian Creole -> French
+  ht: ['fr-FR', 'fr'],
+  // Belarusian -> Russian, Ukrainian
+  be: ['ru-RU', 'uk-UA'],
+  // Bosnian -> Croatian, Serbian
+  bs: ['hr-HR', 'sr-RS'],
+  // Aymara, Quechua, Guarani -> Spanish
+  ay: ['es-ES', 'es'],
+  qu: ['es-ES', 'es'],
+  gn: ['es-ES', 'es'],
+  // Bhojpuri, Maithili -> Hindi
+  bho: ['hi-IN', 'hi'],
+  mai: ['hi-IN', 'hi'],
+  // Javanese, Sundanese -> Indonesian
+  jv: ['id-ID', 'id'],
+  su: ['id-ID', 'id'],
+  // Cebuano -> Filipino / Tagalog
+  ceb: ['fil-PH', 'tl'],
+  // Malagasy -> French
+  mg: ['fr-FR', 'fr'],
+  // Scottish Gaelic -> Irish, English (UK)
+  gd: ['ga-IE', 'en-GB'],
+  // Tatar, Turkmen -> Russian, Turkish
+  tt: ['ru-RU', 'tr-TR'],
+  tk: ['tr-TR', 'ru-RU'],
+  // Tajik -> Persian, Russian
+  tg: ['fa-IR', 'ru-RU'],
+  // Kurdish -> Turkish, Persian
+  ku: ['tr-TR', 'fa-IR'],
+  ckb: ['ar-SA', 'fa-IR'],
+  // Bambara, Lingala -> French
+  bm: ['fr-FR', 'fr'],
+  ln: ['fr-FR', 'fr'],
+  // Ewe, Twi -> English (UK)
+  ee: ['en-GB', 'en'],
+  ak: ['en-GB', 'en'],
+};
+
+/**
+ * Returns the best phonetic fallback language code if the requested language
+ * is known to lack native TTS voices on consumer devices.
+ */
+export function getPhoneticFallbackLanguage(langTag: string): string {
+  if (!langTag) return 'en-US';
+  const clean = langTag.toLowerCase().trim();
+  const base = clean.split(/[-_]/)[0];
+  const fallbacks = PHONETIC_FALLBACK_MAP[base] || PHONETIC_FALLBACK_MAP[clean];
+  if (fallbacks && fallbacks.length > 0) {
+    return fallbacks[0];
+  }
+  return langTag;
+}
 
 /**
  * Normalizes input language names or ISO codes into standard BCP-47 tags
@@ -169,7 +309,7 @@ export function normalizeLanguageCode(lang: string = 'en'): string {
   const trimmed = lang.trim();
   const lower = trimmed.toLowerCase();
 
-  // 1. Check full language names
+  // 1. Check full language names map
   if (LANGUAGE_NAME_MAP[lower]) {
     return LANGUAGE_NAME_MAP[lower];
   }
@@ -179,7 +319,7 @@ export function normalizeLanguageCode(lang: string = 'en'): string {
     return LANGUAGE_CODE_MAP[lower];
   }
 
-  // 3. Normalize existing hyphenated tags (e.g. pt-br -> pt-BR)
+  // 3. Normalize existing hyphenated tags (e.g. pt-br -> pt-BR, es-mx -> es-MX)
   if (trimmed.includes('-')) {
     const parts = trimmed.split('-');
     if (parts.length === 2) {
@@ -187,8 +327,16 @@ export function normalizeLanguageCode(lang: string = 'en'): string {
     }
   }
 
+  // 4. Resolve canonical code using full 123-language registry
+  const canonical = resolveLanguageCode(trimmed);
+  const canonicalLower = canonical.toLowerCase();
+  if (LANGUAGE_CODE_MAP[canonicalLower]) {
+    return LANGUAGE_CODE_MAP[canonicalLower];
+  }
+
   return lower;
 }
+
 
 // In-memory voices cache
 let cachedVoices: Speech.Voice[] | null = null;
@@ -214,6 +362,9 @@ export async function getVoices(): Promise<Speech.Voice[]> {
 
 /**
  * Finds the most suitable voice available on the device for a target language tag.
+ * If no native voice exists for the target language (e.g. Latin or Basque on iOS),
+ * it searches installed voices using a phonetically compatible fallback language
+ * (e.g. Italian for Latin, Spanish for Basque).
  */
 export async function findBestVoice(langTag: string): Promise<Speech.Voice | undefined> {
   const voices = await getVoices();
@@ -222,20 +373,45 @@ export async function findBestVoice(langTag: string): Promise<Speech.Voice | und
   const target = langTag.toLowerCase();
   const targetPrefix = target.split('-')[0];
 
-  // 1. Exact match on language code
+  // 1. Exact match on target language code
   const exact = voices.find((v) => v.language && v.language.toLowerCase() === target);
   if (exact) return exact;
 
-  // 2. Prefix match on language family (e.g., es matches es-ES or es-MX)
+  // 2. Prefix match on target language family (e.g., es matches es-ES or es-MX)
   const prefixMatch = voices.find(
     (v) => v.language && v.language.toLowerCase().startsWith(`${targetPrefix}-`)
   );
   if (prefixMatch) return prefixMatch;
 
-  // 3. Fallback to any voice with the language prefix
-  return voices.find(
+  // 3. Fallback to any voice containing the target language prefix
+  const partialMatch = voices.find(
     (v) => v.language && v.language.toLowerCase().includes(targetPrefix)
   );
+  if (partialMatch) return partialMatch;
+
+  // 4. Phonetic fallback for languages without native voices (e.g. Latin -> Italian, Basque -> Spanish)
+  const fallbacks = PHONETIC_FALLBACK_MAP[targetPrefix] || PHONETIC_FALLBACK_MAP[target];
+  if (fallbacks && fallbacks.length > 0) {
+    for (const fbTag of fallbacks) {
+      const fbLower = fbTag.toLowerCase();
+      const fbPrefix = fbLower.split('-')[0];
+
+      const fbExact = voices.find((v) => v.language && v.language.toLowerCase() === fbLower);
+      if (fbExact) return fbExact;
+
+      const fbPrefixMatch = voices.find(
+        (v) => v.language && v.language.toLowerCase().startsWith(`${fbPrefix}-`)
+      );
+      if (fbPrefixMatch) return fbPrefixMatch;
+
+      const fbPartial = voices.find(
+        (v) => v.language && v.language.toLowerCase().includes(fbPrefix)
+      );
+      if (fbPartial) return fbPartial;
+    }
+  }
+
+  return undefined;
 }
 
 // In-memory buffer/URI cache for network or pre-synthesized TTS requests
@@ -249,7 +425,7 @@ const MIN_SPEAK_INTERVAL_MS = 300; // minimum ms between triggering speech for s
 /**
  * Pronounces a term using native speech synthesis.
  * Throttles rapid button taps, activates silent mode playback on physical iOS devices,
- * and matches installed native voices.
+ * and matches installed native voices or appropriate phonetic fallbacks.
  */
 export async function speakWord(text: string, langCode: string = 'es'): Promise<void> {
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -296,21 +472,27 @@ export async function speakWord(text: string, langCode: string = 'es'): Promise<
       audioBufferCache.set(cacheKey, cleanText);
     }
 
-    // 3. Find matching voice on device
+    // 3. Find matching voice on device (including phonetic fallback if no native voice installed)
     const matchedVoice = await findBestVoice(voiceLang);
+
+    // Determine effective speech language:
+    // If a matched voice is found on the device, use its specific language;
+    // otherwise, use phonetic fallback language (e.g. it-IT for Latin, es-ES for Basque)
+    // so iOS/Android does NOT default to system English!
+    const effectiveLanguage = matchedVoice?.language || getPhoneticFallbackLanguage(voiceLang);
 
     // 4. Synthesize new utterance cleanly
     const options: Speech.SpeechOptions = {
-      language: matchedVoice?.language || voiceLang,
+      language: effectiveLanguage,
       rate: 0.88,
       pitch: 1.05,
       volume: 1.0,
       onError: (error) => {
-        console.warn(`[TTS] Native playback error for "${cleanText}" (${voiceLang}):`, error);
+        console.warn(`[TTS] Native playback error for "${cleanText}" (${effectiveLanguage}):`, error);
         // Fallback without specific voice identifier if customized voice failed
         if (matchedVoice) {
           Speech.speak(cleanText, {
-            language: voiceLang.split('-')[0] || 'en',
+            language: effectiveLanguage.split('-')[0] || 'en',
             rate: 0.88,
             pitch: 1.0,
             volume: 1.0,
@@ -332,6 +514,7 @@ export async function speakWord(text: string, langCode: string = 'es'): Promise<
     console.warn('[TTS] Speech engine notice:', (error as Error).message);
   }
 }
+
 
 /**
  * Stops any ongoing audio narration immediately.
