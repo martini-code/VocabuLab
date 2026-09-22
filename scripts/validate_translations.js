@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Translation Validation & Scaffolding Tool for Vocab Keep
+ * Translation Validation & Scaffolding Tool for VocabuLab
  *
  * Usage:
  *   node scripts/validate_translations.js check [lang]

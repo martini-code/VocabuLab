@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "vocab-keep",
-    "slug": "vocab-keep",
+    "name": "vocabulab",
+    "slug": "vocabulab",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.vocabkeep"
+      "bundleIdentifier": "com.anonymous.vocabulab"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.vocabkeep"
+      "package": "com.anonymous.vocabulab"
     },
     "web": {
       "favicon": "./assets/favicon.png"

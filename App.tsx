@@ -92,7 +92,7 @@ export default function App() {
   const [isReviewInProgress, setIsReviewInProgress] = useState(false);
 
   useEffect(() => {
-    bootstrapKeep();
+    bootstrapApp();
     iapService.init((status) => {
       setIsAdFree(status);
     });
@@ -118,7 +118,7 @@ export default function App() {
     };
   }, []);
 
-  const bootstrapKeep = async () => {
+  const bootstrapApp = async () => {
     try {
       // Preload AdMob rewarded ads in background immediately
       adMobService.preload();
@@ -146,7 +146,7 @@ export default function App() {
 
       setIsVaultReady(true);
     } catch (error) {
-      console.error('[VocabKeep] Bootstrap error:', error);
+      console.error('[VocabuLab] Bootstrap error:', error);
       setIsVaultReady(true);
     }
   };
@@ -170,7 +170,7 @@ export default function App() {
       <SafeAreaProvider>
         <SafeAreaView style={styles.splashContainer}>
           <SquireMascot mood="idle" size={130} />
-          <Text style={styles.splashTitle}>VOCAB KEEP</Text>
+          <Text style={styles.splashTitle}>VOCABULAB</Text>
           <Text style={styles.splashTagline}>The Medieval Fortress of Spaced Memory</Text>
           <ActivityIndicator size="large" color="#F59E0B" style={{ marginTop: 24 }} />
           <Text style={styles.splashStatus}>{statusMessage}</Text>

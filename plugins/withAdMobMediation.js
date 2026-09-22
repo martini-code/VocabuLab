@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PLUGIN_NAME = 'withAdMobMediation';
-const PLUGIN_MARKER = '// [VocabKeep-AdMob-Mediation]';
+const PLUGIN_MARKER = '// [VocabuLab-AdMob-Mediation]';
 
 /**
  * Injects Maven repositories required by mediation networks (Pangle, ironSource, Mintegral, Yandex)

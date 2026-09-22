@@ -3,7 +3,7 @@ import { FSRSAlgorithm } from './algorithms/fsrs';
 
 /**
  * Registry of available spaced repetition algorithms.
- * Vocab Keep exclusively uses FSRS v5 (State-of-the-art DSR model).
+ * VocabuLab exclusively uses FSRS v5 (State-of-the-art DSR model).
  */
 const ALGORITHM_INSTANCES: Record<AlgorithmId, SRSAlgorithm> = {
   fsrs: new FSRSAlgorithm(),

@@ -49,7 +49,7 @@ export const DEFAULT_SECRETS: AppSecrets = {
   },
   IAP_CONFIG: {
     SKUS: {
-      AD_FREE_MONTHLY: 'vocabkeep_adfree_monthly',
+      AD_FREE_MONTHLY: 'vocabulab_adfree_monthly',
     },
   },
 };

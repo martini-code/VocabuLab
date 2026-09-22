@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Sync Locales from Lexicon Database
-Vocab Keep
+VocabuLab
 
 This script synchronizes deck names (and themes/categories) and card terms from the
 master SQLite lexicon database into the app's localization files (src/locales/<lang>/common.json).

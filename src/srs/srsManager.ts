@@ -11,7 +11,7 @@ class SRSManager {
   private listeners: Set<Listener> = new Set();
 
   /**
-   * Initializes the manager (Vocab Keep exclusively runs FSRS v5).
+   * Initializes the manager (VocabuLab exclusively runs FSRS v5).
    */
   async init(): Promise<void> {
     this.activeId = 'fsrs';

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ETL Pipeline script for Vocab Keep (Medieval Theme).
+ETL Pipeline script for VocabuLab (Medieval Theme).
 Generates the SQLite master payload with:
 - Hierarchical Domains (Castle Grounds, Royal Alchemy, Grand Scriptorium, Knight Armory, Mystic Forest, etc.)
 - OMW V2 CILI Concepts
@@ -472,7 +472,7 @@ def create_database(db_path: str):
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent.parent
     assets_target = base_dir / "assets" / "seed-vocab.sqlite"
-    dist_target = base_dir / "dist" / "vocab-keep.sqlite"
+    dist_target = base_dir / "dist" / "vocabulab.sqlite"
 
     create_database(str(assets_target))
     create_database(str(dist_target))

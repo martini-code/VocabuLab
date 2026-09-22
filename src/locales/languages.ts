@@ -7,7 +7,7 @@ export interface LanguageOption {
 }
 
 /**
- * Registry of all 123 languages supported in Vocab Keep from the database,
+ * Registry of all 123 languages supported in VocabuLab from the database,
  * each with native script and regional flag emoji.
  */
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Automated Verification Suite for Vocab Keep (SQLite + FTS5 + FSRS + OMW CILI)
+Automated Verification Suite for VocabuLab (SQLite + FTS5 + FSRS + OMW CILI)
 """
 
 import sqlite3
@@ -10,7 +10,7 @@ from datetime import datetime, timezone, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "seed-vocab.sqlite")
 
-class TestVocabKeepVault(unittest.TestCase):
+class TestVocabuLabVault(unittest.TestCase):
     def setUp(self):
         self.assertTrue(os.path.exists(DB_PATH), f"Database must exist at {DB_PATH}")
         self.conn = sqlite3.connect(DB_PATH)

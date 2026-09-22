@@ -113,13 +113,13 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
             <Text style={styles.adHeadline}>
               {rewardReady
                 ? t('tokens.ad_completed_title', { defaultValue: 'Ad Watched! Token Ready!' })
-                : t('tokens.ad_in_progress_title', { defaultValue: 'Support Vocab Keep & Earn Words' })}
+                : t('tokens.ad_in_progress_title', { defaultValue: 'Support VocabuLab & Earn Words' })}
             </Text>
 
             <Text style={styles.adTagline}>
               {rewardReady
                 ? t('tokens.ad_completed_sub', { defaultValue: 'Your token has been earned. Tap above to claim 10 new words!' })
-                : t('tokens.ad_in_progress_sub', { defaultValue: 'Watching sponsored ads supports Vocab Keep and grants learning tokens.' })}
+                : t('tokens.ad_in_progress_sub', { defaultValue: 'Watching sponsored ads supports VocabuLab and grants learning tokens.' })}
             </Text>
 
             {rewardReady && (
