@@ -123,7 +123,7 @@ export default function App() {
       // Preload AdMob rewarded ads in background immediately
       adMobService.preload();
       configureAudioSession().catch(() => {});
-      setStatusMessage('Checking kingdom scrolls...');
+      setStatusMessage('Checking kingdom cards...');
       await syncDatabaseFromR2();
 
       setStatusMessage('Inscribing SQLite vault with WAL mode & FTS5...');
@@ -131,7 +131,7 @@ export default function App() {
       await srsManager.init();
       setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
 
-      setStatusMessage('Detecting kingdom language & scrolls...');
+      setStatusMessage('Detecting kingdom language & cards...');
       const deviceLang = getDeviceLanguage();
       await ensureDefaultLanguagePairInstalled(deviceLang);
       const currentPair = await getLanguagePairSettings();
@@ -283,7 +283,7 @@ export default function App() {
                 <Text style={styles.statNumber}>{stats.dueCards}</Text>
               </View>
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Mastered Scrolls (S≥10):</Text>
+                <Text style={styles.statLabel}>Mastered Cards (S≥10):</Text>
                 <Text style={styles.statNumber}>{stats.masteredCards}</Text>
               </View>
               <View style={styles.statRow}>

@@ -118,7 +118,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
 
           {/* Prompt */}
           <View style={styles.tapToRevealBox}>
-            <Text style={styles.tapToRevealText}>Tap scroll to reveal translation</Text>
+            <Text style={styles.tapToRevealText}>Tap card to reveal translation</Text>
           </View>
         </ParchmentCard>
       </Animated.View>

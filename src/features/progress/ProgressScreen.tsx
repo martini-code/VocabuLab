@@ -95,7 +95,7 @@ export const ProgressScreen: React.FC = () => {
           <Text style={styles.speechText}>
             {data.currentStreak >= 4
               ? `Outstanding discipline, knight! A ${data.currentStreak}-day defense streak keeps the fortress impenetrable.`
-              : 'Every single scroll reviewed strengthens our kingdom walls. Keep the flame alive!'}
+              : 'Every single card reviewed strengthens our kingdom walls. Keep the flame alive!'}
           </Text>
           <View style={styles.speechTail} />
         </View>
@@ -113,7 +113,7 @@ export const ProgressScreen: React.FC = () => {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{data.totalReviews}</Text>
-          <Text style={styles.statLabel}>SCROLL REVIEWS</Text>
+          <Text style={styles.statLabel}>CARD REVIEWS</Text>
         </View>
       </View>
 
@@ -229,7 +229,7 @@ export const ProgressScreen: React.FC = () => {
               {selectedDay.count >= 15
                 ? 'Legendary campaign day! The scribe recorded massive progress.'
                 : selectedDay.count >= 8
-                ? 'Heroic study session with multiple scrolls reviewed and reinforced.'
+                ? 'Heroic study session with multiple cards reviewed and reinforced.'
                 : selectedDay.count >= 1
                 ? 'Valiant training logged in the local fortress vault.'
                 : 'No campaigns recorded on this calendar day.'}

@@ -68,7 +68,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
           <View style={styles.sponsorBadge}>
             <Shield size={14} color="#F59E0B" />
             <Text style={styles.sponsorBadgeText}>
-              {t('ad_free.banner_badge', { defaultValue: 'SPONSORED ROYAL SCROLL' })}
+              {t('ad_free.banner_badge', { defaultValue: 'SPONSORED ROYAL CARD' })}
             </Text>
           </View>
 
@@ -138,7 +138,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
         <View style={styles.bottomBar}>
           <Text style={styles.bottomPrompt}>
             {t('ad_free.interstitial_upgrade_cta', {
-              defaultValue: 'Never want to watch full-screen scrolls again?',
+              defaultValue: 'Never want to watch full-screen cards again?',
             })}
           </Text>
 

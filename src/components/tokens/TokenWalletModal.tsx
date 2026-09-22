@@ -189,19 +189,19 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                 </Text>
               </View>
 
-              {/* Daily Scroll Pass */}
+              {/* Daily Card Pass */}
               <View style={styles.statCard}>
                 <View style={styles.statCardHeader}>
                   <Scroll size={18} color="#0D9488" />
                   <Text style={styles.statCardTitle}>
-                    {t('tokens.daily_scroll_title', { defaultValue: 'Daily Scroll' })}
+                    {t('tokens.daily_card_title', { defaultValue: 'Daily Card' })}
                   </Text>
                 </View>
                 <Text style={styles.statCardValue}>
                   {wallet.dailyPassWords}/{TOKEN_CONFIG.DAILY_PASS_WORDS}
                 </Text>
                 <Text style={styles.statCardSub}>
-                  {t('tokens.daily_scroll_desc', {
+                  {t('tokens.daily_card_desc', {
                     defaultValue: 'Free daily pass (non-cumulative)',
                   })}
                 </Text>
@@ -214,11 +214,11 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                 <Tv size={20} color="#2563EB" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.adSectionTitle}>
-                    {t('tokens.watch_ad_title', { defaultValue: 'Rewarded Scroll (AdMob)' })}
+                    {t('tokens.watch_ad_title', { defaultValue: 'Rewarded Card (AdMob)' })}
                   </Text>
                   <Text style={styles.adSectionSub}>
                     {t('tokens.watch_ad_desc', {
-                      defaultValue: 'Watch 1 sponsored scroll to earn +1 Token (learn 10 words).',
+                      defaultValue: 'Watch 1 sponsored card to earn +1 Token (learn 10 words).',
                     })}
                   </Text>
                 </View>

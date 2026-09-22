@@ -142,7 +142,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         <View style={styles.headerTextBox}>
           <Text style={styles.title}>THE WIZARD'S SCRIPTORIUM</Text>
           <Text style={styles.subtitle}>
-            FTS5 Full-Text Search across kingdom scrolls
+            FTS5 Full-Text Search across kingdom cards
           </Text>
         </View>
       </View>
@@ -152,7 +152,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.input}
-          placeholder="Search archaic scrolls by prefix or rune..."
+          placeholder="Search archaic cards by prefix or rune..."
           placeholderTextColor="#78350F88"
           value={query}
           onChangeText={handleSearch}
@@ -236,10 +236,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingHorizontal: 14,
     height: 52,
-  },
-  scrollIcon: {
-    fontSize: 18,
-    marginRight: 8,
   },
   input: {
     flex: 1,

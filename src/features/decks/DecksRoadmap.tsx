@@ -43,7 +43,6 @@ import {
   Compass,
   Scale,
   Award,
-  Scroll,
   Landmark,
   Flame,
   Network,
@@ -898,7 +897,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   <View style={styles.searchEmptyContainer}>
                     <Sparkles size={40} color="#D97706" style={{ marginBottom: 10 }} />
                     <Text style={styles.searchEmptyTitle}>
-                      {isSearching ? 'Searching kingdom scrolls...' : 'No matching scrolls found'}
+                      {isSearching ? 'Searching kingdom cards...' : 'No matching cards found'}
                     </Text>
                     <Text style={styles.searchEmptySubtitle}>
                       {isSearching

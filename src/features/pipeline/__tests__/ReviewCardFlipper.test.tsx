@@ -87,7 +87,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       expect(getAllByText('[noun]').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('ES ➔ EN').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('A1').length).toBeGreaterThanOrEqual(1);
-      expect(getByText('Tap scroll to reveal translation')).toBeTruthy();
+      expect(getByText('Tap card to reveal translation')).toBeTruthy();
       expect(getByTestId('pronounce-btn')).toBeTruthy();
       expect(queryByText('Pronounce')).toBeNull();
     });
@@ -108,7 +108,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       );
 
       // Press the front card face — fireEvent.press is async, must be awaited
-      const tapPrompt = getByText('Tap scroll to reveal translation');
+      const tapPrompt = getByText('Tap card to reveal translation');
       await fireEvent.press(tapPrompt);
 
       expect(handleFlip).toHaveBeenCalledTimes(1);
@@ -151,10 +151,10 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       const { getByText } = await render(<InteractiveReviewSessionMock />);
 
       // Initially unflipped: front tap prompt is visible
-      expect(getByText('Tap scroll to reveal translation')).toBeTruthy();
+      expect(getByText('Tap card to reveal translation')).toBeTruthy();
 
       // Tap card to flip — await fireEvent.press to flush async act() scope
-      await fireEvent.press(getByText('Tap scroll to reveal translation'));
+      await fireEvent.press(getByText('Tap card to reveal translation'));
 
       // Now flipped: back translation is revealed
       expect(getByText('TRANSLATION')).toBeTruthy();
@@ -164,7 +164,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       await fireEvent.press(getByText('library'));
 
       // Toggled back to front face
-      expect(getByText('Tap scroll to reveal translation')).toBeTruthy();
+      expect(getByText('Tap card to reveal translation')).toBeTruthy();
     });
   });
 
@@ -249,16 +249,16 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       const { getByText } = await render(<MultiFlipHarness />);
 
       // Flip 1: Front -> Back
-      await fireEvent.press(getByText('Tap scroll to reveal translation'));
+      await fireEvent.press(getByText('Tap card to reveal translation'));
       expect(getByText('TRANSLATION')).toBeTruthy();
       expect(getByText('library')).toBeTruthy();
 
       // Flip 2: Back -> Front
       await fireEvent.press(getByText('library'));
-      expect(getByText('Tap scroll to reveal translation')).toBeTruthy();
+      expect(getByText('Tap card to reveal translation')).toBeTruthy();
 
       // Flip 3: Front -> Back again
-      await fireEvent.press(getByText('Tap scroll to reveal translation'));
+      await fireEvent.press(getByText('Tap card to reveal translation'));
       expect(getByText('TRANSLATION')).toBeTruthy();
       expect(getByText('library')).toBeTruthy();
     });

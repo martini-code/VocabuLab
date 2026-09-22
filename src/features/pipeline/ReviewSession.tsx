@@ -117,7 +117,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     // 1. Immediate visual mascot reaction
     if (rating === Rating.Again) {
       setMascotMood('confused');
-      setMascotQuote("A minor stumble! We shall reinforce this scroll soon.");
+      setMascotQuote("A minor stumble! We shall reinforce this card soon.");
     } else if (rating === Rating.Hard) {
       setMascotMood('idle');
       setMascotQuote("Grit and steel! It is holding in memory.");
@@ -180,7 +180,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#F59E0B" />
-        <Text style={styles.loadingText}>Gathering fortress scrolls...</Text>
+        <Text style={styles.loadingText}>Gathering fortress cards...</Text>
       </View>
     );
   }
@@ -294,8 +294,8 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           </Text>
           <Text style={styles.victorySubtitle}>
             {deckFilter
-              ? `Thou hast reviewed all scrolls in "${deckFilter.name}". The fortress gates remain steadfast!`
-              : 'Thou hast reviewed all scheduled scrolls for today. The fortress gates remain steadfast!'}
+              ? `Thou hast reviewed all cards in "${deckFilter.name}". The fortress gates remain steadfast!`
+              : 'Thou hast reviewed all scheduled cards for today. The fortress gates remain steadfast!'}
           </Text>
 
           {deckFilter && onClearDeckFilter && (
@@ -437,7 +437,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           <Text style={styles.stagingSubtitle}>
             {deckFilter
               ? `Prepare thy memory to master cards in "${deckFilter.name}".`
-              : 'Sharpen thy vocabulary scrolls with spaced repetition.'}
+              : 'Sharpen thy vocabulary cards with spaced repetition.'}
           </Text>
 
           {/* Staging Data Summary Box */}
@@ -557,7 +557,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         />
 
         {/* Actions directly below the centered card */}
-        {isFlipped ? (
+        {isFlipped && (
           <View style={styles.gradingSection}>
             <Text style={styles.gradeSectionTitle}>HOW WELL DID THOU RECALL?</Text>
             <View style={styles.gradingButtonsGrid}>
@@ -597,16 +597,6 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                 style={styles.gradeButton}
               />
             </View>
-          </View>
-        ) : (
-          <View style={styles.activeActionContainer}>
-            <ChunkyButton
-              title="REVEAL SCROLL"
-              subtitle="Tap card or button to reveal"
-              color="wood"
-              onPress={handleFlip}
-              style={{ width: '100%', maxWidth: 360 }}
-            />
           </View>
         )}
       </ScrollView>

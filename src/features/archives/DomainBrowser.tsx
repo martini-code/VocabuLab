@@ -200,7 +200,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Scroll size={40} color="#D97706" style={{ marginBottom: 10 }} />
-            <Text style={styles.emptyTitle}>No scrolls inscribed yet</Text>
+            <Text style={styles.emptyTitle}>No cards inscribed yet</Text>
             <Text style={styles.emptySubtitle}>Try selecting a different CEFR shield rank above.</Text>
           </View>
         }
