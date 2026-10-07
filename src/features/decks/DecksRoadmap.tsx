@@ -247,6 +247,7 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
     );
   }
 );
+MasteryWordCard.displayName = 'MasteryWordCard';
 
 interface DeckCardDetailItemProps {
   item: DeckCardDetail;
@@ -322,6 +323,7 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
     );
   }
 );
+DeckCardDetailItem.displayName = 'DeckCardDetailItem';
 
 interface ThemeDeckCardProps {
   deck: DeckWithProgress;
@@ -383,6 +385,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
     </Pressable>
   );
 });
+ThemeDeckCard.displayName = 'ThemeDeckCard';
 
 interface ThemeGroupSectionProps {
   theme: ThemeGroup;
@@ -416,6 +419,7 @@ const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDec
     </View>
   );
 });
+ThemeGroupSection.displayName = 'ThemeGroupSection';
 
 export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   onStudyDeck,

@@ -42,6 +42,7 @@ export const TokenPill: React.FC<TokenPillProps> = React.memo(({ onPress, testID
     </Pressable>
   );
 });
+TokenPill.displayName = 'TokenPill';
 
 const styles = StyleSheet.create({
   statPill: {

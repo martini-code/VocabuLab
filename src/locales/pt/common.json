@@ -540,5 +540,16 @@
     "daily_ads_limit_reached_desc": "Você assistiu todos os 3 anúncios de hoje. Reinicia amanhã ou desbloqueie aprendizado infinito com o Plus.",
     "upgrade_to_plus_cta": "Fazer Upgrade para o Plus",
     "inspect_mediation": "Inspecionar mediação AdMob"
+  },
+  "random_discovery": {
+    "title": "Descoberta Aleatória",
+    "subtitle": "10 palavras não aprendidas de toda a biblioteca",
+    "btn_discover": "Descobrir 10 Palavras Aleatórias",
+    "counter": "Cartão {{current}} de {{total}}",
+    "learn_word": "Aprender Palavra",
+    "learned": "Aprendida",
+    "empty_title": "Todas as Palavras Descobertas",
+    "empty_desc": "Você aprendeu todo o vocabulário disponível na biblioteca!",
+    "loading": "Amostrando palavras aleatórias da biblioteca..."
   }
 }

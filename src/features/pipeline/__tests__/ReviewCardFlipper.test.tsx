@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { render, fireEvent, cleanup } from '@testing-library/react-native/pure';
 import { ReviewCardFlipper } from '../ReviewCardFlipper';
-import { CardWithDetails } from '../../types';
+import { CardWithDetails } from '../../../types';
 
 // Mock react-native-reanimated worklet & animation hooks for headless React Native testing
 jest.mock('react-native-reanimated', () => {

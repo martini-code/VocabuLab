@@ -86,6 +86,7 @@ export const SearchResultCard = React.memo<SearchResultCardProps>(
     );
   }
 );
+SearchResultCard.displayName = 'SearchResultCard';
 
 export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) => {
   const [query, setQuery] = useState('');
@@ -140,7 +141,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
       <View style={styles.headerBox}>
         <ProfessorOwlMascot size={75} />
         <View style={styles.headerTextBox}>
-          <Text style={styles.title}>THE PROFESSOR'S RESEARCH LIBRARY</Text>
+          <Text style={styles.title}>THE PROFESSOR&apos;S RESEARCH LIBRARY</Text>
           <Text style={styles.subtitle}>
             FTS5 Full-Text Search across lab cards
           </Text>

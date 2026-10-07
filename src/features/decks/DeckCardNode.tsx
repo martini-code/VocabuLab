@@ -133,6 +133,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
     </Pressable>
   );
 });
+DeckCardNode.displayName = 'DeckCardNode';
 
 const styles = StyleSheet.create({
   container: {

@@ -19,7 +19,7 @@
     "react-i18next": "^17.0.13",
     "react-native": "0.86.3",
     "react-native-google-mobile-ads": "^17.0.0",
-    "react-native-iap": "^16.6.0",
+    "react-native-iap": "^16.6.2",
     "react-native-nitro-modules": "^0.37.1",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
@@ -34,7 +34,12 @@
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
     "jest": "^30.5.1",
+    "prettier": "^3.9.9",
     "react-test-renderer": "^19.2.3",
     "test-renderer": "^1.0.0",
     "ts-jest": "^29.4.12",
@@ -46,7 +51,13 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "sync:locales": "python3 scripts/sync_locales_from_db.py",
-    "test": "node --max-old-space-size=512 node_modules/jest/bin/jest.js --runInBand"
+    "test": "node --max-old-space-size=512 node_modules/jest/bin/jest.js --runInBand",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx,js}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js}\"",
+    "test:fsrs": "node tests/test_fsrs_engine.js",
+    "i18n:check": "node scripts/validate_translations.js check"
   },
   "private": true
 }

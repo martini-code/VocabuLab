@@ -82,15 +82,6 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     speakWord(term, language);
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#F59E0B" />
-        <Text style={styles.loadingText}>Loading lab map...</Text>
-      </View>
-    );
-  }
-
   const renderLexemeItem = useCallback(
     ({ item }: { item: Lexeme }) => {
       const isQueued = queuedIds.has(item.id);
@@ -107,6 +98,15 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   );
 
   const lexemeKeyExtractor = useCallback((item: Lexeme) => item.id.toString(), []);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#F59E0B" />
+        <Text style={styles.loadingText}>Loading lab map...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -295,6 +295,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
     </LabCard>
   );
 });
+DomainLexemeCard.displayName = 'DomainLexemeCard';
 
 const styles = StyleSheet.create({
   container: {

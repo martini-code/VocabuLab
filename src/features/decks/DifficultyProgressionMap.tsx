@@ -103,6 +103,7 @@ const TrailNodeItem = React.memo<TrailNodeItemProps>(
     );
   }
 );
+TrailNodeItem.displayName = 'TrailNodeItem';
 
 export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> = ({
   decks,
