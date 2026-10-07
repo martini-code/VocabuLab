@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { render, fireEvent, cleanup } from '@testing-library/react-native/pure';
 import { ReviewCardFlipper } from '../ReviewCardFlipper';
-import { CardWithDetails } from '../../types';
+import { CardWithDetails } from '../../../types';
 
 // Mock react-native-reanimated worklet & animation hooks for headless React Native testing
 jest.mock('react-native-reanimated', () => {
@@ -223,12 +223,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       };
 
       const { getAllByText } = await render(
-        <ReviewCardFlipper
-          card={c2Card}
-          isFlipped={false}
-          onFlip={jest.fn()}
-          onSpeak={jest.fn()}
-        />
+        <ReviewCardFlipper card={c2Card} isFlipped={false} onFlip={jest.fn()} onSpeak={jest.fn()} />
       );
 
       expect(getAllByText('Level 6').length).toBeGreaterThanOrEqual(1);

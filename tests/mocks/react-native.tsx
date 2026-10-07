@@ -36,8 +36,7 @@ export const Pressable = React.forwardRef(
   ({ children, onPress, style, testID, ...props }: any, ref: any) => {
     const resolvedChildren =
       typeof children === 'function' ? children({ pressed: false }) : children;
-    const resolvedStyle =
-      typeof style === 'function' ? style({ pressed: false }) : style;
+    const resolvedStyle = typeof style === 'function' ? style({ pressed: false }) : style;
 
     return React.createElement(
       'View',
@@ -58,8 +57,7 @@ Pressable.displayName = 'Pressable';
 
 export const StyleSheet = {
   create: (styles: any) => styles,
-  flatten: (styles: any) =>
-    Array.isArray(styles) ? Object.assign({}, ...styles) : styles || {},
+  flatten: (styles: any) => (Array.isArray(styles) ? Object.assign({}, ...styles) : styles || {}),
 };
 
 export const Platform = {

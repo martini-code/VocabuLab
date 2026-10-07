@@ -262,4 +262,3 @@ export interface EnrolledLanguagePair {
   enrolled_at: string;
   progress: LanguagePairProgress;
 }
-

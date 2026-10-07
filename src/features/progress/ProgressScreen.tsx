@@ -50,7 +50,13 @@ export const ProgressScreen: React.FC = () => {
       }
       if (foundToday) break;
     }
-    setSelectedDay(foundToday || { date: todayStr, count: overview.todayReviews, level: overview.todayReviews > 0 ? 1 : 0 });
+    setSelectedDay(
+      foundToday || {
+        date: todayStr,
+        count: overview.todayReviews,
+        level: overview.todayReviews > 0 ? 1 : 0,
+      }
+    );
     setLoading(false);
   };
 
@@ -123,11 +129,17 @@ export const ProgressScreen: React.FC = () => {
       <LabCard style={styles.matrixCard}>
         <View style={styles.matrixHeader}>
           <Text style={styles.sectionTitle}>STUDY ACTIVITY GRAPH</Text>
-          <Text style={styles.sectionSub}>{data.totalReviews} total contributions in the lab notebook</Text>
+          <Text style={styles.sectionSub}>
+            {data.totalReviews} total contributions in the lab notebook
+          </Text>
         </View>
 
         {/* Month Headers & Grid */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gridScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gridScroll}
+        >
           <View style={styles.gridContainer}>
             {/* Month Labels Bar */}
             <View style={styles.monthLabelsRow}>

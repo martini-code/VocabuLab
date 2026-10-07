@@ -14,7 +14,6 @@ function resolveTargetLangName(codeOrName: string): string {
   return codeOrName.charAt(0).toUpperCase() + codeOrName.slice(1);
 }
 
-
 export type UserProfilePreset = 'beginner' | 'intermediate' | 'advanced' | 'clean';
 
 export interface UserProfileInfo {
@@ -37,7 +36,8 @@ export const USER_PROFILES: Record<UserProfilePreset, UserProfileInfo> = {
     id: 'beginner',
     title: 'Beginner Profile',
     badge: 'Level 1',
-    description: 'Early-stage learner with 15 active words in initial learning state, 0 mastered, and a 2-day streak.',
+    description:
+      'Early-stage learner with 15 active words in initial learning state, 0 mastered, and a 2-day streak.',
     cardCount: 15,
     masteredCount: 0,
     dueCount: 5,
@@ -51,7 +51,8 @@ export const USER_PROFILES: Record<UserProfilePreset, UserProfileInfo> = {
     id: 'intermediate',
     title: 'Intermediate Profile',
     badge: 'Level 2',
-    description: 'Consistent learner with 60 words across 6 decks, 15 mastered cards, balanced FSRS stability, and a 12-day streak.',
+    description:
+      'Consistent learner with 60 words across 6 decks, 15 mastered cards, balanced FSRS stability, and a 12-day streak.',
     cardCount: 60,
     masteredCount: 15,
     dueCount: 14,
@@ -65,7 +66,8 @@ export const USER_PROFILES: Record<UserProfilePreset, UserProfileInfo> = {
     id: 'advanced',
     title: 'Advanced Profile',
     badge: 'Level 3',
-    description: 'Power user with 120 words across all 24 decks, 95 mastered cards, high FSRS maturity, and a 45-day streak.',
+    description:
+      'Power user with 120 words across all 24 decks, 95 mastered cards, high FSRS maturity, and a 45-day streak.',
     cardCount: 120,
     masteredCount: 95,
     dueCount: 26,
@@ -79,7 +81,8 @@ export const USER_PROFILES: Record<UserProfilePreset, UserProfileInfo> = {
     id: 'clean',
     title: 'Clean Slate',
     badge: 'Reset',
-    description: 'Resets the database to a blank initial state with 0 active cards, 0 review logs, and default settings.',
+    description:
+      'Resets the database to a blank initial state with 0 active cards, 0 review logs, and default settings.',
     cardCount: 0,
     masteredCount: 0,
     dueCount: 0,
@@ -220,7 +223,7 @@ export function generateMockProfileData(
         // Young
         state = 2;
         stability = 7.0 + ((i * 3) % 11); // 7.0 - 17.0
-        difficulty = 4.0 + ((i % 5) * 0.2);
+        difficulty = 4.0 + (i % 5) * 0.2;
         reps = 3 + (i % 3);
         lapses = i % 7 === 0 ? 1 : 0;
         isDue = i <= 15; // some are due
@@ -228,7 +231,7 @@ export function generateMockProfileData(
         // Mature (>= 21d stability)
         state = 2;
         stability = 22.0 + ((i * 2) % 15); // 22.0 - 36.0
-        difficulty = 3.2 + ((i % 4) * 0.2);
+        difficulty = 3.2 + (i % 4) * 0.2;
         reps = 5 + (i % 3);
         lapses = 0;
         isDue = i <= 49;
@@ -260,7 +263,7 @@ export function generateMockProfileData(
       const reviewCount = 10 + ((day * 7) % 8); // 10 - 17 reviews per day
       for (let r = 0; r < reviewCount; r++) {
         const cardId = ((day * 5 + r) % 60) + 1;
-        const rating = r % 6 === 0 ? 2 : (r % 9 === 0 ? 1 : 3);
+        const rating = r % 6 === 0 ? 2 : r % 9 === 0 ? 1 : 3;
         logs.push({
           card_id: cardId,
           rating,
@@ -305,7 +308,7 @@ export function generateMockProfileData(
       // Mature (95 cards, stability 25.0 - 140.0)
       state = 2;
       stability = 25.0 + ((i * 3) % 115);
-      difficulty = 2.4 + ((i % 5) * 0.3);
+      difficulty = 2.4 + (i % 5) * 0.3;
       reps = 6 + (i % 8);
       lapses = i % 13 === 0 ? 1 : 0;
       isDue = i <= 36;
@@ -337,7 +340,7 @@ export function generateMockProfileData(
     const reviewsThisDay = 12 + ((day * 13) % 12); // 12 - 23 reviews/day
     for (let r = 0; r < reviewsThisDay; r++) {
       const cardId = ((day * 7 + r) % 120) + 1;
-      const rating = r % 8 === 0 ? 4 : (r % 11 === 0 ? 2 : 3);
+      const rating = r % 8 === 0 ? 4 : r % 11 === 0 ? 2 : 3;
       logs.push({
         card_id: cardId,
         rating,

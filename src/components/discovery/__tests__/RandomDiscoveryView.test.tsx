@@ -75,7 +75,9 @@ jest.mock('react-i18next', () => ({
     t: (_key: string, opts?: any) => {
       if (opts?.defaultValue) {
         if (opts.current && opts.total) {
-          return opts.defaultValue.replace('{{current}}', opts.current).replace('{{total}}', opts.total);
+          return opts.defaultValue
+            .replace('{{current}}', opts.current)
+            .replace('{{total}}', opts.total);
         }
         return opts.defaultValue;
       }
@@ -134,11 +136,7 @@ describe('RandomDiscoveryView', () => {
 
   it('renders 10 random unlearned words directly in page', async () => {
     const result = await render(
-      <RandomDiscoveryView
-        onExit={jest.fn()}
-        targetLang="es"
-        originLang="en"
-      />
+      <RandomDiscoveryView onExit={jest.fn()} targetLang="es" originLang="en" />
     );
 
     expect(vaultModule.getRandomUnlearnedWords).toHaveBeenCalledWith(10, 'es', 'en', undefined, 'B1');
@@ -151,11 +149,7 @@ describe('RandomDiscoveryView', () => {
 
   it('pronounce button contains only the speaker icon without "pronounce" text label', async () => {
     const result = await render(
-      <RandomDiscoveryView
-        onExit={jest.fn()}
-        targetLang="es"
-        originLang="en"
-      />
+      <RandomDiscoveryView onExit={jest.fn()} targetLang="es" originLang="en" />
     );
 
     // Verify pronounce button exists by testID
@@ -224,11 +218,7 @@ describe('RandomDiscoveryView', () => {
   it('forgets the list of 10 words completely when exiting', async () => {
     const handleExit = jest.fn();
     const result = await render(
-      <RandomDiscoveryView
-        onExit={handleExit}
-        targetLang="es"
-        originLang="en"
-      />
+      <RandomDiscoveryView onExit={handleExit} targetLang="es" originLang="en" />
     );
 
     expect(result.getByText('Palabra_1')).toBeTruthy();
@@ -244,11 +234,7 @@ describe('RandomDiscoveryView', () => {
   it('displays empty state when all words have been learned', async () => {
     (vaultModule.getRandomUnlearnedWords as jest.Mock).mockResolvedValueOnce([]);
     const result = await render(
-      <RandomDiscoveryView
-        onExit={jest.fn()}
-        targetLang="es"
-        originLang="en"
-      />
+      <RandomDiscoveryView onExit={jest.fn()} targetLang="es" originLang="en" />
     );
 
     expect(result.getByText('All Words Conquered')).toBeTruthy();

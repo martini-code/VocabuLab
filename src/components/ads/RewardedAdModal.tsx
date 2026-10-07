@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Coins, ShieldCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -20,11 +13,7 @@ interface RewardedAdModalProps {
   onClose: () => void;
 }
 
-export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
-  visible,
-  onReward,
-  onClose,
-}) => {
+export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({ visible, onReward, onClose }) => {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState(5);
   const [rewardReady, setRewardReady] = useState(false);
@@ -87,7 +76,10 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
           ) : (
             <View style={styles.countdownPill}>
               <Text style={styles.countdownText}>
-                {t('tokens.ad_countdown', { count: countdown, defaultValue: `Reward in ${countdown}s` })}
+                {t('tokens.ad_countdown', {
+                  count: countdown,
+                  defaultValue: `Reward in ${countdown}s`,
+                })}
               </Text>
             </View>
           )}
@@ -115,13 +107,20 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
             <Text style={styles.adHeadline}>
               {rewardReady
                 ? t('tokens.ad_completed_title', { defaultValue: 'Ad Watched! Token Ready!' })
-                : t('tokens.ad_in_progress_title', { defaultValue: 'Support VocabuLab & Earn Words' })}
+                : t('tokens.ad_in_progress_title', {
+                    defaultValue: 'Support VocabuLab & Earn Words',
+                  })}
             </Text>
 
             <Text style={styles.adTagline}>
               {rewardReady
-                ? t('tokens.ad_completed_sub', { defaultValue: 'Your token has been earned. Tap above to claim 10 new words!' })
-                : t('tokens.ad_in_progress_sub', { defaultValue: 'Watching sponsored ads supports VocabuLab and grants learning tokens.' })}
+                ? t('tokens.ad_completed_sub', {
+                    defaultValue: 'Your token has been earned. Tap above to claim 10 new words!',
+                  })
+                : t('tokens.ad_in_progress_sub', {
+                    defaultValue:
+                      'Watching sponsored ads supports VocabuLab and grants learning tokens.',
+                  })}
             </Text>
 
             {rewardReady && (

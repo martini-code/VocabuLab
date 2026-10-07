@@ -37,9 +37,7 @@ describe('DeckIcon & Custom Icon Drawing Engine', () => {
       );
       expect(getVehicles('icon-vehicles')).toBeTruthy();
 
-      const { getByTestId: getFood } = await render(
-        <DeckIcon name="food" testID="icon-food" />
-      );
+      const { getByTestId: getFood } = await render(<DeckIcon name="food" testID="icon-food" />);
       expect(getFood('icon-food')).toBeTruthy();
     });
 
@@ -61,9 +59,7 @@ describe('DeckIcon & Custom Icon Drawing Engine', () => {
     });
 
     it('falls back gracefully to BookOpen/Layers when an unknown icon is provided', async () => {
-      const { getByTestId } = await render(
-        <DeckIcon name="unknown-obscure-glyph-999" />
-      );
+      const { getByTestId } = await render(<DeckIcon name="unknown-obscure-glyph-999" />);
       expect(getByTestId('deck-icon-fallback')).toBeTruthy();
     });
   });
@@ -110,8 +106,20 @@ describe('DeckIcon & Custom Icon Drawing Engine', () => {
         name: 'test-drawing-fn-icon',
         render: ({ color, strokeWidth }) => (
           <>
-            <Circle cx="12" cy="12" r="9" stroke={color} strokeWidth={strokeWidth} testID="custom-drawn-circle" />
-            <Path d="M12 7v5l3 3" stroke={color} strokeWidth={strokeWidth} testID="custom-drawn-hand" />
+            <Circle
+              cx="12"
+              cy="12"
+              r="9"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              testID="custom-drawn-circle"
+            />
+            <Path
+              d="M12 7v5l3 3"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              testID="custom-drawn-hand"
+            />
           </>
         ),
       });

@@ -540,5 +540,16 @@
     "172": "stadium",
     "173": "court",
     "174": "pool"
+  },
+  "random_discovery": {
+    "title": "Random Discovery",
+    "subtitle": "10 unlearned words from across the library",
+    "btn_discover": "Discover 10 Random Words",
+    "counter": "Card {{current}} of {{total}}",
+    "learn_word": "Learn Word",
+    "learned": "Learned",
+    "empty_title": "All Words Discovered",
+    "empty_desc": "You have learned all available vocabulary in the library!",
+    "loading": "Sampling random words from the library..."
   }
 }

@@ -53,7 +53,9 @@ jest.mock('react-native', () => {
       React.createElement(
         'View',
         { testID: 'flat-list' },
-        ...(data || []).slice(0, 10).map((item: any, i: number) =>
+        ...(data || [])
+          .slice(0, 10)
+          .map((item: any, i: number) =>
           React.createElement('View', { key: i }, renderItem({ item, index: i }))
         )
       ),
@@ -192,7 +194,7 @@ jest.mock('../../../locales/languages', () => ({
       es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
       fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
       de: { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-    }[code] || null),
+    })[code] || null,
   getLanguageByName: (_name: string) => null,
   getLanguageFlag: (codeOrName: string) => {
     const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪' };
@@ -273,10 +275,7 @@ const AppModalCoordinator: React.FC<AppModalCoordinatorProps> = ({
       {plusModalOpen && (
         <View testID="plus-modal-standin">
           <Text>Plus Membership Gateway</Text>
-          <TouchableOpacity
-            testID="close-plus-modal-btn"
-            onPress={() => setPlusModalOpen(false)}
-          >
+          <TouchableOpacity testID="close-plus-modal-btn" onPress={() => setPlusModalOpen(false)}>
             <Text>Close Plus</Text>
           </TouchableOpacity>
         </View>
@@ -405,9 +404,7 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Modal is visible with origin prompt
       expect(await findByText('Language Lab')).toBeTruthy();
-      expect(
-        await findByText('Configuring App Interface & Explanation Language')
-      ).toBeTruthy();
+      expect(await findByText('Configuring App Interface & Explanation Language')).toBeTruthy();
 
       // Close modal
       await fireEvent.press(getByTestId('modal-close-btn'));

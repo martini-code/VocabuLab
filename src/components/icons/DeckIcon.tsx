@@ -213,6 +213,7 @@ export const DeckIcon: React.FC<DeckIconProps> = React.memo(
     return null;
   }
 );
+DeckIcon.displayName = 'DeckIcon';
 
 /**
  * Convenience render helper for backward compatibility and imperative usage.

@@ -10,7 +10,12 @@ import {
 } from 'react-native';
 import { Shield, Check, Sparkles, X, Award, Zap, RefreshCw } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { iapService, IAP_SKUS, AdFreeProductItem, DEFAULT_PRODUCTS } from '../../services/iapService';
+import {
+  iapService,
+  IAP_SKUS,
+  AdFreeProductItem,
+  DEFAULT_PRODUCTS,
+} from '../../services/iapService';
 
 import { colors } from '../../theme';
 
@@ -92,12 +97,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           {/* Header */}
@@ -123,9 +123,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
               <View style={styles.activeBanner}>
                 <Award size={28} color={colors.success[700]} />
                 <Text style={styles.activeTitle}>{t('ad_free.purchased_badge')}</Text>
-                <Text style={styles.activeSub}>
-                  {t('ad_free.benefit_1_sub')}
-                </Text>
+                <Text style={styles.activeSub}>{t('ad_free.benefit_1_sub')}</Text>
               </View>
             ) : (
               <>
@@ -177,7 +175,8 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
                         <Text style={styles.planBadgeText}>MONTHLY SUBSCRIPTION</Text>
                       </View>
                       <Text style={styles.planPrice}>
-                        {products.find((p) => p.id === IAP_SKUS.AD_FREE_MONTHLY)?.price || t('ad_free.price_monthly')}
+                        {products.find((p) => p.id === IAP_SKUS.AD_FREE_MONTHLY)?.price ||
+                          t('ad_free.price_monthly')}
                       </Text>
                     </View>
                     <Text style={styles.planTitle}>{t('ad_free.plan_monthly')}</Text>

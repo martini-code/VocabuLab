@@ -40,7 +40,9 @@ for (const r of [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy]) {
   const result = repeatResults[r];
   assert(result, `Rating ${r} must produce a valid result`);
   assert(result.card.due instanceof Date, `Rating ${r} must compute a valid next due Date`);
-  console.log(`- Rating ${r}: State=${result.card.state}, Stability=${result.card.stability.toFixed(2)}, Due=${result.card.due.toISOString()}`);
+  console.log(
+    `- Rating ${r}: State=${result.card.state}, Stability=${result.card.stability.toFixed(2)}, Due=${result.card.due.toISOString()}`
+  );
 }
 
 // 2. Test progression from Good -> Review State

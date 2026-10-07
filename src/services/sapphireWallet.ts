@@ -150,9 +150,17 @@ const _maybeResetDailyCounter = async (): Promise<void> => {
 };
 
 /** Convenience: expose the whole wallet state for debugging / UI display */
-export const getWalletState = async (): Promise<{ balance: number; adsWatchedToday: number; canWatchMoreAds: boolean }> => {
+export const getWalletState = async (): Promise<{
+  balance: number;
+  adsWatchedToday: number;
+  canWatchMoreAds: boolean;
+}> => {
   const [balance, adsWatched] = await Promise.all([getBalance(), getAdsWatchedToday()]);
-  return { balance, adsWatchedToday: adsWatched, canWatchMoreAds: adsWatched < CONFIG.DAILY_AD_CAP };
+  return {
+    balance,
+    adsWatchedToday: adsWatched,
+    canWatchMoreAds: adsWatched < CONFIG.DAILY_AD_CAP,
+  };
 };
 
 // Initialise on import

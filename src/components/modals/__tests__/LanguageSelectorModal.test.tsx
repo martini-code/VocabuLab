@@ -155,12 +155,28 @@ jest.mock('../../../locales/languages', () => ({
       en: { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
       es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
       fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-      'pt-br': { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
-      'pt-BR': { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
-    }[code] || null),
+      'pt-br': {
+        code: 'pt-BR',
+        name: 'Portuguese (Brazil)',
+        nativeName: 'Português (Brasil)',
+        flag: '🇧🇷',
+      },
+      'pt-BR': {
+        code: 'pt-BR',
+        name: 'Portuguese (Brazil)',
+        nativeName: 'Português (Brasil)',
+        flag: '🇧🇷',
+      },
+    })[code] || null,
   getLanguageByName: (_name: string) => null,
   getLanguageFlag: (codeOrName: string) => {
-    const map: Record<string, string> = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', 'pt-br': '🇧🇷', 'pt-BR': '🇧🇷' };
+    const map: Record<string, string> = {
+      en: '🇬🇧',
+      es: '🇪🇸',
+      fr: '🇫🇷',
+      'pt-br': '🇧🇷',
+      'pt-BR': '🇧🇷',
+    };
     return map[codeOrName.toLowerCase()] || '🌐';
   },
   resolveLanguageCode: (codeOrName: string) => codeOrName || 'es',
@@ -237,9 +253,7 @@ describe('LanguageSelectorModal', () => {
   });
 
   it('shows language pair banner with origin (EN) and destination (ES)', async () => {
-    const { findByText, findAllByText } = await render(
-      <LanguageSelectorModal {...defaultProps} />
-    );
+    const { findByText, findAllByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Lab');
     // Banner displays clean codes EN and ES with flags
     const originCodes = await findAllByText('EN');
@@ -258,9 +272,7 @@ describe('LanguageSelectorModal', () => {
   });
 
   it('renders language list items with language codes and native scripts', async () => {
-    const { findByText, findAllByText } = await render(
-      <LanguageSelectorModal {...defaultProps} />
-    );
+    const { findByText, findAllByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Lab');
     // FlatList mock renders up to 10 items; we have en, es, fr
     // Language rows display clean code (ES, FR) and native script
@@ -273,19 +285,13 @@ describe('LanguageSelectorModal', () => {
   });
 
   it('shows search input placeholder text', async () => {
-    const { findByPlaceholderText } = await render(
-      <LanguageSelectorModal {...defaultProps} />
-    );
-    const input = await findByPlaceholderText(
-      'Search by language, native name or code...'
-    );
+    const { findByPlaceholderText } = await render(<LanguageSelectorModal {...defaultProps} />);
+    const input = await findByPlaceholderText('Search by language, native name or code...');
     expect(input).toBeTruthy();
   });
 
   it('renders enrolled learning languages carousel with live card and due counts', async () => {
-    const { findByTestId, findByText } = await render(
-      <LanguageSelectorModal {...defaultProps} />
-    );
+    const { findByTestId, findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Lab');
 
     const enrolledSection = await findByTestId('enrolled-languages-section');
@@ -312,11 +318,7 @@ describe('LanguageSelectorModal', () => {
     const vaultModule = require('../../../db/vault');
 
     const { findByTestId, findByText } = await render(
-      <LanguageSelectorModal
-        {...defaultProps}
-        onPairChanged={onPairChanged}
-        onClose={onClose}
-      />
+      <LanguageSelectorModal {...defaultProps} onPairChanged={onPairChanged} onClose={onClose} />
     );
     await findByText('Language Lab');
 
@@ -337,9 +339,7 @@ describe('LanguageSelectorModal', () => {
   });
 
   it('renders long regional languages like PT-BR with both clean code and native name', async () => {
-    const { findByText, findAllByText } = await render(
-      <LanguageSelectorModal {...defaultProps} />
-    );
+    const { findByText, findAllByText } = await render(<LanguageSelectorModal {...defaultProps} />);
     await findByText('Language Lab');
 
     // Code is displayed cleanly as PT-BR

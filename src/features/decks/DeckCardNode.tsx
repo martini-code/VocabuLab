@@ -1,12 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import {
-  CheckCircle2,
-  Sparkles,
-  ChevronRight,
-  Plus,
-  Layers,
-} from 'lucide-react-native';
+import { CheckCircle2, Sparkles, ChevronRight, Plus, Layers } from 'lucide-react-native';
 import { DeckWithProgress } from '../../types';
 import { DeckIcon } from '../../components/icons/DeckIcon';
 
@@ -24,9 +18,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
   const queuedCount = deck.queued_count ?? 0;
   const isQueued = queuedCount > 0;
   const queuePercent =
-    deck.card_count > 0
-      ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100))
-      : 0;
+    deck.card_count > 0 ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100)) : 0;
 
   return (
     <Pressable
@@ -137,6 +129,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
     </Pressable>
   );
 });
+DeckCardNode.displayName = 'DeckCardNode';
 
 const styles = StyleSheet.create({
   container: {

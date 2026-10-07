@@ -1,10 +1,4 @@
-import {
-  SECRETS,
-  TOKEN_CONFIG,
-  ADMOB_CONFIG,
-  ADMOB_TEST_IDS,
-  IAP_SKUS,
-} from '../secrets';
+import { SECRETS, TOKEN_CONFIG, ADMOB_CONFIG, ADMOB_TEST_IDS, IAP_SKUS } from '../secrets';
 
 describe('Secrets & Config Architecture', () => {
   it('exports valid TOKEN_CONFIG with initial allowances', () => {

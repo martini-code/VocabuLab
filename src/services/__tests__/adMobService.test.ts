@@ -2,6 +2,18 @@ import { Platform } from 'react-native';
 import { adMobService, ADMOB_CONFIG, ADMOB_TEST_IDS } from '../adMobService';
 import { tokenWallet } from '../tokenWallet';
 
+// Provide a distinct production ad unit so tests don't depend on a developer's
+// git-ignored secrets.local.ts (the committed defaults reuse the test ID as a safe fallback).
+jest.mock(
+  '../../config/secrets.local',
+  () => ({
+    SECRETS: {
+      ADMOB_CONFIG: { PRODUCTION_AD_UNITS: { REWARDED: 'ca-app-pub-0000000000000000/0000000000' } },
+    },
+  }),
+  { virtual: true }
+);
+
 // Mock tokenWallet
 jest.mock('../tokenWallet', () => ({
   tokenWallet: {

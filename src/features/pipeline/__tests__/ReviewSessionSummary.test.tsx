@@ -79,11 +79,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
   it('renders congratulatory header, deck name, and word count', async () => {
     const handleDone = jest.fn();
     const { getByText, getAllByText } = await render(
-      <ReviewSessionSummary
-        items={mockItems}
-        deckName="Spanish Basics"
-        onDone={handleDone}
-      />
+      <ReviewSessionSummary items={mockItems} deckName="Spanish Basics" onDone={handleDone} />
     );
 
     expect(getByText('SESSION COMPLETE!')).toBeTruthy();
@@ -95,10 +91,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
     const handleDone = jest.fn();
     // 2 out of 3 were Good or Easy = 67%
     const { getByText } = await render(
-      <ReviewSessionSummary
-        items={mockItems}
-        onDone={handleDone}
-      />
+      <ReviewSessionSummary items={mockItems} onDone={handleDone} />
     );
 
     expect(getByText('Session Retention Rate')).toBeTruthy();
@@ -109,10 +102,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
   it('displays response breakdown counts for Again, Hard, Good, Easy', async () => {
     const handleDone = jest.fn();
     const { getByText } = await render(
-      <ReviewSessionSummary
-        items={mockItems}
-        onDone={handleDone}
-      />
+      <ReviewSessionSummary items={mockItems} onDone={handleDone} />
     );
 
     expect(getByText('Response Breakdown')).toBeTruthy();
@@ -125,10 +115,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
   it('displays session high-level stats grid (Avg Stability, Mastered, Algorithm)', async () => {
     const handleDone = jest.fn();
     const { getByText } = await render(
-      <ReviewSessionSummary
-        items={mockItems}
-        onDone={handleDone}
-      />
+      <ReviewSessionSummary items={mockItems} onDone={handleDone} />
     );
 
     expect(getByText('Avg Stability Gain')).toBeTruthy();
@@ -140,10 +127,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
   it('renders word-by-word list with FSRS stability and difficulty metrics', async () => {
     const handleDone = jest.fn();
     const { getByText, getAllByText } = await render(
-      <ReviewSessionSummary
-        items={mockItems}
-        onDone={handleDone}
-      />
+      <ReviewSessionSummary items={mockItems} onDone={handleDone} />
     );
 
     // Front & Back terms
@@ -185,10 +169,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
   it('triggers onDone when CONTINUE button is pressed', async () => {
     const handleDone = jest.fn();
     const { getByText } = await render(
-      <ReviewSessionSummary
-        items={mockItems}
-        onDone={handleDone}
-      />
+      <ReviewSessionSummary items={mockItems} onDone={handleDone} />
     );
 
     await fireEvent.press(getByText('CONTINUE'));
@@ -235,10 +216,7 @@ describe('ReviewSessionSummary Integration Tests', () => {
     ];
 
     const { getByText, getAllByText } = await render(
-      <ReviewSessionSummary
-        items={singleItem}
-        onDone={jest.fn()}
-      />
+      <ReviewSessionSummary items={singleItem} onDone={jest.fn()} />
     );
 
     expect(getByText('100%')).toBeTruthy();

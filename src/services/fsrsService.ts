@@ -44,7 +44,11 @@ export function getReviewOptions(userCard: UserCard, now: Date = new Date()): Re
  * Applies a grade to a card using the user's active spaced repetition algorithm
  * (FSRS, SM-2, or Leitner) and returns the database update payload.
  */
-export function gradeCardFSRS(userCard: UserCard, rating: Grade, now: Date = new Date()): SRSUpdatePayload {
+export function gradeCardFSRS(
+  userCard: UserCard,
+  rating: Grade,
+  now: Date = new Date()
+): SRSUpdatePayload {
   const srsRating = toSRSRating(rating);
   return srsManager.gradeCard(userCard, srsRating, now);
 }

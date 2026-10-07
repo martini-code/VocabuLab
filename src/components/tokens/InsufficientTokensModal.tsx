@@ -8,13 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import {
-  AlertCircle,
-  Tv,
-  Rocket,
-  X,
-  Sparkles,
-} from 'lucide-react-native';
+import { AlertCircle, Tv, Rocket, X, Sparkles } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 import { TOKEN_CONFIG } from '../../config/secrets';
@@ -75,7 +69,8 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
         Alert.alert(
           t('tokens.ad_error_title', { defaultValue: 'Ad Unavailable' }),
           t('tokens.ad_error_msg', {
-            defaultValue: 'Unable to load ad right now. Please check your network connection and try again.',
+            defaultValue:
+              'Unable to load ad right now. Please check your network connection and try again.',
           })
         );
       }

@@ -540,5 +540,16 @@
     "daily_ads_limit_reached_desc": "Vous avez regardé vos 3 pubs pour aujourd'hui. Réinitialisation demain ou illimité avec Plus.",
     "upgrade_to_plus_cta": "Passer à Plus",
     "inspect_mediation": "Inspecter la médiation AdMob"
+  },
+  "random_discovery": {
+    "title": "Découverte Aléatoire",
+    "subtitle": "10 mots non appris de toute la bibliothèque",
+    "btn_discover": "Découvrir 10 Mots Aléatoires",
+    "counter": "Carte {{current}} sur {{total}}",
+    "learn_word": "Apprendre le Mot",
+    "learned": "Appris",
+    "empty_title": "Tous les Mots Découverts",
+    "empty_desc": "Vous avez appris tout le vocabulaire disponible dans la bibliothèque !",
+    "loading": "Échantillonnage de mots aléatoires dans la bibliothèque..."
   }
 }

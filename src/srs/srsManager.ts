@@ -1,4 +1,11 @@
-import { AlgorithmId, SRSAlgorithm, AlgorithmMeta, ReviewOption, SRSRating, SRSUpdatePayload } from './types';
+import {
+  AlgorithmId,
+  SRSAlgorithm,
+  AlgorithmMeta,
+  ReviewOption,
+  SRSRating,
+  SRSUpdatePayload,
+} from './types';
 import { getAlgorithmById, getAllAlgorithmsMeta, DEFAULT_ALGORITHM_ID } from './registry';
 import { getSetting, setSetting } from '../db/vault';
 import { UserCard } from '../types';
