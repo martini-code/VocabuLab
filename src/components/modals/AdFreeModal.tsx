@@ -12,6 +12,8 @@ import { Shield, Check, Sparkles, X, Award, Zap, RefreshCw } from 'lucide-react-
 import { useTranslation } from 'react-i18next';
 import { iapService, IAP_SKUS, AdFreeProductItem, DEFAULT_PRODUCTS } from '../../services/iapService';
 
+import { colors } from '../../theme';
+
 interface AdFreeModalProps {
   visible: boolean;
   onClose: () => void;
@@ -102,7 +104,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconCircle}>
-                <Shield size={22} color="#B45309" />
+                <Shield size={22} color={colors.primary[700]} />
               </View>
               <View>
                 <Text style={styles.title}>{t('ad_free.modal_title')}</Text>
@@ -111,7 +113,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
             </View>
 
             <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-              <X size={20} color="#78350F" />
+              <X size={20} color={colors.primary[900]} />
             </TouchableOpacity>
           </View>
 
@@ -119,7 +121,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
             {/* Active Status Badge if already Ad-Free */}
             {isAdFree ? (
               <View style={styles.activeBanner}>
-                <Award size={28} color="#047857" />
+                <Award size={28} color={colors.success[700]} />
                 <Text style={styles.activeTitle}>{t('ad_free.purchased_badge')}</Text>
                 <Text style={styles.activeSub}>
                   {t('ad_free.benefit_1_sub')}
@@ -131,7 +133,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
                 <View style={styles.benefitsCard}>
                   <View style={styles.benefitRow}>
                     <View style={styles.checkCircle}>
-                      <Check size={14} color="#047857" />
+                      <Check size={14} color={colors.success[700]} />
                     </View>
                     <View style={styles.benefitTextCol}>
                       <Text style={styles.benefitTitle}>{t('ad_free.benefit_1')}</Text>
@@ -141,7 +143,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
 
                   <View style={styles.benefitRow}>
                     <View style={styles.checkCircle}>
-                      <Check size={14} color="#047857" />
+                      <Check size={14} color={colors.success[700]} />
                     </View>
                     <View style={styles.benefitTextCol}>
                       <Text style={styles.benefitTitle}>{t('ad_free.benefit_2')}</Text>
@@ -151,7 +153,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
 
                   <View style={styles.benefitRow}>
                     <View style={styles.checkCircle}>
-                      <Check size={14} color="#047857" />
+                      <Check size={14} color={colors.success[700]} />
                     </View>
                     <View style={styles.benefitTextCol}>
                       <Text style={styles.benefitTitle}>{t('ad_free.benefit_3')}</Text>
@@ -171,7 +173,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
                   >
                     <View style={styles.planHeader}>
                       <View style={styles.planBadge}>
-                        <Sparkles size={12} color="#FFFFFF" />
+                        <Sparkles size={12} color={colors.neutral[0]} />
                         <Text style={styles.planBadgeText}>MONTHLY SUBSCRIPTION</Text>
                       </View>
                       <Text style={styles.planPrice}>
@@ -183,10 +185,10 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
 
                     <View style={styles.planBtn}>
                       {loadingSku === IAP_SKUS.AD_FREE_MONTHLY ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
+                        <ActivityIndicator size="small" color={colors.neutral[0]} />
                       ) : (
                         <>
-                          <Zap size={15} color="#FFFFFF" />
+                          <Zap size={15} color={colors.neutral[0]} />
                           <Text style={styles.planBtnText}>SUBSCRIBE MONTHLY</Text>
                         </>
                       )}
@@ -211,10 +213,10 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
               activeOpacity={0.7}
             >
               {isRestoring ? (
-                <ActivityIndicator size="small" color="#64748B" />
+                <ActivityIndicator size="small" color={colors.neutral[500]} />
               ) : (
                 <View style={styles.restoreBtnContent}>
-                  <RefreshCw size={14} color="#64748B" />
+                  <RefreshCw size={14} color={colors.neutral[500]} />
                   <Text style={styles.restoreBtnText}>{t('ad_free.restore_purchases')}</Text>
                 </View>
               )}
@@ -240,17 +242,17 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFDF7',
+    backgroundColor: colors.neutral[0],
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '90%',
     paddingBottom: 24,
     borderTopWidth: 2,
-    borderTopColor: '#F59E0B',
+    borderTopColor: colors.primary[500],
   },
   header: {
     flexDirection: 'row',
@@ -260,7 +262,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 14,
     borderBottomWidth: 1.5,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: colors.neutral[100],
   },
   headerLeft: {
     flexDirection: 'row',
@@ -272,28 +274,28 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
   },
   title: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   closeBtn: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
   },
   body: {
     paddingHorizontal: 20,
@@ -304,10 +306,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   activeBanner: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.success[50],
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: '#A7F3D0',
+    borderColor: colors.success[200],
     padding: 24,
     alignItems: 'center',
     gap: 8,
@@ -315,20 +317,20 @@ const styles = StyleSheet.create({
   activeTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#047857',
+    color: colors.success[700],
     letterSpacing: 0.5,
   },
   activeSub: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#065F46',
+    color: colors.success[800],
     textAlign: 'center',
   },
   benefitsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     padding: 16,
     gap: 14,
   },
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.success[100],
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
@@ -352,30 +354,30 @@ const styles = StyleSheet.create({
   benefitTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   benefitDesc: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   plansSection: {
     gap: 12,
   },
   planCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     padding: 16,
     borderBottomWidth: 3,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
   },
   planCardFeatured: {
-    borderColor: '#F59E0B',
-    borderBottomColor: '#D97706',
-    backgroundColor: '#FFFBEB',
+    borderColor: colors.primary[500],
+    borderBottomColor: colors.primary[600],
+    backgroundColor: colors.primary[50],
   },
   planHeader: {
     flexDirection: 'row',
@@ -386,26 +388,26 @@ const styles = StyleSheet.create({
   planBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
     gap: 4,
   },
   planBadgeText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   monthlyTag: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   monthlyTagText: {
-    color: '#475569',
+    color: colors.neutral[600],
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -413,22 +415,22 @@ const styles = StyleSheet.create({
   planPrice: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#92400E',
+    color: colors.primary[800],
   },
   planPriceSecondary: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   planTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   planSub: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     marginBottom: 12,
   },
@@ -436,15 +438,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     paddingVertical: 12,
     borderRadius: 12,
     gap: 6,
     borderBottomWidth: 2,
-    borderBottomColor: '#B45309',
+    borderBottomColor: colors.primary[700],
   },
   planBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -452,30 +454,30 @@ const styles = StyleSheet.create({
   planBtnSecondary: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingVertical: 11,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
   },
   planBtnTextSecondary: {
-    color: '#78350F',
+    color: colors.primary[900],
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   feedbackBanner: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#FCD34D',
+    borderColor: colors.primary[300],
     alignItems: 'center',
   },
   feedbackText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
     textAlign: 'center',
   },
   restoreBtn: {
@@ -490,21 +492,21 @@ const styles = StyleSheet.create({
   restoreBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
     letterSpacing: 0.5,
   },
   simulationBtn: {
     alignItems: 'center',
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   simulationBtnText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: colors.neutral[400],
     letterSpacing: 0.5,
   },
 });

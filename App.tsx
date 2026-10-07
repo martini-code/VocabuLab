@@ -22,7 +22,7 @@ import { VaultStats, LanguagePairSettings } from './src/types';
 import { ReviewSession } from './src/features/pipeline/ReviewSession';
 import { DecksRoadmap } from './src/features/decks/DecksRoadmap';
 import { ProgressScreen } from './src/features/progress/ProgressScreen';
-import { SquireMascot } from './src/components/mascot/Mascots';
+import { LexMascot } from './src/components/mascot/Mascots';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
@@ -53,6 +53,8 @@ import {
   Check,
   Languages,
 } from 'lucide-react-native';
+
+import { colors } from './src/theme';
 
 type TabType = 'pipeline' | 'archives' | 'chronicles' | 'treasury';
 
@@ -169,10 +171,10 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <SafeAreaView style={styles.splashContainer}>
-          <SquireMascot mood="idle" size={130} />
+          <LexMascot mood="idle" size={130} />
           <Text style={styles.splashTitle}>VOCABULAB</Text>
           <Text style={styles.splashTagline}>The Medieval Fortress of Spaced Memory</Text>
-          <ActivityIndicator size="large" color="#F59E0B" style={{ marginTop: 24 }} />
+          <ActivityIndicator size="large" color={colors.primary[500]} style={{ marginTop: 24 }} />
           <Text style={styles.splashStatus}>{statusMessage}</Text>
         </SafeAreaView>
       </SafeAreaProvider>
@@ -182,20 +184,20 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FEFCE8" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.primary[50]} />
 
       {/* Top Medieval Stats Header (Vector Icons - Strictly No Emojis) */}
       {!isReviewInProgress && (
         <View style={styles.topStatsBar}>
           {/* Streak Flame */}
           <View style={styles.statPill}>
-            <Flame size={16} color="#DC2626" />
+            <Flame size={16} color={colors.danger[600]} />
             <Text style={styles.statValue}>{stats.streakDays}</Text>
           </View>
 
           {/* Due Cards Shield */}
           <View style={styles.statPill}>
-            <Shield size={16} color="#0D9488" />
+            <Shield size={16} color={colors.success[600]} />
             <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
           </View>
 
@@ -269,7 +271,7 @@ export default function App() {
             contentContainerStyle={styles.treasuryTabContainer}
             showsVerticalScrollIndicator={false}
           >
-            <SquireMascot mood="victorious" size={120} />
+            <LexMascot mood="victorious" size={120} />
             <Text style={styles.treasuryTitle}>THE ROYAL TREASURY</Text>
             <Text style={styles.treasurySub}>Zero Cloud Overhead • 100% Local Fortress</Text>
 
@@ -302,7 +304,7 @@ export default function App() {
 
             {/* SRS Engine Card in Treasury (FSRS v5 Exclusively) */}
             <View style={styles.treasuryAlgoBtn}>
-              <Zap size={20} color="#B45309" />
+              <Zap size={20} color={colors.primary[700]} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.treasuryAlgoTitle}>
                   SRS ENGINE: FSRS v5
@@ -312,7 +314,7 @@ export default function App() {
                 </Text>
               </View>
               <View style={styles.treasuryAlgoActiveBadge}>
-                <Check size={12} color="#065F46" />
+                <Check size={12} color={colors.success[800]} />
                 <Text style={styles.treasuryAlgoActiveText}>ACTIVE</Text>
               </View>
             </View>
@@ -320,7 +322,7 @@ export default function App() {
             {/* Ad-Free Status in Treasury */}
             {isAdFree ? (
               <View style={styles.treasuryAdFreeCard}>
-                <ShieldCheck size={22} color="#047857" />
+                <ShieldCheck size={22} color={colors.success[700]} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.treasuryAdFreeTitle}>
                     {t('ad_free.purchased_badge')}
@@ -336,7 +338,7 @@ export default function App() {
                 onPress={() => setAdFreeModalOpen(true)}
                 activeOpacity={0.85}
               >
-                <Sparkles size={18} color="#FFFFFF" />
+                <Sparkles size={18} color={colors.neutral[0]} />
                 <Text style={styles.treasuryUpgradeText}>
                   {t('ad_free.modal_title')} • {t('ad_free.go_ad_free')}
                 </Text>
@@ -345,13 +347,13 @@ export default function App() {
 
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
               <TouchableOpacity
-                style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0, backgroundColor: '#EFF6FF', borderColor: '#93C5FD' }]}
+                style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0, backgroundColor: colors.primary[50], borderColor: colors.primary[300] }]}
                 onPress={() => {
                   setLanguageModalMode('origin');
                   setLanguageModalOpen(true);
                 }}
               >
-                <Text style={[styles.treasuryActionText, { color: '#1D4ED8' }]}>
+                <Text style={[styles.treasuryActionText, { color: colors.primary[800] }]}>
                   App Origin: {formatLanguageCode(languagePair.origin_lang)}
                 </Text>
               </TouchableOpacity>
@@ -372,7 +374,7 @@ export default function App() {
             {/* Deck & Subdeck Title Language Preference Setting */}
             <View style={styles.deckTitlePrefCard}>
               <View style={styles.deckTitlePrefHeader}>
-                <Languages size={18} color="#92400E" />
+                <Languages size={18} color={colors.primary[800]} />
                 <Text style={styles.deckTitlePrefTitle}>Deck & Topic Titles</Text>
               </View>
               <Text style={styles.deckTitlePrefSubtitle}>
@@ -390,7 +392,7 @@ export default function App() {
                   }}
                   activeOpacity={0.8}
                 >
-                  {deckTitleLanguage === 'origin' && <Check size={14} color="#B45309" />}
+                  {deckTitleLanguage === 'origin' && <Check size={14} color={colors.primary[700]} />}
                   <Text
                     style={[
                       styles.deckTitleToggleText,
@@ -412,7 +414,7 @@ export default function App() {
                   }}
                   activeOpacity={0.8}
                 >
-                  {deckTitleLanguage === 'target' && <Check size={14} color="#B45309" />}
+                  {deckTitleLanguage === 'target' && <Check size={14} color={colors.primary[700]} />}
                   <Text
                     style={[
                       styles.deckTitleToggleText,
@@ -431,10 +433,10 @@ export default function App() {
             </View>
 
             <TouchableOpacity
-              style={[styles.treasuryActionBtn, { marginTop: 12, backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}
+              style={[styles.treasuryActionBtn, { marginTop: 12, backgroundColor: colors.neutral[50], borderColor: colors.neutral[300] }]}
               onPress={() => setMockProfileModalOpen(true)}
             >
-              <Text style={[styles.treasuryActionText, { color: '#334155' }]}>
+              <Text style={[styles.treasuryActionText, { color: colors.neutral[700] }]}>
                 SWITCH TESTING PROFILE
               </Text>
             </TouchableOpacity>
@@ -453,7 +455,7 @@ export default function App() {
             }}
             style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
           >
-            <Swords size={20} color={activeTab === 'pipeline' ? '#B45309' : '#64748B'} />
+            <Swords size={20} color={activeTab === 'pipeline' ? colors.primary[700] : colors.neutral[500]} />
             <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
               {t('nav.training')}
             </Text>
@@ -467,7 +469,7 @@ export default function App() {
             }}
             style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
           >
-            <Library size={20} color={activeTab === 'archives' ? '#B45309' : '#64748B'} />
+            <Library size={20} color={activeTab === 'archives' ? colors.primary[700] : colors.neutral[500]} />
             <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
               {t('nav.decks')}
             </Text>
@@ -481,7 +483,7 @@ export default function App() {
             }}
             style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
           >
-            <Activity size={20} color={activeTab === 'chronicles' ? '#B45309' : '#64748B'} />
+            <Activity size={20} color={activeTab === 'chronicles' ? colors.primary[700] : colors.neutral[500]} />
             <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
               {t('nav.chronicles')}
             </Text>
@@ -495,7 +497,7 @@ export default function App() {
             }}
             style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
           >
-            <Coins size={20} color={activeTab === 'treasury' ? '#B45309' : '#64748B'} />
+            <Coins size={20} color={activeTab === 'treasury' ? colors.primary[700] : colors.neutral[500]} />
             <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
               {t('nav.treasury')}
             </Text>
@@ -578,11 +580,11 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.primary[50],
   },
   splashContainer: {
     flex: 1,
-    backgroundColor: '#FFFDF7',
+    backgroundColor: colors.neutral[0],
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -590,19 +592,19 @@ const styles = StyleSheet.create({
   splashTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     marginTop: 18,
     letterSpacing: 1,
   },
   splashTagline: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#B45309',
+    color: colors.primary[700],
     marginTop: 4,
   },
   splashStatus: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.neutral[400],
     marginTop: 14,
     fontWeight: '600',
   },
@@ -611,41 +613,41 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderBottomWidth: 2,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.neutral[200],
   },
   statPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   flagEmoji: {
     fontSize: 15,
     marginRight: 4,
   },
   tokenPill: {
-    borderColor: '#FDE68A',
-    backgroundColor: '#FEF3C7',
+    borderColor: colors.primary[200],
+    backgroundColor: colors.primary[100],
     gap: 4,
   },
   tokenPillText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#B45309',
+    color: colors.primary[700],
   },
   proPill: {
-    borderColor: '#F59E0B',
-    backgroundColor: '#FEF3C7',
+    borderColor: colors.primary[500],
+    backgroundColor: colors.primary[100],
   },
   proPillActive: {
-    borderColor: '#10B981',
-    backgroundColor: '#D1FAE5',
+    borderColor: colors.success[500],
+    backgroundColor: colors.success[100],
   },
   statEmoji: {
     fontSize: 14,
@@ -654,23 +656,23 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   proText: {
-    color: '#B45309',
+    color: colors.primary[700],
   },
   proTextActive: {
-    color: '#047857',
+    color: colors.success[700],
   },
   contentArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
   },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderTopWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     paddingBottom: 8,
     paddingTop: 6,
   },
@@ -681,7 +683,7 @@ const styles = StyleSheet.create({
   },
   navItemActive: {
     borderTopWidth: 3,
-    borderTopColor: '#F59E0B',
+    borderTopColor: colors.primary[500],
     marginTop: -3,
   },
   navEmoji: {
@@ -690,11 +692,11 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   navLabelActive: {
-    color: '#B45309',
+    color: colors.primary[700],
   },
   treasuryScrollView: {
     flex: 1,
@@ -709,24 +711,24 @@ const styles = StyleSheet.create({
   treasuryTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     marginTop: 12,
     letterSpacing: 0.5,
   },
   treasurySub: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.neutral[500],
     fontWeight: '600',
     marginTop: 4,
   },
   statsCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 4,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     padding: 16,
     marginTop: 20,
     gap: 12,
@@ -739,27 +741,27 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   statNumber: {
     fontSize: 15,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   statHighlight: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#2563EB',
+    color: colors.primary[700],
   },
   statFree: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#10B981',
+    color: colors.success[500],
   },
   treasuryActionBtn: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 2,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -770,30 +772,30 @@ const styles = StyleSheet.create({
   treasuryActionText: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#B45309',
+    color: colors.primary[700],
     letterSpacing: 0.5,
   },
   adFreePillFree: {
-    borderColor: '#F59E0B',
-    backgroundColor: '#FFFBEB',
+    borderColor: colors.primary[500],
+    backgroundColor: colors.primary[50],
   },
   adFreePillActive: {
-    borderColor: '#10B981',
-    backgroundColor: '#ECFDF5',
+    borderColor: colors.success[500],
+    backgroundColor: colors.success[50],
   },
   adFreeTextFree: {
-    color: '#B45309',
+    color: colors.primary[700],
   },
   adFreeTextActive: {
-    color: '#047857',
+    color: colors.success[700],
   },
   treasuryAdFreeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.success[50],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#A7F3D0',
+    borderColor: colors.success[200],
     padding: 14,
     marginTop: 18,
     width: '100%',
@@ -802,20 +804,20 @@ const styles = StyleSheet.create({
   treasuryAdFreeTitle: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#047857',
+    color: colors.success[700],
     letterSpacing: 0.5,
   },
   treasuryAdFreeSub: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#065F46',
+    color: colors.success[800],
     marginTop: 2,
   },
   treasuryUpgradeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -823,21 +825,21 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 8,
     borderBottomWidth: 3,
-    borderBottomColor: '#B45309',
+    borderBottomColor: colors.primary[700],
   },
   treasuryUpgradeText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     letterSpacing: 0.5,
   },
   treasuryAlgoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     padding: 14,
     marginTop: 14,
     width: '100%',
@@ -846,36 +848,36 @@ const styles = StyleSheet.create({
   treasuryAlgoTitle: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
   treasuryAlgoSub: {
     fontSize: 11,
-    color: '#92400E',
+    color: colors.primary[800],
     marginTop: 2,
   },
   treasuryAlgoActiveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.success[100],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: colors.success[200],
   },
   treasuryAlgoActiveText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#065F46',
+    color: colors.success[800],
     letterSpacing: 0.5,
   },
   deckTitlePrefCard: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     padding: 14,
     marginTop: 12,
     width: '100%',
@@ -889,12 +891,12 @@ const styles = StyleSheet.create({
   deckTitlePrefTitle: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
   deckTitlePrefSubtitle: {
     fontSize: 11,
-    color: '#92400E',
+    color: colors.primary[800],
     marginBottom: 10,
     lineHeight: 15,
   },
@@ -908,17 +910,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.primary[50],
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     paddingVertical: 10,
     paddingHorizontal: 8,
   },
   deckTitleToggleBtnActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#B45309',
-    shadowColor: '#B45309',
+    backgroundColor: colors.neutral[0],
+    borderColor: colors.primary[700],
+    shadowColor: colors.primary[700],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
@@ -927,16 +929,16 @@ const styles = StyleSheet.create({
   deckTitleToggleText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#92400E',
+    color: colors.primary[800],
     letterSpacing: 0.3,
   },
   deckTitleToggleTextActive: {
-    color: '#B45309',
+    color: colors.primary[700],
     fontWeight: '900',
   },
   deckTitlePrefNote: {
     fontSize: 10,
-    color: '#B45309',
+    color: colors.primary[700],
     marginTop: 8,
     fontStyle: 'italic',
   },

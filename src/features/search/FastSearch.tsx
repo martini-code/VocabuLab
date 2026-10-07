@@ -11,11 +11,13 @@ import {
 import { Search, Sparkles, Volume2, Check, Plus, X } from 'lucide-react-native';
 import { searchLexemesFTS, addCardToQueue } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
-import { WizardOwlMascot } from '../../components/mascot/Mascots';
+import { LexMascot } from '../../components/mascot/Mascots';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { tokenWallet } from '../../services/tokenWallet';
 import { formatLanguageCode } from '../../locales/languages';
+
+import { colors } from '../../theme';
 
 interface FastSearchProps {
   onInsufficientTokens?: (requiredWords: number) => void;
@@ -53,7 +55,7 @@ export const SearchResultCard = React.memo<SearchResultCardProps>(
             ]}
             onPress={() => onSpeak(item.term, item.language)}
           >
-            <Volume2 size={16} color="#78350F" style={{ marginRight: 6 }} />
+            <Volume2 size={16} color={colors.primary[900]} style={{ marginRight: 6 }} />
             <Text style={styles.audioText}>Hear Sound</Text>
           </Pressable>
 
@@ -71,12 +73,12 @@ export const SearchResultCard = React.memo<SearchResultCardProps>(
           >
             {isQueued ? (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Check size={14} color="#166534" style={{ marginRight: 4 }} />
+                <Check size={14} color={colors.success[800]} style={{ marginRight: 4 }} />
                 <Text style={styles.learnBtnText}>Learned</Text>
               </View>
             ) : (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                <Plus size={14} color={colors.neutral[0]} style={{ marginRight: 4 }} />
                 <Text style={styles.learnBtnText}>Learn Word</Text>
               </View>
             )}
@@ -138,7 +140,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
     <View style={styles.container}>
       {/* Scriptorium Header with Archmage Barnaby */}
       <View style={styles.headerBox}>
-        <WizardOwlMascot size={75} />
+        <LexMascot mood="thinking" size={75} />
         <View style={styles.headerTextBox}>
           <Text style={styles.title}>THE WIZARD'S SCRIPTORIUM</Text>
           <Text style={styles.subtitle}>
@@ -149,11 +151,11 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
 
       {/* Medieval Input Field */}
       <View style={styles.searchBarContainer}>
-        <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
+        <Search size={18} color={colors.primary[900]} style={{ marginRight: 8 }} />
         <TextInput
           style={styles.input}
           placeholder="Search archaic cards by prefix or rune..."
-          placeholderTextColor="#78350F88"
+          placeholderTextColor={colors.textSubtle}
           value={query}
           onChangeText={handleSearch}
           autoCapitalize="none"
@@ -161,7 +163,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={() => handleSearch('')} style={styles.clearBtn}>
-            <X size={16} color="#78350F" />
+            <X size={16} color={colors.primary[900]} />
           </TouchableOpacity>
         )}
       </View>
@@ -179,7 +181,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Sparkles size={44} color="#D97706" style={{ marginBottom: 12 }} />
+            <Sparkles size={44} color={colors.primary[600]} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>
               {query ? 'No matching runes found' : 'The enchanted archives await thy query'}
             </Text>
@@ -198,7 +200,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
   },
   headerBox: {
     flexDirection: 'row',
@@ -214,23 +216,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: colors.neutral[300],
     borderBottomWidth: 4,
-    borderBottomColor: '#94A3B8',
+    borderBottomColor: colors.neutral[400],
     borderRadius: 20,
     marginHorizontal: 16,
     marginVertical: 10,
@@ -241,7 +243,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '700',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   clearBtn: {
     padding: 6,
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
   clearText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: colors.neutral[400],
   },
   resultsList: {
     padding: 16,
@@ -267,12 +269,12 @@ const styles = StyleSheet.create({
   term: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   langAndPos: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   cardFooter: {
@@ -281,18 +283,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 14,
     borderTopWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: colors.neutral[100],
     paddingTop: 10,
   },
   audioBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
   },
   audioEmoji: {
     fontSize: 14,
@@ -301,22 +303,22 @@ const styles = StyleSheet.create({
   audioText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
   },
   learnBtn: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary[500],
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 14,
     borderBottomWidth: 3,
-    borderBottomColor: '#1D4ED8',
+    borderBottomColor: colors.primary[800],
   },
   learnBtnDone: {
-    backgroundColor: '#94A3B8',
-    borderBottomColor: '#64748B',
+    backgroundColor: colors.neutral[400],
+    borderBottomColor: colors.neutral[500],
   },
   learnBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontWeight: '800',
     fontSize: 12,
   },
@@ -331,11 +333,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   emptySubtitle: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.neutral[400],
     marginTop: 4,
     textAlign: 'center',
     paddingHorizontal: 20,

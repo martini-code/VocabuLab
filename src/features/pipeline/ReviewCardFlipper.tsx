@@ -14,6 +14,8 @@ import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
 import { formatLanguageCode } from '../../locales/languages';
 
+import { colors } from '../../theme';
+
 interface ReviewCardFlipperProps {
   card: CardWithDetails;
   isFlipped: boolean;
@@ -112,7 +114,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
                 onSpeak(card.front_term, card.front_lang);
               }}
             >
-              <Volume2 size={18} color="#78350F" />
+              <Volume2 size={18} color={colors.primary[900]} />
             </TouchableOpacity>
           </View>
 
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
   langTag: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#94A3B8',
+    color: colors.neutral[400],
     letterSpacing: 1,
   },
   termBox: {
@@ -201,37 +203,37 @@ const styles = StyleSheet.create({
   termText: {
     fontSize: 34,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     textAlign: 'center',
     letterSpacing: -0.5,
   },
   termTextSmall: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
     textAlign: 'center',
   },
   posText: {
     fontSize: 14,
     fontStyle: 'italic',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 4,
     fontWeight: '600',
   },
   ttsButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     width: 38,
     height: 38,
     borderRadius: 19,
     marginTop: 12,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
   },
   divider: {
     height: 1.5,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     marginVertical: 12,
     width: '80%',
     alignSelf: 'center',
@@ -243,14 +245,14 @@ const styles = StyleSheet.create({
   backTranslationLabel: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#A16207',
+    color: colors.primary[700],
     letterSpacing: 1,
     marginBottom: 4,
   },
   backTermText: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
     marginBottom: 4,
     textAlign: 'center',
   },
@@ -258,12 +260,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: colors.neutral[100],
     alignItems: 'center',
   },
   tapToRevealText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.neutral[400],
   },
 });

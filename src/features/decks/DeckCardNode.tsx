@@ -10,6 +10,8 @@ import {
 import { DeckWithProgress } from '../../types';
 import { DeckIcon } from '../../components/icons/DeckIcon';
 
+import { colors } from '../../theme';
+
 interface DeckCardNodeProps {
   deck: DeckWithProgress;
   onPress: () => void;
@@ -53,11 +55,11 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
           <View
             style={[
               styles.iconBox,
-              isMastered && { backgroundColor: '#D1FAE5', borderColor: '#A7F3D0' },
-              isQueued && !isMastered && { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
+              isMastered && { backgroundColor: colors.success[100], borderColor: colors.success[200] },
+              isQueued && !isMastered && { backgroundColor: colors.primary[100], borderColor: colors.primary[200] },
             ]}
           >
-            <DeckIcon name={deck.icon_name} size={18} color={isMastered ? '#065F46' : '#92400E'} />
+            <DeckIcon name={deck.icon_name} size={18} color={isMastered ? colors.success[800] : colors.primary[800]} />
           </View>
 
           <View style={styles.badgeRow}>
@@ -65,8 +67,8 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
             <View
               style={[
                 styles.tierBadge,
-                isMastered && { backgroundColor: '#059669' },
-                isQueued && !isMastered && { backgroundColor: '#D97706' },
+                isMastered && { backgroundColor: colors.success[600] },
+                isQueued && !isMastered && { backgroundColor: colors.primary[600] },
               ]}
             >
               <Text style={styles.tierBadgeText}>{deck.cefr_level}</Text>
@@ -74,7 +76,7 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
 
             {/* Deck Card Count Tag */}
             <View style={styles.cardCountPill}>
-              <Layers size={11} color="#64748B" />
+              <Layers size={11} color={colors.neutral[500]} />
               <Text style={styles.cardCountText}>{deck.card_count}</Text>
             </View>
           </View>
@@ -99,8 +101,8 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
               style={[
                 styles.progressBarFill,
                 { width: `${isMastered ? 100 : queuePercent}%` },
-                isMastered && { backgroundColor: '#10B981' },
-                isQueued && !isMastered && { backgroundColor: '#F59E0B' },
+                isMastered && { backgroundColor: colors.success[500] },
+                isQueued && !isMastered && { backgroundColor: colors.primary[500] },
               ]}
             />
           </View>
@@ -110,24 +112,24 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
         <View style={styles.footerRow}>
           {isMastered ? (
             <View style={styles.statusBadgeMastered}>
-              <CheckCircle2 size={12} color="#065F46" />
+              <CheckCircle2 size={12} color={colors.success[800]} />
               <Text style={styles.statusTextMastered}>MASTERED</Text>
             </View>
           ) : isQueued ? (
             <View style={styles.statusBadgeQueued}>
-              <Sparkles size={12} color="#92400E" />
+              <Sparkles size={12} color={colors.primary[800]} />
               <Text style={styles.statusTextQueued}>
                 {queuedCount}/{deck.card_count} IN QUEUE
               </Text>
             </View>
           ) : (
             <View style={styles.statusBadgeAvailable}>
-              <Plus size={12} color="#475569" />
+              <Plus size={12} color={colors.neutral[600]} />
               <Text style={styles.statusTextAvailable}>READY TO ADOPT</Text>
             </View>
           )}
 
-          <ChevronRight size={15} color="#94A3B8" />
+          <ChevronRight size={15} color={colors.neutral[400]} />
         </View>
       </View>
     </Pressable>
@@ -148,15 +150,15 @@ const styles = StyleSheet.create({
     left: -4,
     right: 4,
     bottom: -6,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: colors.neutral[300],
     transform: [{ rotate: '-3deg' }],
   },
   cardStackBackMastered: {
-    backgroundColor: '#D1FAE5',
-    borderColor: '#A7F3D0',
+    backgroundColor: colors.success[100],
+    borderColor: colors.success[200],
   },
   // Middle card layer in stack (offset right & tilted)
   cardStackMid: {
@@ -165,41 +167,41 @@ const styles = StyleSheet.create({
     left: 4,
     right: -4,
     bottom: -3,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: colors.neutral[300],
     transform: [{ rotate: '2.5deg' }],
   },
   cardStackMidMastered: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#6EE7B7',
+    backgroundColor: colors.success[50],
+    borderColor: colors.success[300],
   },
   // Foreground main card
   cardFront: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 16,
     borderWidth: 2,
     borderBottomWidth: 4,
-    borderColor: '#E2E8F0',
-    borderBottomColor: '#CBD5E1',
+    borderColor: colors.neutral[200],
+    borderBottomColor: colors.neutral[300],
     padding: 12,
     zIndex: 3,
-    shadowColor: '#000',
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 5,
     elevation: 3,
   },
   cardFrontActive: {
-    borderColor: '#FDE68A',
-    borderBottomColor: '#F59E0B',
-    backgroundColor: '#FFFDF5',
+    borderColor: colors.primary[200],
+    borderBottomColor: colors.primary[500],
+    backgroundColor: colors.neutral[0],
   },
   cardFrontMastered: {
-    borderColor: '#A7F3D0',
-    borderBottomColor: '#059669',
-    backgroundColor: '#F0FDF4',
+    borderColor: colors.success[200],
+    borderBottomColor: colors.success[600],
+    backgroundColor: colors.success[50],
   },
   headerRow: {
     flexDirection: 'row',
@@ -211,9 +213,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -223,7 +225,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tierBadge: {
-    backgroundColor: '#64748B',
+    backgroundColor: colors.neutral[500],
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
@@ -231,14 +233,14 @@ const styles = StyleSheet.create({
   tierBadgeText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     letterSpacing: 0.5,
   },
   cardCountPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 6,
@@ -246,7 +248,7 @@ const styles = StyleSheet.create({
   cardCountText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   bodySection: {
     marginVertical: 4,
@@ -254,13 +256,13 @@ const styles = StyleSheet.create({
   deckName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
     lineHeight: 18,
   },
   themeName: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#94A3B8',
+    color: colors.neutral[400],
     marginTop: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -271,13 +273,13 @@ const styles = StyleSheet.create({
   },
   progressBarBackground: {
     height: 6,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary[500],
     borderRadius: 3,
   },
   footerRow: {
@@ -286,13 +288,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.neutral[100],
   },
   statusBadgeMastered: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.success[100],
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
@@ -300,14 +302,14 @@ const styles = StyleSheet.create({
   statusTextMastered: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#065F46',
+    color: colors.success[800],
     letterSpacing: 0.5,
   },
   statusBadgeQueued: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
@@ -315,14 +317,14 @@ const styles = StyleSheet.create({
   statusTextQueued: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#92400E',
+    color: colors.primary[800],
     letterSpacing: 0.5,
   },
   statusBadgeAvailable: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
@@ -330,7 +332,7 @@ const styles = StyleSheet.create({
   statusTextAvailable: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
     letterSpacing: 0.5,
   },
 });

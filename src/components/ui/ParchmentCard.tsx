@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import { colors } from '../../theme';
 
 interface ParchmentCardProps {
   children: React.ReactNode;
@@ -19,19 +20,13 @@ export const ParchmentCard: React.FC<ParchmentCardProps> = ({
       style={[
         styles.card,
         {
-          backgroundColor: isAged ? '#FEF3C7' : '#FFFDF7',
-          borderColor: isAged ? '#D97706' : '#E2E8F0',
-          borderBottomColor: isAged ? '#B45309' : '#CBD5E1',
+          backgroundColor: isAged ? colors.primary[50] : colors.neutral[0],
+          borderColor: isAged ? colors.primary[200] : colors.neutral[200],
+          borderBottomColor: isAged ? colors.primary[500] : colors.neutral[300],
         },
         style,
       ]}
     >
-      {/* Ornate corner rivets */}
-      <View style={[styles.rivet, styles.rivetTopLeft]} />
-      <View style={[styles.rivet, styles.rivetTopRight]} />
-      <View style={[styles.rivet, styles.rivetBottomLeft]} />
-      <View style={[styles.rivet, styles.rivetBottomRight]} />
-
       {children}
     </View>
   );
@@ -44,22 +39,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 6,
     padding: 20,
     position: 'relative',
-    shadowColor: '#000',
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 4,
   },
-  rivet: {
-    position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#D97706',
-    opacity: 0.6,
-  },
-  rivetTopLeft: { top: 8, left: 8 },
-  rivetTopRight: { top: 8, right: 8 },
-  rivetBottomLeft: { bottom: 8, left: 8 },
-  rivetBottomRight: { bottom: 8, right: 8 },
 });

@@ -63,7 +63,7 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('../../../components/mascot/Mascots', () => {
   const React = require('react');
   return {
-    SquireMascot: (props: any) =>
+    LexMascot: (props: any) =>
       React.createElement('View', { testID: 'squire-mascot', ...props }),
   };
 });

@@ -46,6 +46,8 @@ import {
 } from '../../db/downloader';
 import { DownloadedLanguage, LanguagePairSettings, EnrolledLanguagePair } from '../../types';
 
+import { colors } from '../../theme';
+
 interface LanguageSelectorModalProps {
   visible: boolean;
   onClose: () => void;
@@ -322,7 +324,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconCircle}>
-                <Globe size={20} color="#78350F" />
+                <Globe size={20} color={colors.primary[900]} />
               </View>
               <View>
                 <Text style={styles.title}>
@@ -339,7 +341,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               style={styles.closeBtn}
               onPress={onClose}
             >
-              <X size={20} color="#78350F" />
+              <X size={20} color={colors.primary[900]} />
             </TouchableOpacity>
           </View>
 
@@ -370,7 +372,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               onPress={handleSwapPair}
               activeOpacity={0.7}
             >
-              <ArrowLeftRight size={16} color="#78350F" />
+              <ArrowLeftRight size={16} color={colors.primary[900]} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -430,7 +432,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                         </View>
                         {isActive && (
                           <View style={styles.activePill}>
-                            <Check size={10} color="#FFFFFF" />
+                            <Check size={10} color={colors.neutral[0]} />
                             <Text style={styles.activePillText}>Active</Text>
                           </View>
                         )}
@@ -460,7 +462,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
 
           {/* Mode Selector Notice */}
           <View style={styles.modeNoticeBar}>
-            <Languages size={14} color="#B45309" />
+            <Languages size={14} color={colors.primary[700]} />
             <Text style={styles.modeNoticeText}>
               {mode === 'origin'
                 ? t('language.selecting_origin', 'Configuring App Interface & Explanation Language')
@@ -494,7 +496,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               ]}
               onPress={() => setFilterTab('downloaded')}
             >
-              <HardDrive size={13} color={filterTab === 'downloaded' ? '#78350F' : '#64748B'} />
+              <HardDrive size={13} color={filterTab === 'downloaded' ? colors.primary[900] : colors.neutral[500]} />
               <Text
                 style={[
                   styles.filterTabText,
@@ -508,18 +510,18 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
 
           {/* Search Filter Box */}
           <View style={styles.searchBox}>
-            <Search size={18} color="#94A3B8" />
+            <Search size={18} color={colors.neutral[400]} />
             <TextInput
               style={styles.searchInput}
               placeholder={t('language.search_placeholder', 'Search by language, native name or code...')}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.neutral[400]}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCorrect={false}
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <X size={16} color="#94A3B8" />
+                <X size={16} color={colors.neutral[400]} />
               </TouchableOpacity>
             )}
           </View>
@@ -621,13 +623,13 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
       {/* Actions / Status */}
       <View style={styles.rowActions}>
         {isDownloading ? (
-          <ActivityIndicator size="small" color="#D97706" />
+          <ActivityIndicator size="small" color={colors.primary[600]} />
         ) : isDeleting ? (
-          <ActivityIndicator size="small" color="#DC2626" />
+          <ActivityIndicator size="small" color={colors.danger[600]} />
         ) : isDownloaded ? (
           <View style={styles.downloadedGroup}>
             <View style={styles.downloadedBadge}>
-              <Check size={12} color="#059669" />
+              <Check size={12} color={colors.success[600]} />
               <Text style={styles.downloadedBadgeText}>Saved</Text>
             </View>
 
@@ -637,7 +639,7 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
                 onPress={() => onDelete(item)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Trash2 size={15} color="#94A3B8" />
+                <Trash2 size={15} color={colors.neutral[400]} />
               </TouchableOpacity>
             )}
           </View>
@@ -646,14 +648,14 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
             style={styles.downloadBtn}
             onPress={() => onDownload(item)}
           >
-            <Download size={13} color="#78350F" />
+            <Download size={13} color={colors.primary[900]} />
             <Text style={styles.downloadBtnText}>Get</Text>
           </TouchableOpacity>
         )}
 
         {isSelectedInCurrentMode && (
           <View style={styles.checkCircle}>
-            <Check size={13} color="#FFFFFF" />
+            <Check size={13} color={colors.neutral[0]} />
           </View>
         )}
       </View>
@@ -664,15 +666,15 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.primary[50],
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 2,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
     borderBottomWidth: 0,
     height: '93%',
     paddingHorizontal: 16,
@@ -685,7 +687,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#FDE68A',
+    borderBottomColor: colors.primary[200],
   },
   headerLeft: {
     flexDirection: 'row',
@@ -696,9 +698,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#FDE68A',
+    backgroundColor: colors.primary[200],
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -706,29 +708,29 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     fontSize: 16,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 11,
-    color: '#92400E',
+    color: colors.primary[800],
     marginTop: 1,
   },
   closeBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#FDE68A',
+    backgroundColor: colors.primary[200],
     justifyContent: 'center',
     alignItems: 'center',
   },
   pairBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     padding: 8,
     marginTop: 8,
     gap: 6,
@@ -739,38 +741,38 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
   pairHalfActive: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#D97706',
+    backgroundColor: colors.primary[100],
+    borderColor: colors.primary[600],
   },
   pairHalfLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#92400E',
+    color: colors.primary[800],
     letterSpacing: 0.5,
     marginBottom: 2,
   },
   pairHalfName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   pairHalfCode: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 1,
   },
   swapBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -784,7 +786,7 @@ const styles = StyleSheet.create({
   modeNoticeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#92400E',
+    color: colors.primary[800],
   },
   filterTabBar: {
     flexDirection: 'row',
@@ -797,31 +799,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     gap: 5,
   },
   filterTabActive: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#D97706',
+    backgroundColor: colors.primary[100],
+    borderColor: colors.primary[600],
   },
   filterTabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   filterTabTextActive: {
-    color: '#78350F',
+    color: colors.primary[900],
     fontWeight: '800',
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     paddingHorizontal: 12,
     height: 40,
     marginTop: 8,
@@ -831,7 +833,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 13,
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   langFlatList: {
     flex: 1,
@@ -845,17 +847,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 56,
   },
   langRowSelected: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#D97706',
+    backgroundColor: colors.primary[50],
+    borderColor: colors.primary[600],
     borderWidth: 1.5,
   },
   langNames: {
@@ -873,42 +875,42 @@ const styles = StyleSheet.create({
   nativeName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   nativeNameSelected: {
-    color: '#78350F',
+    color: colors.primary[900],
   },
   originTag: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.primary[50],
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: colors.primary[200],
     flexShrink: 0,
   },
   originTagText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: colors.primary[700],
   },
   destTag: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.success[50],
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: colors.success[200],
     flexShrink: 0,
   },
   destTagText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#059669',
+    color: colors.success[600],
   },
   englishName: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   rowActions: {
@@ -926,17 +928,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.success[50],
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: colors.success[200],
   },
   downloadedBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#059669',
+    color: colors.success[600],
   },
   deleteBtn: {
     padding: 4,
@@ -945,32 +947,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
   },
   downloadBtnText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   checkCircle: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     justifyContent: 'center',
     alignItems: 'center',
   },
   enrolledSection: {
     paddingHorizontal: 16,
     paddingVertical: 6,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.primary[50],
     borderBottomWidth: 1,
-    borderBottomColor: '#FDE68A',
+    borderBottomColor: colors.primary[200],
   },
   enrolledHeaderRow: {
     marginBottom: 8,
@@ -978,23 +980,23 @@ const styles = StyleSheet.create({
   enrolledSectionTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#92400E',
+    color: colors.primary[800],
     letterSpacing: 0.3,
   },
   enrolledScroll: {
     gap: 10,
   },
   enrolledCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     padding: 10,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     minWidth: 155,
   },
   enrolledCardActive: {
-    borderColor: '#B45309',
-    backgroundColor: '#FEF3C7',
+    borderColor: colors.primary[700],
+    backgroundColor: colors.primary[100],
     borderWidth: 2,
   },
   enrolledTopRow: {
@@ -1006,14 +1008,14 @@ const styles = StyleSheet.create({
   enrolledLangName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
     flexShrink: 1,
   },
   activePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: '#059669',
+    backgroundColor: colors.success[600],
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1021,12 +1023,12 @@ const styles = StyleSheet.create({
   activePillText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   enrolledSubtext: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   enrolledStatsRow: {
@@ -1037,15 +1039,15 @@ const styles = StyleSheet.create({
   enrolledStatBadge: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#475569',
-    backgroundColor: '#F1F5F9',
+    color: colors.neutral[600],
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   enrolledStatDue: {
-    color: '#B45309',
-    backgroundColor: '#FDE68A',
+    color: colors.primary[700],
+    backgroundColor: colors.primary[200],
   },
   pairFlagCodeRow: {
     flexDirection: 'row',
@@ -1060,7 +1062,7 @@ const styles = StyleSheet.create({
   pairHalfCodeOnly: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
     flexShrink: 1,
   },
@@ -1087,20 +1089,20 @@ const styles = StyleSheet.create({
   langCodeMain: {
     fontSize: 15,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   langCodeMainSelected: {
-    color: '#B45309',
+    color: colors.primary[700],
   },
   langNativeScript: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   langNativeScriptSelected: {
-    color: '#92400E',
+    color: colors.primary[800],
   },
 });
 

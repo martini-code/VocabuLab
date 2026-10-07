@@ -8,6 +8,8 @@ import {
   IconRendererProps,
 } from './customDeckIcons';
 
+import { colors } from '../../theme';
+
 export interface DeckIconProps extends IconRendererProps {
   name?: string | null;
 }
@@ -161,7 +163,7 @@ function resolveLucideComponent(name: string): React.ComponentType<any> | null {
  * Renders either a custom drawn Lucide-style icon (if registered) or an official Lucide icon.
  */
 export const DeckIcon: React.FC<DeckIconProps> = React.memo(
-  ({ name = 'book-open', size = 20, color = '#64748B', strokeWidth = 2, style, testID }) => {
+  ({ name = 'book-open', size = 20, color = colors.neutral[500], strokeWidth = 2, style, testID }) => {
     const rawName = name || 'book-open';
     const normalized = normalizeIconName(rawName);
 
@@ -218,7 +220,7 @@ export const DeckIcon: React.FC<DeckIconProps> = React.memo(
 export function renderDeckIcon(
   iconName: string,
   size = 20,
-  color = '#64748B',
+  color = colors.neutral[500],
   strokeWidth = 2
 ): React.ReactElement {
   return <DeckIcon name={iconName} size={size} color={color} strokeWidth={strokeWidth} />;

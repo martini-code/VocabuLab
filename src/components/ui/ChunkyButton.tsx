@@ -1,7 +1,14 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
+import { colors, withAlpha } from '../../theme';
 
-export type ButtonColor = 'green' | 'blue' | 'crimson' | 'amber' | 'wood' | 'slate';
+/**
+ * primary   – brand blue, the main call to action
+ * secondary – blue mist with brand text, for alternate actions
+ * ink       – Lex's suit black, for bold secondary actions
+ * success / warning / danger – feedback & grading (Good / Hard / Again)
+ */
+export type ButtonColor = 'primary' | 'secondary' | 'ink' | 'success' | 'warning' | 'danger';
 
 interface ChunkyButtonProps {
   title: string;
@@ -19,41 +26,41 @@ const COLOR_MAP: Record<
   ButtonColor,
   { bg: string; border: string; text: string; subtext: string }
 > = {
-  green: {
-    bg: '#10B981', // Emerald Forest
-    border: '#047857',
-    text: '#FFFFFF',
-    subtext: '#D1FAE5',
+  primary: {
+    bg: colors.primary[500],
+    border: colors.primary[700],
+    text: colors.neutral[0],
+    subtext: colors.primary[100],
   },
-  blue: {
-    bg: '#3B82F6', // Royal Knight Blue
-    border: '#1D4ED8',
-    text: '#FFFFFF',
-    subtext: '#DBEAFE',
+  secondary: {
+    bg: colors.primary[100],
+    border: colors.primary[300],
+    text: colors.primary[800],
+    subtext: colors.primary[700],
   },
-  crimson: {
-    bg: '#EF4444', // Red Shield / Again
-    border: '#B91C1C',
-    text: '#FFFFFF',
-    subtext: '#FEE2E2',
+  ink: {
+    bg: colors.neutral[800],
+    border: colors.neutral[900],
+    text: colors.neutral[0],
+    subtext: colors.primary[300],
   },
-  amber: {
-    bg: '#F59E0B', // Royal Gold / Hard
-    border: '#B45309',
-    text: '#FFFFFF',
-    subtext: '#FEF3C7',
+  success: {
+    bg: colors.success[500],
+    border: colors.success[700],
+    text: colors.neutral[0],
+    subtext: colors.success[100],
   },
-  wood: {
-    bg: '#78350F', // Fortress Timber
-    border: '#451A03',
-    text: '#FDE68A',
-    subtext: '#D97706',
+  warning: {
+    bg: colors.warning[500],
+    border: colors.warning[700],
+    text: colors.neutral[0],
+    subtext: colors.warning[100],
   },
-  slate: {
-    bg: '#334155', // Castle Stone
-    border: '#1E293B',
-    text: '#F1F5F9',
-    subtext: '#94A3B8',
+  danger: {
+    bg: colors.danger[500],
+    border: colors.danger[700],
+    text: colors.neutral[0],
+    subtext: colors.danger[100],
   },
 };
 
@@ -61,7 +68,7 @@ export const ChunkyButton: React.FC<ChunkyButtonProps> = ({
   title,
   subtitle,
   onPress,
-  color = 'green',
+  color = 'primary',
   disabled = false,
   style,
   textStyle,
@@ -109,8 +116,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderBottomWidth: 4,
-    borderColor: '#00000015',
-    shadowColor: '#000',
+    borderColor: withAlpha(colors.neutral[900], 0.08),
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,

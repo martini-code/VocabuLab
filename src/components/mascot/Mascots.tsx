@@ -1,192 +1,228 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Circle, Path, Rect, G, Ellipse, Polygon } from 'react-native-svg';
+import { View } from 'react-native';
+import Svg, { Circle, Ellipse, G, Path, Polygon, Rect } from 'react-native-svg';
 import { MascotMood } from '../../types';
+import { colors, mascotColors as c, withAlpha } from '../../theme';
 
 interface MascotProps {
   mood?: MascotMood;
   size?: number;
 }
 
-/**
- * Squire Pip: The cheerful little medieval apprentice knight mascot!
- * Features animated moods: idle, happy, cheering, thinking, confused, victorious.
- */
-export const SquireMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) => {
-  const isCheering = mood === 'cheering' || mood === 'victorious';
-  const isConfused = mood === 'confused';
-  const isThinking = mood === 'thinking';
+// The artwork is drawn on a 1254×1254 canvas; this crop keeps Lex centred.
+const VIEW_BOX = '56 60 1130 1150';
 
+const LEG = 'M558,920 L624,920 L624,996 L616,997 L591,1125 L482,1110 L486,1044 L549,1039 Z';
+const SHOE =
+  'M486,1100 C455,1104 436,1114 423,1128 C415,1137 411,1148 414,1160 C417,1170 424,1174 432,1174 L580,1174 C589,1174 594,1166 594,1157 L591,1122 C560,1110 520,1100 486,1100 Z';
+const COAT =
+  'M522,701 L492,759 L521,775 L502,801 L558,881 L549,1043 L437,1041 L445,994 L455,942 L481,807 L481,726 Z';
+const COLLAR = 'M522,701 L492,759 L521,775 L502,801 L558,881 L558,706 Z';
+const POCKET = 'M476,925 L529,918 L532,972 L470,980 Z';
+const EYEBROW =
+  'M410,435 C405,405 435,382 470,376 C468,366 464,358 466,350 C500,338 548,342 578,368 C592,382 594,402 584,414 C560,402 530,400 495,412 C462,424 445,448 424,456 C414,452 411,444 410,435 Z';
+const HAIR_BACK =
+  'M660,78 C665,100 660,115 672,128 C690,150 710,152 745,168 C800,190 850,215 868,262 C872,285 868,298 866,306 C900,290 930,275 955,265 C975,300 990,340 975,385 C965,420 950,445 932,466 C960,475 990,485 1015,496 C1000,525 975,565 915,612 L937,650 C900,670 840,690 770,690 L470,690 C400,690 340,670 305,645 L328,614 C280,590 250,550 230,508 C260,495 285,480 304,466 C280,440 270,400 245,370 L228,350 C270,320 320,300 370,306 C360,280 355,250 365,215 C375,185 395,165 415,157 C430,175 450,190 480,198 C510,205 530,208 549,213 C545,180 555,140 590,110 C620,92 645,85 660,78 Z';
+const HAIR_FRONT =
+  'M383,380 L383,505 C387,500 398,482 405,473 C412,464 419,458 428,450 C437,442 448,434 458,427 C468,420 480,414 490,410 C500,406 510,406 520,405 C530,404 542,404 552,405 C562,406 572,410 582,414 C592,418 601,423 609,427 C617,431 622,438 629,438 C636,438 640,431 648,427 C656,423 666,419 676,416 C686,413 696,410 706,408 C716,406 728,406 738,407 C748,408 758,408 768,412 C778,416 790,422 800,431 C810,440 820,458 827,467 C834,476 837,480 842,488 C847,496 854,508 857,512 L857,380 Z';
+const HEAD =
+  'M380,600 C380,500 425,410 625,405 C825,410 860,500 860,600 C860,660 780,705 620,705 C460,705 380,660 380,600 Z';
+
+const Arm: React.FC<{ side: 'left' | 'right'; rotation: number }> = ({ side, rotation }) => {
+  const isLeft = side === 'left';
+  const [px, py] = isLeft ? [481, 740] : [762, 740];
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={size} height={size} viewBox="0 0 100 100">
-        {/* Soft Shadow */}
-        <Ellipse cx="50" cy="92" rx="32" ry="6" fill="#00000018" />
-
-        {/* Knight Armor Body */}
-        <Rect x="32" y="55" width="36" height="30" rx="10" fill="#94A3B8" stroke="#475569" strokeWidth="2.5" />
-        {/* Breastplate Emblem (Golden Fleur-de-lis / Cross) */}
-        <Path d="M50 60 L50 78 M42 66 L58 66" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" />
-
-        {/* Arms & Hands */}
-        {isCheering ? (
-          // Arms raised in victory!
-          <G>
-            {/* Left Arm up */}
-            <Path d="M32 62 Q20 45 22 35" stroke="#94A3B8" strokeWidth="7" strokeLinecap="round" />
-            <Circle cx="22" cy="34" r="5" fill="#FBBF24" />
-            {/* Right Arm up with wooden sword */}
-            <Path d="M68 62 Q80 45 78 35" stroke="#94A3B8" strokeWidth="7" strokeLinecap="round" />
-            <Circle cx="78" cy="34" r="5" fill="#FBBF24" />
-            {/* Cute wooden sword */}
-            <Path d="M78 34 L92 18" stroke="#D97706" strokeWidth="4.5" strokeLinecap="round" />
-            <Path d="M74 30 L84 25" stroke="#B45309" strokeWidth="3" strokeLinecap="round" />
-          </G>
-        ) : isConfused ? (
-          // Left hand scratching helmet, right hand on hip
-          <G>
-            <Path d="M32 65 Q18 68 25 78" stroke="#94A3B8" strokeWidth="6" strokeLinecap="round" />
-            <Circle cx="25" cy="78" r="5" fill="#FBBF24" />
-            {/* Right arm scratching helmet */}
-            <Path d="M68 65 Q82 50 68 28" stroke="#94A3B8" strokeWidth="6" strokeLinecap="round" fill="none" />
-            <Circle cx="68" cy="28" r="5" fill="#FBBF24" />
-          </G>
-        ) : (
-          // Idle: Holding little wooden shield
-          <G>
-            <Path d="M32 65 Q20 70 24 78" stroke="#94A3B8" strokeWidth="6" strokeLinecap="round" />
-            <Circle cx="24" cy="78" r="5" fill="#FBBF24" />
-            {/* Mini wooden shield */}
-            <Path
-              d="M70 60 Q85 62 85 75 Q85 88 70 94 Q55 88 55 75 Q55 62 70 60 Z"
-              fill="#D97706"
-              stroke="#78350F"
-              strokeWidth="2"
-            />
-            <Path d="M70 65 L70 89 M60 74 L80 74" stroke="#FDE68A" strokeWidth="2" />
-          </G>
-        )}
-
-        {/* Cute Round Helmet & Face */}
-        <Circle cx="50" cy="38" r="24" fill="#CBD5E1" stroke="#475569" strokeWidth="2.5" />
-
-        {/* Helmet Visor Plate */}
-        <Path d="M28 32 Q50 25 72 32 Q74 44 72 45 Q50 38 28 45 Z" fill="#64748B" />
-
-        {/* Cute Face Peeking Through Helmet */}
-        <Ellipse cx="50" cy="40" rx="15" ry="11" fill="#FDE68A" />
-
-        {/* Eyes */}
-        {isCheering ? (
-          // Happy closed curving crescent eyes ^ ^
-          <G stroke="#1E293B" strokeWidth="2.8" strokeLinecap="round" fill="none">
-            <Path d="M42 39 Q45 35 48 39" />
-            <Path d="M52 39 Q55 35 58 39" />
-          </G>
-        ) : isConfused ? (
-          // One wide round eye, one squiggly confused eye
-          <G>
-            <Circle cx="44" cy="39" r="3.5" fill="#1E293B" />
-            <Path d="M52 38 Q55 42 58 38" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-          </G>
-        ) : isThinking ? (
-          // Eyes looking up
-          <G fill="#1E293B">
-            <Circle cx="45" cy="36" r="3" />
-            <Circle cx="55" cy="36" r="3" />
-          </G>
-        ) : (
-          // Big adorable cartoon eyes with highlights
-          <G>
-            <Circle cx="44" cy="39" r="3.5" fill="#1E293B" />
-            <Circle cx="45.5" cy="37.5" r="1.2" fill="#FFFFFF" />
-            <Circle cx="56" cy="39" r="3.5" fill="#1E293B" />
-            <Circle cx="57.5" cy="37.5" r="1.2" fill="#FFFFFF" />
-          </G>
-        )}
-
-        {/* Rosy Cheeks */}
-        <Circle cx="38" cy="43" r="3" fill="#F87171" opacity="0.6" />
-        <Circle cx="62" cy="43" r="3" fill="#F87171" opacity="0.6" />
-
-        {/* Mouth */}
-        {isCheering ? (
-          // Big happy open mouth :D
-          <Path d="M46 44 Q50 50 54 44 Z" fill="#DC2626" />
-        ) : isConfused ? (
-          // Wavy curious mouth ~
-          <Path d="M46 45 Q50 43 54 46" stroke="#1E293B" strokeWidth="2" strokeLinecap="round" fill="none" />
-        ) : (
-          // Sweet gentle smile :)
-          <Path d="M47 44 Q50 47 53 44" stroke="#1E293B" strokeWidth="2" strokeLinecap="round" fill="none" />
-        )}
-
-        {/* Helmet Feather Plume (Crimson Knight Plume!) */}
-        <Path
-          d="M50 15 C52 5, 68 8, 64 22 C62 18, 55 16, 50 15 Z"
-          fill="#EF4444"
-          stroke="#B91C1C"
-          strokeWidth="1.5"
-        />
-        <Circle cx="50" cy="15" r="3" fill="#F59E0B" />
-
-        {/* Victory Laurel or Star Sparkles */}
-        {mood === 'victorious' && (
-          <G>
-            <Polygon points="20,18 22,23 27,24 23,28 24,33 20,30 16,33 17,28 13,24 18,23" fill="#F59E0B" />
-            <Polygon points="80,18 82,23 87,24 83,28 84,33 80,30 76,33 77,28 73,24 78,23" fill="#F59E0B" />
-          </G>
-        )}
-      </Svg>
-    </View>
+    <G transform={rotation ? `rotate(${rotation} ${px} ${py})` : undefined}>
+      {isLeft ? (
+        <>
+          <Path d="M481,726 L418,805 L383,860 L362,903 L453,942 L481,807 Z" fill={c.coat} />
+          <Path
+            d="M481,726 L418,805 L383,860 L362,903 L453,942 L481,807"
+            fill="none"
+            stroke={c.coatSeam}
+            strokeWidth={5}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          <Path
+            d="M377,911 L420,932 L451,942 C449,975 443,995 432,1005 C422,1014 408,1018 394,1017 C376,1014 361,1003 357,987 C353,970 356,955 362,940 C366,928 372,918 377,911 Z"
+            fill={c.ink}
+          />
+        </>
+      ) : (
+        <>
+          <Path d="M762,726 L825,805 L860,860 L881,903 L790,942 L762,807 Z" fill={c.coat} />
+          <Path
+            d="M762,726 L825,805 L860,860 L881,903 L790,942 L762,807"
+            fill="none"
+            stroke={c.coatSeam}
+            strokeWidth={5}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          <Path
+            d="M866,911 L823,932 L792,942 C794,975 800,995 811,1005 C821,1014 835,1018 849,1017 C867,1014 882,1003 886,987 C890,970 887,955 881,940 C877,928 871,918 866,911 Z"
+            fill={c.ink}
+          />
+        </>
+      )}
+    </G>
   );
 };
 
+const Sparkle: React.FC<{ x: number; y: number; r: number; fill: string }> = ({ x, y, r, fill }) => (
+  <Polygon
+    points={`${x},${y - r} ${x + r * 0.28},${y - r * 0.28} ${x + r},${y} ${x + r * 0.28},${y + r * 0.28} ${x},${y + r} ${x - r * 0.28},${y + r * 0.28} ${x - r},${y} ${x - r * 0.28},${y - r * 0.28}`}
+    fill={fill}
+  />
+);
+
 /**
- * Archmage Barnaby: Wise Owl Wizard with purple starry hat!
+ * Lex: the blue-haired lab scientist mascot.
+ * Moods: idle, happy, cheering, thinking, confused, victorious.
  */
-export const WizardOwlMascot: React.FC<{ size?: number }> = ({ size = 90 }) => {
+export const LexMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) => {
+  const armsUp = mood === 'cheering' || mood === 'victorious';
+  const joyfulEyes = mood === 'happy' || armsUp;
+  const isThinking = mood === 'thinking';
+  const isConfused = mood === 'confused';
+
+  // Pupil offsets per mood (default: looking toward the viewer, slightly cross-eyed).
+  const pupilShift = isThinking ? { dx: 18, dy: -30 } : { dx: 0, dy: 0 };
+  // Confused: right brow shoots up, left brow dips.
+  const leftBrowY = isConfused ? 34 : armsUp ? 10 : 24;
+  const rightBrowY = isConfused ? -6 : armsUp ? 10 : 24;
+
+  const renderArms = () => (
+    <>
+      <Arm side="left" rotation={armsUp ? 100 : 0} />
+      <Arm side="right" rotation={armsUp ? -100 : 0} />
+    </>
+  );
+
+  const renderEye = (cx: number, pupilX: number) =>
+    joyfulEyes ? (
+      <Path
+        d={`M${cx - 38},${548} Q${cx},${490} ${cx + 38},${548}`}
+        stroke={c.ink}
+        strokeWidth={22}
+        strokeLinecap="round"
+        fill="none"
+      />
+    ) : (
+      <Ellipse
+        cx={pupilX + pupilShift.dx}
+        cy={530 + pupilShift.dy}
+        rx={28}
+        ry={isConfused && cx > 620 ? 30 : 41}
+        fill={c.ink}
+      />
+    );
+
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={size} height={size} viewBox="0 0 100 100">
-        <Ellipse cx="50" cy="88" rx="28" ry="6" fill="#00000015" />
+      <Svg width={size} height={size} viewBox={VIEW_BOX}>
+        {/* Ground shadow */}
+        <Ellipse cx={621} cy={1178} rx={260} ry={26} fill={withAlpha(colors.neutral[900], 0.1)} />
 
-        {/* Owl Body */}
-        <Ellipse cx="50" cy="60" rx="26" ry="25" fill="#B45309" stroke="#78350F" strokeWidth="2" />
-        {/* Soft Tummy */}
-        <Ellipse cx="50" cy="64" rx="16" ry="18" fill="#FEF3C7" />
-        {/* Feathery chest marks */}
-        <Path d="M46 58 Q50 61 54 58 M44 65 Q50 68 56 65 M46 72 Q50 75 54 72" stroke="#D97706" strokeWidth="2" strokeLinecap="round" fill="none" />
+        {/* Legs & shoes */}
+        <Path d={LEG} fill={c.trousers} stroke={c.trousers} strokeWidth={3} strokeLinejoin="round" />
+        <G transform="translate(1243,0) scale(-1,1)">
+          <Path d={LEG} fill={c.trousers} stroke={c.trousers} strokeWidth={3} strokeLinejoin="round" />
+        </G>
+        <Path d={SHOE} fill={c.shoes} />
+        <G transform="translate(1243,0) scale(-1,1)">
+          <Path d={SHOE} fill={c.shoes} />
+        </G>
 
-        {/* Owl Wings */}
-        <Ellipse cx="26" cy="62" rx="7" ry="16" fill="#92400E" transform="rotate(15, 26, 62)" />
-        <Ellipse cx="74" cy="62" rx="7" ry="16" fill="#92400E" transform="rotate(-15, 74, 62)" />
+        {/* Shirt, belt & tie */}
+        <Rect x={557} y={690} width={131} height={230} fill={c.shirt} />
+        <G fill={c.shirt} stroke={c.shirtSeam} strokeWidth={4} strokeLinejoin="round">
+          <Path d="M566,706 L608,711 L588,746 Z" />
+          <Path d="M677,706 L635,711 L655,746 Z" />
+        </G>
+        <Rect x={558} y={908} width={128} height={40} fill={c.ink} />
+        <Rect x={591} y={905} width={63} height={44} rx={4} fill={c.buckle} />
+        <Rect x={603} y={917} width={40} height={22} fill={c.ink} />
+        <Path
+          d="M607,766 L637,764 L657,850 L622,886 L586,850 Z"
+          fill={c.tie}
+          stroke={c.tie}
+          strokeWidth={4}
+          strokeLinejoin="miter"
+        />
+        <Path
+          d="M615,715 L629,715 L649,741 L637,765 L607,766 L595,741 Z"
+          fill={c.tieKnot}
+          stroke={c.tieKnot}
+          strokeWidth={4}
+          strokeLinejoin="round"
+        />
 
-        {/* Little Owl Feet */}
-        <Path d="M40 84 L40 88 M43 84 L45 88 M37 84 L35 88" stroke="#D97706" strokeWidth="3" strokeLinecap="round" />
-        <Path d="M60 84 L60 88 M63 84 L65 88 M57 84 L55 88" stroke="#D97706" strokeWidth="3" strokeLinecap="round" />
+        {/* Lab coat */}
+        {[undefined, 'translate(1243,0) scale(-1,1)'].map((transform, i) => (
+          <G key={i} transform={transform}>
+            <Path d={COAT} fill={c.coat} stroke={c.coatSeam} strokeWidth={5} strokeLinejoin="round" />
+            <Path d={COLLAR} fill={c.coat} stroke={c.coatSeam} strokeWidth={5} strokeLinejoin="round" />
+            <Path d={POCKET} fill={c.coat} stroke={c.coatSeam} strokeWidth={4} strokeLinejoin="round" />
+          </G>
+        ))}
 
-        {/* Big Owl Eyes */}
-        <Circle cx="39" cy="46" r="11" fill="#FFFFFF" stroke="#D97706" strokeWidth="2" />
-        <Circle cx="61" cy="46" r="11" fill="#FFFFFF" stroke="#D97706" strokeWidth="2" />
-        <Circle cx="39" cy="46" r="6" fill="#1E293B" />
-        <Circle cx="61" cy="46" r="6" fill="#1E293B" />
-        <Circle cx="41" cy="44" r="2.2" fill="#FFFFFF" />
-        <Circle cx="63" cy="44" r="2.2" fill="#FFFFFF" />
+        {/* Arms hang behind the hair; raised arms are drawn last so they sit in front */}
+        {!armsUp && renderArms()}
 
-        {/* Wizard Spectacles */}
-        <Circle cx="39" cy="46" r="12" fill="none" stroke="#F59E0B" strokeWidth="2.5" />
-        <Circle cx="61" cy="46" r="12" fill="none" stroke="#F59E0B" strokeWidth="2.5" />
-        <Path d="M51 46 L49 46" stroke="#F59E0B" strokeWidth="2.5" />
+        {/* Hair, head & fringe */}
+        <Path d={HAIR_BACK} fill={c.hair} />
+        <Path d={HEAD} fill={c.skin} />
+        <Path d={HAIR_FRONT} fill={c.hair} />
 
-        {/* Little Beak */}
-        <Polygon points="50,48 46,55 54,55" fill="#EA580C" />
+        {/* Eyebrows */}
+        <G transform={`translate(0,${leftBrowY})`}>
+          <Path d={EYEBROW} fill={c.eyebrow} stroke={c.eyebrow} strokeWidth={10} strokeLinejoin="round" />
+        </G>
+        <G transform={`translate(1240,${rightBrowY}) scale(-1,1)`}>
+          <Path d={EYEBROW} fill={c.eyebrow} stroke={c.eyebrow} strokeWidth={10} strokeLinejoin="round" />
+        </G>
 
-        {/* Wizard Hat */}
-        <Polygon points="50,2 25,32 75,32" fill="#6D28D9" stroke="#4C1D95" strokeWidth="2" />
-        <Ellipse cx="50" cy="32" rx="30" ry="6" fill="#7C3AED" stroke="#4C1D95" strokeWidth="2" />
-        {/* Hat Gold Star */}
-        <Polygon points="50,14 52,18 56,18 53,21 54,25 50,23 46,25 47,21 44,18 48,18" fill="#FBBF24" />
+        {/* Eyes: eyeball, glasses lens + frame, pupil */}
+        <Circle cx={513} cy={530} r={74} fill={c.lens} stroke={c.ink} strokeWidth={6} />
+        <Circle cx={513} cy={527} r={100} fill={c.lens} stroke={c.ink} strokeWidth={25} />
+        {renderEye(513, 540)}
+        <Circle cx={727} cy={530} r={74} fill={c.lens} stroke={c.ink} strokeWidth={6} />
+        <Circle cx={727} cy={527} r={100} fill={c.lens} stroke={c.ink} strokeWidth={25} />
+        {renderEye(727, 700)}
+
+        {armsUp && renderArms()}
+
+        {/* Thinking: little thought bubbles */}
+        {isThinking && (
+          <G fill={colors.primary[200]}>
+            <Circle cx={900} cy={300} r={22} />
+            <Circle cx={965} cy={225} r={34} />
+            <Circle cx={1060} cy={130} r={54} />
+          </G>
+        )}
+
+        {/* Confused: question mark */}
+        {isConfused && (
+          <Path
+            d="M960,170 C960,110 1060,110 1060,170 C1060,215 1010,215 1010,260 M1010,310 L1010,312"
+            stroke={colors.primary[500]}
+            strokeWidth={30}
+            strokeLinecap="round"
+            fill="none"
+          />
+        )}
+
+        {/* Victorious: sparkles */}
+        {mood === 'victorious' && (
+          <G>
+            <Sparkle x={200} y={220} r={60} fill={colors.primary[400]} />
+            <Sparkle x={1050} y={190} r={70} fill={colors.primary[500]} />
+            <Sparkle x={1080} y={420} r={36} fill={colors.primary[300]} />
+            <Sparkle x={170} y={450} r={32} fill={colors.primary[300]} />
+          </G>
+        )}
       </Svg>
     </View>
   );

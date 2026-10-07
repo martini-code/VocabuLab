@@ -12,7 +12,7 @@ import { CardWithDetails, MascotMood, EnrolledLanguagePair } from '../../types';
 import { getDueCards, getDeckCardsForReview, recordCardReview, getEnrolledLanguagePairs } from '../../db/vault';
 import { getReviewOptions, gradeCardFSRS } from '../../services/fsrsService';
 import { speakWord } from '../../utils/tts';
-import { SquireMascot } from '../../components/mascot/Mascots';
+import { LexMascot } from '../../components/mascot/Mascots';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 import { ShieldBadge } from '../../components/ui/ShieldBadge';
 import { ParchmentCard } from '../../components/ui/ParchmentCard';
@@ -22,6 +22,8 @@ import { ReviewCardFlipper } from './ReviewCardFlipper';
 import { ReviewSessionSummary, ReviewSessionWordSummary } from './ReviewSessionSummary';
 import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
 import { getLanguageFlag, formatLanguageCode } from '../../locales/languages';
+
+import { colors } from '../../theme';
 
 interface ReviewSessionProps {
   onSessionComplete?: () => void;
@@ -179,7 +181,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#F59E0B" />
+        <ActivityIndicator size="large" color={colors.primary[500]} />
         <Text style={styles.loadingText}>Gathering fortress cards...</Text>
       </View>
     );
@@ -249,7 +251,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                 ]}
                 onPress={() => setReviewScope('all')}
               >
-                <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
+                <Globe size={13} color={reviewScope === 'all' ? colors.neutral[0] : colors.primary[900]} />
                 <Text
                   style={[
                     styles.scopePillText,
@@ -288,7 +290,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         )}
 
         <View style={styles.victoryCard}>
-          <SquireMascot mood="victorious" size={130} />
+          <LexMascot mood="victorious" size={130} />
           <Text style={styles.victoryTitle}>
             {deckFilter ? 'DECK COMPLETED!' : 'QUEST COMPLETED!'}
           </Text>
@@ -302,7 +304,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             <ChunkyButton
               title="TRAIN ALL KINGDOM DECKS"
               subtitle="Return to general training queue"
-              color="wood"
+              color="secondary"
               onPress={onClearDeckFilter}
               style={{ width: '100%', marginTop: 20 }}
             />
@@ -311,7 +313,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           <ChunkyButton
             title="EXPLORE THE ARCHIVES"
             subtitle="Browse progressive difficulty decks"
-            color="green"
+            color="primary"
             onPress={onExploreArchives || loadCards}
             style={{ width: '100%', marginTop: deckFilter ? 12 : 20 }}
           />
@@ -319,14 +321,14 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           <ChunkyButton
             title="DISCOVER 10 RANDOM WORDS"
             subtitle="Scout unlearned vocabulary across random decks"
-            color="amber"
+            color="ink"
             onPress={() => setRandomDiscoveryActive(true)}
             style={{ width: '100%', marginTop: 12 }}
           />
 
           <ChunkyButton
             title="REFRESH TRAINING QUEUE"
-            color="wood"
+            color="secondary"
             onPress={loadCards}
             style={{ width: '100%', marginTop: 12 }}
           />
@@ -357,7 +359,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         {deckFilter && (
           <View style={styles.deckFilterBanner}>
             <View style={styles.deckFilterLeft}>
-              <Layers size={16} color="#78350F" />
+              <Layers size={16} color={colors.primary[900]} />
               <Text style={styles.deckFilterText} numberOfLines={1}>
                 Deck Focus: {deckFilter.name}
               </Text>
@@ -367,7 +369,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                 style={styles.clearFilterBtn}
                 onPress={onClearDeckFilter}
               >
-                <X size={14} color="#78350F" />
+                <X size={14} color={colors.primary[900]} />
                 <Text style={styles.clearFilterText}>All Decks</Text>
               </TouchableOpacity>
             )}
@@ -390,7 +392,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                 ]}
                 onPress={() => setReviewScope('all')}
               >
-                <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
+                <Globe size={13} color={reviewScope === 'all' ? colors.neutral[0] : colors.primary[900]} />
                 <Text
                   style={[
                     styles.scopePillText,
@@ -430,7 +432,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
         {/* Staging Information Card */}
         <View style={styles.stagingCard}>
-          <SquireMascot mood={mascotMood} size={105} />
+          <LexMascot mood={mascotMood} size={105} />
           <Text style={styles.stagingTitle}>
             {deckFilter ? 'DECK REVIEW' : 'DAILY REVIEW'}
           </Text>
@@ -463,7 +465,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             <View style={styles.stagingDataRow}>
               <Text style={styles.stagingDataLabel}>Algorithm</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Zap size={14} color="#D97706" />
+                <Zap size={14} color={colors.primary[600]} />
                 <Text style={styles.stagingDataEngineText}>{activeAlgorithm.meta.shortName}</Text>
               </View>
             </View>
@@ -473,7 +475,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           <ChunkyButton
             title="BEGIN REVIEW"
             subtitle={`${cards.length} ${cards.length === 1 ? 'card' : 'cards'} ready to review`}
-            color="green"
+            color="primary"
             onPress={() => setReviewActiveState(true)}
             testID="begin-review-button"
             style={{ width: '100%', marginTop: 14 }}
@@ -483,7 +485,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             <ChunkyButton
               title="TRAIN ALL KINGDOM DECKS"
               subtitle="Return to general training queue"
-              color="wood"
+              color="secondary"
               onPress={onClearDeckFilter}
               style={{ width: '100%', marginTop: 12 }}
             />
@@ -492,7 +494,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           <ChunkyButton
             title="DISCOVER 10 RANDOM WORDS"
             subtitle="Scout unlearned vocabulary across random decks"
-            color="amber"
+            color="ink"
             onPress={() => setRandomDiscoveryActive(true)}
             style={{ width: '100%', marginTop: 12 }}
           />
@@ -501,7 +503,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             <ChunkyButton
               title="EXPLORE THE ARCHIVES"
               subtitle="Browse progressive difficulty decks"
-              color="wood"
+              color="secondary"
               onPress={onExploreArchives}
               style={{ width: '100%', marginTop: 12 }}
             />
@@ -540,7 +542,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.closeReviewButton}
         >
-          <X size={20} color="#78350F" />
+          <X size={20} color={colors.primary[900]} />
         </TouchableOpacity>
       </View>
 
@@ -565,7 +567,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               <ChunkyButton
                 title="AGAIN"
                 subtitle={reviewOptions[0]?.intervalText || '10m'}
-                color="crimson"
+                color="danger"
                 onPress={() => handleGrade(Rating.Again)}
                 style={styles.gradeButton}
               />
@@ -574,7 +576,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               <ChunkyButton
                 title="HARD"
                 subtitle={reviewOptions[1]?.intervalText || '1d'}
-                color="amber"
+                color="warning"
                 onPress={() => handleGrade(Rating.Hard)}
                 style={styles.gradeButton}
               />
@@ -583,7 +585,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               <ChunkyButton
                 title="GOOD"
                 subtitle={reviewOptions[2]?.intervalText || '4d'}
-                color="green"
+                color="success"
                 onPress={() => handleGrade(Rating.Good)}
                 style={styles.gradeButton}
               />
@@ -592,7 +594,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               <ChunkyButton
                 title="EASY"
                 subtitle={reviewOptions[3]?.intervalText || '12d'}
-                color="blue"
+                color="primary"
                 onPress={() => handleGrade(Rating.Easy)}
                 style={styles.gradeButton}
               />
@@ -615,10 +617,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 14,
@@ -633,23 +635,23 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     fontSize: 13,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   clearFilterBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FDE68A',
+    backgroundColor: colors.primary[200],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#B45309',
+    borderColor: colors.primary[700],
   },
   clearFilterText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   centerContainer: {
     flex: 1,
@@ -661,7 +663,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     fontSize: 16,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   mascotSpeechRow: {
     flexDirection: 'row',
@@ -672,21 +674,21 @@ const styles = StyleSheet.create({
   },
   speechBubble: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 4,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     marginLeft: 8,
     position: 'relative',
   },
   speechText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#334155',
+    color: colors.neutral[700],
     lineHeight: 19,
   },
   speechTail: {
@@ -700,7 +702,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
     borderRightWidth: 8,
-    borderRightColor: '#CBD5E1',
+    borderRightColor: colors.neutral[300],
   },
   progressRow: {
     flexDirection: 'row',
@@ -712,37 +714,37 @@ const styles = StyleSheet.create({
   progressBarBackground: {
     flex: 1,
     height: 14,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     borderRadius: 7,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: colors.neutral[300],
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success[500],
     borderRadius: 7,
   },
   progressText: {
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
     fontSize: 13,
   },
   algorithmChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
   },
   algorithmChipText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#92400E',
+    color: colors.primary[800],
     letterSpacing: 0.5,
   },
   cardContainer: {
@@ -758,7 +760,7 @@ const styles = StyleSheet.create({
   langTag: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#94A3B8',
+    color: colors.neutral[400],
     letterSpacing: 1,
   },
   termBox: {
@@ -768,27 +770,27 @@ const styles = StyleSheet.create({
   termText: {
     fontSize: 34,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     textAlign: 'center',
     letterSpacing: -0.5,
   },
   posText: {
     fontSize: 14,
     fontStyle: 'italic',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 4,
     fontWeight: '600',
   },
   ttsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginTop: 12,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
   },
   ttsIcon: {
     fontSize: 16,
@@ -797,11 +799,11 @@ const styles = StyleSheet.create({
   ttsLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
   },
   divider: {
     height: 1.5,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     marginVertical: 14,
   },
   backContainer: {
@@ -810,14 +812,14 @@ const styles = StyleSheet.create({
   backTranslationLabel: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#A16207',
+    color: colors.primary[700],
     letterSpacing: 1,
     marginBottom: 4,
   },
   backTermText: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
     marginBottom: 4,
     textAlign: 'center',
   },
@@ -825,13 +827,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: colors.neutral[100],
     alignItems: 'center',
   },
   tapToRevealText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.neutral[400],
   },
   gradingSection: {
     width: '100%',
@@ -841,7 +843,7 @@ const styles = StyleSheet.create({
   gradeSectionTitle: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#64748B',
+    color: colors.neutral[500],
     letterSpacing: 1,
     marginBottom: 12,
   },
@@ -863,12 +865,12 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   victoryCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 6,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     padding: 26,
     alignItems: 'center',
     width: '100%',
@@ -876,14 +878,14 @@ const styles = StyleSheet.create({
   victoryTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     marginTop: 14,
     letterSpacing: 0.5,
   },
   victorySubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
@@ -903,18 +905,18 @@ const styles = StyleSheet.create({
   scopePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
     gap: 6,
   },
   scopePillActive: {
-    backgroundColor: '#B45309',
-    borderColor: '#78350F',
-    shadowColor: '#78350F',
+    backgroundColor: colors.primary[700],
+    borderColor: colors.primary[900],
+    shadowColor: colors.primary[900],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
@@ -923,10 +925,10 @@ const styles = StyleSheet.create({
   scopePillText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   scopePillTextActive: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   stagingContainer: {
     flexGrow: 1,
@@ -935,12 +937,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stagingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 6,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     padding: 22,
     alignItems: 'center',
     width: '100%',
@@ -950,14 +952,14 @@ const styles = StyleSheet.create({
   stagingTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     marginTop: 10,
     letterSpacing: 0.5,
   },
   stagingSubtitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     textAlign: 'center',
     marginTop: 4,
     marginBottom: 14,
@@ -965,10 +967,10 @@ const styles = StyleSheet.create({
   },
   stagingDataBox: {
     width: '100%',
-    backgroundColor: '#FAF5ED',
+    backgroundColor: colors.cream[50],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#E5D5BC',
+    borderColor: colors.cream[300],
     padding: 14,
     marginVertical: 10,
     gap: 10,
@@ -981,29 +983,29 @@ const styles = StyleSheet.create({
   stagingDataLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   stagingDataBadge: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
   },
   stagingDataBadgeText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   stagingDataEngineText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
   },
   activeContainer: {
     flex: 1,
-    backgroundColor: '#FAF5ED',
+    backgroundColor: colors.cream[50],
     width: '100%',
   },
   activeReviewTopBar: {
@@ -1025,19 +1027,19 @@ const styles = StyleSheet.create({
   topProgressBarTrack: {
     flex: 1,
     height: 10,
-    backgroundColor: '#E5D5BC',
+    backgroundColor: colors.primary[100],
     borderRadius: 5,
     overflow: 'hidden',
   },
   topProgressBarFill: {
     height: '100%',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     borderRadius: 5,
   },
   topProgressText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
     minWidth: 44,
     textAlign: 'right',
   },
@@ -1045,9 +1047,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     alignItems: 'center',
     justifyContent: 'center',
   },

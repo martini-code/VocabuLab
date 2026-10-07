@@ -82,6 +82,8 @@ import { tokenWallet } from '../../services/tokenWallet';
 import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
 import { SearchResultCard } from '../search/FastSearch';
 
+import { colors, cefrColors as cefrPalette } from '../../theme';
+
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
   onStartReview?: () => void;
@@ -93,27 +95,16 @@ export interface DecksRoadmapProps {
 
 type MainTab = 'decks' | 'difficulty' | 'mastery';
 
-function renderDeckIcon(iconName: string, size = 20, color = '#64748B') {
+function renderDeckIcon(iconName: string, size = 20, color = colors.neutral[500]) {
   return <DeckIcon name={iconName} size={size} color={color} />;
 }
 
 function getCefrBadgeColors(cefr: string) {
-  switch (cefr) {
-    case 'A1':
-      return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
-    case 'A2':
-      return { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' };
-    case 'B1':
-      return { bg: '#FEF3C7', text: '#D97706', border: '#FDE68A' };
-    case 'B2':
-      return { bg: '#FFF7ED', text: '#EA580C', border: '#FFEDD5' };
-    case 'C1':
-      return { bg: '#F5F3FF', text: '#7C3AED', border: '#DDD6FE' };
-    case 'C2':
-      return { bg: '#FDF2F8', text: '#DB2777', border: '#FBCFE8' };
-    default:
-      return { bg: '#F1F5F9', text: '#475569', border: '#CBD5E1' };
+  const level = cefrPalette[cefr as keyof typeof cefrPalette];
+  if (!level) {
+    return { bg: colors.neutral[100], text: colors.neutral[600], border: colors.neutral[300] };
   }
+  return { bg: level.soft, text: level.onSoft, border: level.softBorder };
 }
 function formatNextReview(dueDateStr?: string, t?: (key: string, options?: any) => string): string {
   if (!dueDateStr) return 'New';
@@ -160,7 +151,7 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
               style={styles.speakerBtn}
               onPress={() => onSpeak(item.front_term, item.front_lang)}
             >
-              <Volume2 size={16} color="#D97706" />
+              <Volume2 size={16} color={colors.primary[600]} />
             </TouchableOpacity>
           </View>
           <View
@@ -202,11 +193,11 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
               </View>
             )}
             {item.lapses !== undefined && item.lapses > 0 && (
-              <View style={[styles.srsMetricBadge, { backgroundColor: '#FEE2E2' }]}>
-                <Text style={[styles.srsMetricLabel, { color: '#DC2626' }]}>
+              <View style={[styles.srsMetricBadge, { backgroundColor: colors.danger[100] }]}>
+                <Text style={[styles.srsMetricLabel, { color: colors.danger[600] }]}>
                   Lapses:
                 </Text>
-                <Text style={[styles.srsMetricVal, { color: '#DC2626' }]}>
+                <Text style={[styles.srsMetricVal, { color: colors.danger[600] }]}>
                   {item.lapses}
                 </Text>
               </View>
@@ -236,14 +227,14 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
                 )
               }
             >
-              <Plus size={14} color="#FFFFFF" />
+              <Plus size={14} color={colors.neutral[0]} />
               <Text style={styles.addQueueBtnText}>
                 {t('explore.add_to_queue')}
               </Text>
             </Pressable>
           ) : (
             <View style={styles.inQueueBadge}>
-              <Check size={14} color="#2563EB" />
+              <Check size={14} color={colors.primary[700]} />
               <Text style={styles.inQueueBadgeText}>{t('explore.in_queue')}</Text>
             </View>
           )}
@@ -274,7 +265,7 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
               style={styles.speakerBtn}
               onPress={() => onSpeak(item.front_term, item.front_lang)}
             >
-              <Volume2 size={16} color="#D97706" />
+              <Volume2 size={16} color={colors.primary[600]} />
             </TouchableOpacity>
           </View>
           <View
@@ -294,8 +285,8 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
         <View style={styles.modalWordCardFooter}>
           {isQueued ? (
             <View style={styles.inQueueBadge}>
-              <Check size={14} color="#059669" />
-              <Text style={[styles.inQueueBadgeText, { color: '#059669' }]}>
+              <Check size={14} color={colors.success[600]} />
+              <Text style={[styles.inQueueBadgeText, { color: colors.success[600] }]}>
                 {t('explore.in_queue')}
               </Text>
             </View>
@@ -316,7 +307,7 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
                 )
               }
             >
-              <Plus size={14} color="#FFFFFF" />
+              <Plus size={14} color={colors.neutral[0]} />
               <Text style={styles.addQueueBtnText}>
                 {t('explore.add_to_queue')}
               </Text>
@@ -355,7 +346,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
     >
       <View style={styles.deckCardMain}>
         <View style={styles.deckIconBox}>
-          {renderDeckIcon(deck.icon_name, 20, '#B45309')}
+          {renderDeckIcon(deck.icon_name, 20, colors.primary[700])}
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.deckTitleRow}>
@@ -367,7 +358,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
             </View>
           </View>
         </View>
-        <ChevronRight size={18} color="#94A3B8" />
+        <ChevronRight size={18} color={colors.neutral[400]} />
       </View>
 
       {/* Progress Bar & Word Counts */}
@@ -377,7 +368,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
             style={[
               styles.progressBarFill,
               { width: `${queuePercent}%` },
-              isFullyQueued && { backgroundColor: '#10B981' },
+              isFullyQueued && { backgroundColor: colors.success[500] },
             ]}
           />
         </View>
@@ -401,7 +392,7 @@ const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDec
       {/* Theme Header */}
       <View style={styles.themeHeader}>
         <View style={styles.themeIconBox}>
-          {renderDeckIcon(theme.icon_name, 22, '#92400E')}
+          {renderDeckIcon(theme.icon_name, 22, colors.primary[800])}
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.themeTitle}>{theme.name}</Text>
@@ -737,7 +728,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           activeOpacity={0.8}
           testID="open-random-discovery-btn"
         >
-          <Dices size={15} color="#78350F" style={{ marginRight: 5 }} />
+          <Dices size={15} color={colors.primary[900]} style={{ marginRight: 5 }} />
           <Text style={styles.randomDiscoveryPillText}>
             {t('random_discovery.btn_discover', { defaultValue: '10 Random Words' })}
           </Text>
@@ -759,7 +750,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         >
           <Layers
             size={16}
-            color={activeTab === 'decks' && !randomDiscoveryActive ? '#B45309' : '#64748B'}
+            color={activeTab === 'decks' && !randomDiscoveryActive ? colors.primary[700] : colors.neutral[500]}
           />
           <Text
             style={[
@@ -785,7 +776,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         >
           <TrendingUp
             size={16}
-            color={activeTab === 'difficulty' && !randomDiscoveryActive ? '#B45309' : '#64748B'}
+            color={activeTab === 'difficulty' && !randomDiscoveryActive ? colors.primary[700] : colors.neutral[500]}
           />
           <Text
             style={[
@@ -811,7 +802,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
         >
           <Brain
             size={16}
-            color={activeTab === 'mastery' && !randomDiscoveryActive ? '#B45309' : '#64748B'}
+            color={activeTab === 'mastery' && !randomDiscoveryActive ? colors.primary[700] : colors.neutral[500]}
           />
           <Text
             style={[
@@ -843,11 +834,11 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           {activeTab === 'decks' && (
             <View style={styles.searchBarWrapper}>
               <View style={styles.searchBarContainer}>
-                <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
+                <Search size={18} color={colors.primary[900]} style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.searchInput}
                   placeholder={t('search.placeholder', { defaultValue: 'Search kingdom vocabulary, runes, or meanings...' })}
-                  placeholderTextColor="#78350F88"
+                  placeholderTextColor={colors.textSubtle}
                   value={searchQuery}
                   onChangeText={handleSearch}
                   autoCapitalize="none"
@@ -860,7 +851,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                     style={styles.clearSearchBtn}
                     testID="clear-decks-search-btn"
                   >
-                    <X size={16} color="#78350F" />
+                    <X size={16} color={colors.primary[900]} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -895,7 +886,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                   <View style={styles.searchEmptyContainer}>
-                    <Sparkles size={40} color="#D97706" style={{ marginBottom: 10 }} />
+                    <Sparkles size={40} color={colors.primary[600]} style={{ marginBottom: 10 }} />
                     <Text style={styles.searchEmptyTitle}>
                       {isSearching ? 'Searching kingdom cards...' : 'No matching cards found'}
                     </Text>
@@ -957,10 +948,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               <View style={styles.stageCardTop}>
                 <AlertCircle
                   size={16}
-                  color={masteryStage === 'slipping' ? '#DC2626' : '#EF4444'}
+                  color={masteryStage === 'slipping' ? colors.danger[600] : colors.danger[500]}
                 />
-                <View style={[styles.stageBadge, { backgroundColor: '#FEE2E2' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#B91C1C' }]}>
+                <View style={[styles.stageBadge, { backgroundColor: colors.danger[100] }]}>
+                  <Text style={[styles.stageBadgeText, { color: colors.danger[700] }]}>
                     {masterySummary?.slipping_count || 0}
                   </Text>
                 </View>
@@ -984,10 +975,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               <View style={styles.stageCardTop}>
                 <Clock
                   size={16}
-                  color={masteryStage === 'learning' ? '#2563EB' : '#3B82F6'}
+                  color={masteryStage === 'learning' ? colors.primary[700] : colors.primary[500]}
                 />
-                <View style={[styles.stageBadge, { backgroundColor: '#DBEAFE' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#1D4ED8' }]}>
+                <View style={[styles.stageBadge, { backgroundColor: colors.primary[100] }]}>
+                  <Text style={[styles.stageBadgeText, { color: colors.primary[800] }]}>
                     {masterySummary?.learning_count || 0}
                   </Text>
                 </View>
@@ -1011,10 +1002,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               <View style={styles.stageCardTop}>
                 <Sparkles
                   size={16}
-                  color={masteryStage === 'mastered' ? '#059669' : '#10B981'}
+                  color={masteryStage === 'mastered' ? colors.success[600] : colors.success[500]}
                 />
-                <View style={[styles.stageBadge, { backgroundColor: '#D1FAE5' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#047857' }]}>
+                <View style={[styles.stageBadge, { backgroundColor: colors.success[100] }]}>
+                  <Text style={[styles.stageBadgeText, { color: colors.success[700] }]}>
                     {masterySummary?.mastered_count || 0}
                   </Text>
                 </View>
@@ -1038,10 +1029,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               <View style={styles.stageCardTop}>
                 <Layers
                   size={16}
-                  color={masteryStage === 'new_in_queue' ? '#7C3AED' : '#8B5CF6'}
+                  color={masteryStage === 'new_in_queue' ? colors.primary[700] : colors.primary[400]}
                 />
-                <View style={[styles.stageBadge, { backgroundColor: '#EDE9FE' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#6D28D9' }]}>
+                <View style={[styles.stageBadge, { backgroundColor: colors.primary[100] }]}>
+                  <Text style={[styles.stageBadgeText, { color: colors.primary[800] }]}>
                     {masterySummary?.new_queue_count || 0}
                   </Text>
                 </View>
@@ -1058,7 +1049,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 style={styles.reviewSlippingBtn}
                 onPress={() => onStartReview && onStartReview()}
               >
-                <Play size={16} color="#FFFFFF" />
+                <Play size={16} color={colors.neutral[0]} />
                 <Text style={styles.reviewSlippingBtnText}>
                   Review Slipping Words Now ({masterySummary?.slipping_count})
                 </Text>
@@ -1069,7 +1060,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           {/* Word List for Mastery Stage */}
           {loadingMastery ? (
             <View style={styles.centerLoading}>
-              <ActivityIndicator size="large" color="#D97706" />
+              <ActivityIndicator size="large" color={colors.primary[600]} />
             </View>
           ) : (
             <FlatList
@@ -1088,7 +1079,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
               ListFooterComponent={
                 loadingMoreMastery ? (
                   <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-                    <ActivityIndicator size="small" color="#D97706" />
+                    <ActivityIndicator size="small" color={colors.primary[600]} />
                   </View>
                 ) : null
               }
@@ -1126,14 +1117,14 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 style={styles.closeModalBtn}
                 onPress={() => setSelectedDeck(null)}
               >
-                <X size={20} color="#64748B" />
+                <X size={20} color={colors.neutral[500]} />
               </TouchableOpacity>
             </View>
 
             {/* Modal Card List */}
             {loadingDeckCards ? (
               <View style={styles.centerLoading}>
-                <ActivityIndicator size="large" color="#D97706" />
+                <ActivityIndicator size="large" color={colors.primary[600]} />
               </View>
             ) : (
               <FlatList
@@ -1163,10 +1154,10 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 disabled={addingAllDeck}
               >
                 {addingAllDeck ? (
-                  <ActivityIndicator size="small" color="#B45309" />
+                  <ActivityIndicator size="small" color={colors.primary[700]} />
                 ) : (
                   <>
-                    <PlusCircle size={16} color="#B45309" />
+                    <PlusCircle size={16} color={colors.primary[700]} />
                     <Text style={styles.modalAddAllText}>
                       {t('explore.add_all_to_queue')}
                     </Text>
@@ -1189,7 +1180,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   }
                 }}
               >
-                <Play size={16} color="#FFFFFF" />
+                <Play size={16} color={colors.neutral[0]} />
                 <Text style={styles.modalStudyText}>{t('explore.study_deck')}</Text>
               </Pressable>
             </View>
@@ -1203,19 +1194,19 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.primary[50],
   },
   topTabBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
     borderRadius: 12,
     padding: 4,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
+    borderColor: colors.neutral[200],
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -1232,27 +1223,27 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabButtonActive: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
   },
   tabButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   tabButtonTextActive: {
-    color: '#92400E',
+    color: colors.primary[800],
   },
   headerBanner: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     marginHorizontal: 16,
     marginBottom: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   bannerRow: {
     flexDirection: 'row',
@@ -1263,21 +1254,21 @@ const styles = StyleSheet.create({
   randomDiscoveryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
   },
   randomDiscoveryBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   roleTag: {
     alignSelf: 'flex-start',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -1286,14 +1277,14 @@ const styles = StyleSheet.create({
   roleTagText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   questionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: -0.2,
   },
   tabContent: {
@@ -1313,32 +1304,32 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     alignItems: 'center',
     justifyContent: 'center',
   },
   themeTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   themeDesc: {
     fontSize: 12,
-    color: '#92400E',
+    color: colors.primary[800],
     marginTop: 2,
   },
   decksList: {
     gap: 10,
   },
   deckCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
+    borderColor: colors.neutral[200],
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -1353,9 +1344,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.primary[50],
     borderWidth: 1,
-    borderColor: '#FEF3C7',
+    borderColor: colors.primary[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1369,11 +1360,11 @@ const styles = StyleSheet.create({
   deckName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
     flex: 1,
   },
   tierPill: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1381,11 +1372,11 @@ const styles = StyleSheet.create({
   tierPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   deckDesc: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.neutral[500],
     lineHeight: 16,
   },
   deckProgressRow: {
@@ -1398,18 +1389,18 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     borderRadius: 3,
   },
   deckProgressText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   tierSelectorScroll: {
     flexDirection: 'row',
@@ -1422,26 +1413,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     gap: 6,
   },
   tierFilterChipActive: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#D97706',
+    backgroundColor: colors.primary[100],
+    borderColor: colors.primary[600],
   },
   tierFilterChipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   tierFilterChipTextActive: {
-    color: '#92400E',
+    color: colors.primary[800],
   },
   tierCountBadge: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1449,15 +1440,15 @@ const styles = StyleSheet.create({
   tierCountBadgeText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   tierSummaryCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   summaryStatsRow: {
     flexDirection: 'row',
@@ -1470,36 +1461,36 @@ const styles = StyleSheet.create({
   summaryStatVal: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   summaryStatLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   adoptTierButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
   },
   adoptTierButtonText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 13,
     fontWeight: '800',
   },
   wordItemCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
+    borderColor: colors.neutral[200],
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
@@ -1519,7 +1510,7 @@ const styles = StyleSheet.create({
   wordFrontTerm: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   speakerBtn: {
     padding: 4,
@@ -1537,12 +1528,12 @@ const styles = StyleSheet.create({
   wordBackTerm: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#475569',
+    color: colors.neutral[600],
     marginBottom: 4,
   },
   wordDescText: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginBottom: 8,
     lineHeight: 16,
   },
@@ -1552,18 +1543,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.neutral[100],
   },
   wordOriginText: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontWeight: '600',
     flex: 1,
   },
   inQueueBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.primary[50],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -1572,12 +1563,12 @@ const styles = StyleSheet.create({
   inQueueBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#2563EB',
+    color: colors.primary[700],
   },
   masteredBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.success[50],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -1586,12 +1577,12 @@ const styles = StyleSheet.create({
   masteredBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#059669',
+    color: colors.success[600],
   },
   addQueueBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
@@ -1600,7 +1591,7 @@ const styles = StyleSheet.create({
   addQueueBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   stageSelectorScroll: {
     flexDirection: 'row',
@@ -1610,31 +1601,31 @@ const styles = StyleSheet.create({
   },
   stageCard: {
     width: 140,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     padding: 12,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   stageCardActiveSlipping: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FFF5F5',
+    borderColor: colors.danger[500],
+    backgroundColor: colors.danger[50],
   },
   stageCardActiveLearning: {
-    borderColor: '#3B82F6',
-    backgroundColor: '#F0F7FF',
+    borderColor: colors.primary[500],
+    backgroundColor: colors.primary[50],
   },
   stageCardActiveMastered: {
-    borderColor: '#10B981',
-    backgroundColor: '#F0FDF4',
+    borderColor: colors.success[500],
+    backgroundColor: colors.success[50],
   },
   stageCardActiveNew: {
-    borderColor: '#8B5CF6',
-    backgroundColor: '#F5F3FF',
+    borderColor: colors.primary[400],
+    backgroundColor: colors.primary[50],
   },
   stageCardActiveAvailable: {
-    borderColor: '#14B8A6',
-    backgroundColor: '#F0FDFA',
+    borderColor: colors.success[500],
+    backgroundColor: colors.success[50],
   },
   stageCardTop: {
     flexDirection: 'row',
@@ -1654,12 +1645,12 @@ const styles = StyleSheet.create({
   stageCardTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
     marginBottom: 4,
   },
   stageCardSubtitle: {
     fontSize: 10,
-    color: '#64748B',
+    color: colors.neutral[500],
     lineHeight: 13,
   },
   masteryActionCard: {
@@ -1669,7 +1660,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0D9488',
+    backgroundColor: colors.success[600],
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
@@ -1677,13 +1668,13 @@ const styles = StyleSheet.create({
   adoptAvailableBtnText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   reviewSlippingBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DC2626',
+    backgroundColor: colors.danger[600],
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
@@ -1691,7 +1682,7 @@ const styles = StyleSheet.create({
   reviewSlippingBtnText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   srsMetricsRow: {
     flexDirection: 'row',
@@ -1701,7 +1692,7 @@ const styles = StyleSheet.create({
   srsMetricBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1709,13 +1700,13 @@ const styles = StyleSheet.create({
   },
   srsMetricLabel: {
     fontSize: 10,
-    color: '#64748B',
+    color: colors.neutral[500],
     fontWeight: '600',
   },
   srsMetricVal: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   centerLoading: {
     flex: 1,
@@ -1729,16 +1720,16 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
@@ -1749,28 +1740,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.neutral[200],
   },
   modalDeckTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   modalDeckSub: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   closeModalBtn: {
     padding: 6,
   },
   modalWordCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   modalWordCardFooter: {
     flexDirection: 'row',
@@ -1782,17 +1773,17 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.neutral[200],
+    backgroundColor: colors.neutral[0],
   },
   modalAddAllBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     paddingVertical: 12,
     borderRadius: 10,
     gap: 6,
@@ -1800,14 +1791,14 @@ const styles = StyleSheet.create({
   modalAddAllText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#92400E',
+    color: colors.primary[800],
   },
   modalStudyBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     paddingVertical: 12,
     borderRadius: 10,
     gap: 6,
@@ -1815,7 +1806,7 @@ const styles = StyleSheet.create({
   modalStudyText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   topHeaderRow: {
     flexDirection: 'row',
@@ -1831,26 +1822,26 @@ const styles = StyleSheet.create({
   topHeaderTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   topHeaderSubtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   randomDiscoveryPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
     gap: 5,
-    shadowColor: '#D97706',
+    shadowColor: colors.primary[600],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -1859,7 +1850,7 @@ const styles = StyleSheet.create({
   randomDiscoveryPillText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   searchBarWrapper: {
     marginHorizontal: 16,
@@ -1868,13 +1859,13 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
     paddingHorizontal: 12,
     paddingVertical: 10,
-    shadowColor: '#78350F',
+    shadowColor: colors.primary[900],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -1883,7 +1874,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#451A03',
+    color: colors.primary[950],
     fontWeight: '600',
     paddingVertical: 0,
   },
@@ -1899,13 +1890,13 @@ const styles = StyleSheet.create({
   searchEmptyTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
     marginBottom: 6,
     textAlign: 'center',
   },
   searchEmptySubtitle: {
     fontSize: 13,
-    color: '#92400E',
+    color: colors.primary[800],
     textAlign: 'center',
     lineHeight: 18,
   },
