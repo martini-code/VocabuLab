@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { getProgressOverview } from '../../db/vault';
 import { ProgressOverview, ActivityDay } from '../../types';
-import { SquireMascot } from '../../components/mascot/Mascots';
-import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { LabMascot } from '../../components/mascot/Mascots';
+import { LabCard } from '../../components/ui/LabCard';
 
 const LEVEL_COLORS: Record<number, { bg: string; border: string }> = {
   0: { bg: '#E2E8F0', border: '#CBD5E1' }, // 0 reviews
@@ -56,7 +56,7 @@ export const ProgressScreen: React.FC = () => {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Unrolling battle chronicles...</Text>
+        <Text style={styles.loadingText}>Opening the lab notebook...</Text>
       </View>
     );
   }
@@ -84,24 +84,24 @@ export const ProgressScreen: React.FC = () => {
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       {/* Top Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>BATTLE CHRONICLES</Text>
-        <Text style={styles.subtitle}>Daily study contributions and fortress defense record</Text>
+        <Text style={styles.title}>LAB NOTEBOOK</Text>
+        <Text style={styles.subtitle}>Daily study contributions and experiment log</Text>
       </View>
 
       {/* Mascot & Streak Banner */}
       <View style={styles.mascotBanner}>
-        <SquireMascot mood={data.currentStreak >= 3 ? 'happy' : 'idle'} size={85} />
+        <LabMascot mood={data.currentStreak >= 3 ? 'happy' : 'idle'} size={85} />
         <View style={styles.speechBubble}>
           <Text style={styles.speechText}>
             {data.currentStreak >= 4
-              ? `Outstanding discipline, knight! A ${data.currentStreak}-day defense streak keeps the fortress impenetrable.`
-              : 'Every single card reviewed strengthens our kingdom walls. Keep the flame alive!'}
+              ? `Outstanding discipline, scientist! A ${data.currentStreak}-day study streak keeps your results reproducible.`
+              : 'Every single card reviewed adds another data point. Keep the Bunsen burner lit!'}
           </Text>
           <View style={styles.speechTail} />
         </View>
       </View>
 
-      {/* Defense Stats Grid */}
+      {/* Streak Stats Grid */}
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{data.currentStreak} Days</Text>
@@ -109,7 +109,7 @@ export const ProgressScreen: React.FC = () => {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{data.longestStreak} Days</Text>
-          <Text style={styles.statLabel}>LONGEST DEFENSE</Text>
+          <Text style={styles.statLabel}>LONGEST STREAK</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{data.totalReviews}</Text>
@@ -118,10 +118,10 @@ export const ProgressScreen: React.FC = () => {
       </View>
 
       {/* GitHub-Style Activity Contribution Heat-Map */}
-      <ParchmentCard style={styles.matrixCard}>
+      <LabCard style={styles.matrixCard}>
         <View style={styles.matrixHeader}>
           <Text style={styles.sectionTitle}>STUDY ACTIVITY GRAPH</Text>
-          <Text style={styles.sectionSub}>{data.totalReviews} total contributions in the archives</Text>
+          <Text style={styles.sectionSub}>{data.totalReviews} total contributions in the lab notebook</Text>
         </View>
 
         {/* Month Headers & Grid */}
@@ -227,20 +227,20 @@ export const ProgressScreen: React.FC = () => {
             </View>
             <Text style={styles.inspectorMessage}>
               {selectedDay.count >= 15
-                ? 'Legendary campaign day! The scribe recorded massive progress.'
+                ? 'Breakthrough day! The lab notebook recorded massive progress.'
                 : selectedDay.count >= 8
                 ? 'Heroic study session with multiple cards reviewed and reinforced.'
                 : selectedDay.count >= 1
-                ? 'Valiant training logged in the local fortress vault.'
-                : 'No campaigns recorded on this calendar day.'}
+                ? 'Solid experiment logged in the local lab notebook.'
+                : 'No experiments recorded on this calendar day.'}
             </Text>
           </View>
         )}
-      </ParchmentCard>
+      </LabCard>
 
       {/* Day of Week Distribution Chart */}
-      <ParchmentCard style={styles.distributionCard}>
-        <Text style={styles.sectionTitle}>WEEKLY BATTLE VOLUME</Text>
+      <LabCard style={styles.distributionCard}>
+        <Text style={styles.sectionTitle}>WEEKLY EXPERIMENT VOLUME</Text>
         <Text style={styles.sectionSub}>Review distribution across days of the week</Text>
 
         <View style={styles.chartContainer}>
@@ -258,7 +258,7 @@ export const ProgressScreen: React.FC = () => {
             );
           })}
         </View>
-      </ParchmentCard>
+      </LabCard>
     </ScrollView>
   );
 };

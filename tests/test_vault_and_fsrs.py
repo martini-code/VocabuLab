@@ -88,7 +88,7 @@ class TestVocabuLabVault(unittest.TestCase):
     def test_review_logs_and_activity_aggregation(self):
         self.cursor.execute("SELECT count(*) as count FROM Review_Logs;")
         cnt = self.cursor.fetchone()["count"]
-        self.assertGreater(cnt, 0, "Review_Logs should contain seeded campaign logs")
+        self.assertGreater(cnt, 0, "Review_Logs should contain seeded review logs")
 
         # Test daily grouping query used by the GitHub activity matrix
         self.cursor.execute("""

@@ -9,10 +9,10 @@ interface MascotProps {
 }
 
 /**
- * Squire Pip: The cheerful little medieval apprentice knight mascot!
+ * Pip the Lab Assistant: The cheerful little scientist mascot in a lab coat and safety goggles!
  * Features animated moods: idle, happy, cheering, thinking, confused, victorious.
  */
-export const SquireMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) => {
+export const LabMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) => {
   const isCheering = mood === 'cheering' || mood === 'victorious';
   const isConfused = mood === 'confused';
   const isThinking = mood === 'thinking';
@@ -23,58 +23,69 @@ export const SquireMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 
         {/* Soft Shadow */}
         <Ellipse cx="50" cy="92" rx="32" ry="6" fill="#00000018" />
 
-        {/* Knight Armor Body */}
-        <Rect x="32" y="55" width="36" height="30" rx="10" fill="#94A3B8" stroke="#475569" strokeWidth="2.5" />
-        {/* Breastplate Emblem (Golden Fleur-de-lis / Cross) */}
-        <Path d="M50 60 L50 78 M42 66 L58 66" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" />
+        {/* Lab Coat Body */}
+        <Rect x="32" y="55" width="36" height="30" rx="10" fill="#F8FAFC" stroke="#94A3B8" strokeWidth="2.5" />
+        {/* Teal shirt peeking between the lapels */}
+        <Path d="M43 57 L50 67 L57 57 Z" fill="#14B8A6" />
+        {/* Coat Lapels */}
+        <Path d="M42 56 L50 68 L58 56" stroke="#94A3B8" strokeWidth="2.5" strokeLinejoin="round" fill="none" />
+        {/* Breast Pocket with Pen */}
+        <Rect x="55" y="71" width="9" height="7" rx="1.5" fill="none" stroke="#94A3B8" strokeWidth="1.5" />
+        <Path d="M59.5 67 L59.5 73" stroke="#0D9488" strokeWidth="2" strokeLinecap="round" />
 
         {/* Arms & Hands */}
         {isCheering ? (
           // Arms raised in victory!
           <G>
             {/* Left Arm up */}
-            <Path d="M32 62 Q20 45 22 35" stroke="#94A3B8" strokeWidth="7" strokeLinecap="round" />
+            <Path d="M32 62 Q20 45 22 35" stroke="#E2E8F0" strokeWidth="7" strokeLinecap="round" />
             <Circle cx="22" cy="34" r="5" fill="#FBBF24" />
-            {/* Right Arm up with wooden sword */}
-            <Path d="M68 62 Q80 45 78 35" stroke="#94A3B8" strokeWidth="7" strokeLinecap="round" />
+            {/* Right Arm up with test tube */}
+            <Path d="M68 62 Q80 45 78 35" stroke="#E2E8F0" strokeWidth="7" strokeLinecap="round" />
             <Circle cx="78" cy="34" r="5" fill="#FBBF24" />
-            {/* Cute wooden sword */}
-            <Path d="M78 34 L92 18" stroke="#D97706" strokeWidth="4.5" strokeLinecap="round" />
-            <Path d="M74 30 L84 25" stroke="#B45309" strokeWidth="3" strokeLinecap="round" />
+            {/* Bubbling test tube held aloft */}
+            <G transform="rotate(35, 82, 22)">
+              <Rect x="79" y="8" width="7" height="24" rx="3.5" fill="#E0F2FE" stroke="#0369A1" strokeWidth="1.5" />
+              <Rect x="79.75" y="19" width="5.5" height="12" rx="2.75" fill="#22C55E" />
+            </G>
+            <Circle cx="92" cy="8" r="1.8" fill="#86EFAC" />
+            <Circle cx="96" cy="3" r="1.2" fill="#86EFAC" />
           </G>
         ) : isConfused ? (
-          // Left hand scratching helmet, right hand on hip
+          // Right hand scratching head, left hand on hip
           <G>
-            <Path d="M32 65 Q18 68 25 78" stroke="#94A3B8" strokeWidth="6" strokeLinecap="round" />
+            <Path d="M32 65 Q18 68 25 78" stroke="#E2E8F0" strokeWidth="6" strokeLinecap="round" />
             <Circle cx="25" cy="78" r="5" fill="#FBBF24" />
-            {/* Right arm scratching helmet */}
-            <Path d="M68 65 Q82 50 68 28" stroke="#94A3B8" strokeWidth="6" strokeLinecap="round" fill="none" />
+            {/* Right arm scratching head */}
+            <Path d="M68 65 Q82 50 68 28" stroke="#E2E8F0" strokeWidth="6" strokeLinecap="round" fill="none" />
             <Circle cx="68" cy="28" r="5" fill="#FBBF24" />
           </G>
         ) : (
-          // Idle: Holding little wooden shield
+          // Idle: Holding a little round-bottom flask
           <G>
-            <Path d="M32 65 Q20 70 24 78" stroke="#94A3B8" strokeWidth="6" strokeLinecap="round" />
+            <Path d="M32 65 Q20 70 24 78" stroke="#E2E8F0" strokeWidth="6" strokeLinecap="round" />
             <Circle cx="24" cy="78" r="5" fill="#FBBF24" />
-            {/* Mini wooden shield */}
-            <Path
-              d="M70 60 Q85 62 85 75 Q85 88 70 94 Q55 88 55 75 Q55 62 70 60 Z"
-              fill="#D97706"
-              stroke="#78350F"
-              strokeWidth="2"
-            />
-            <Path d="M70 65 L70 89 M60 74 L80 74" stroke="#FDE68A" strokeWidth="2" />
+            {/* Mini round-bottom flask */}
+            <Rect x="66" y="59" width="8" height="12" fill="#E0F2FE" stroke="#0369A1" strokeWidth="2" />
+            <Rect x="64" y="57" width="12" height="3" rx="1.5" fill="#0369A1" />
+            <Circle cx="70" cy="80" r="12" fill="#E0F2FE" stroke="#0369A1" strokeWidth="2" />
+            {/* Glowing reagent */}
+            <Path d="M58.5 81 A11.5 11.5 0 0 0 81.5 81 Z" fill="#A78BFA" />
+            <Circle cx="66" cy="77" r="1.5" fill="#FFFFFF" opacity="0.8" />
+            <Circle cx="73" cy="74" r="1" fill="#FFFFFF" opacity="0.8" />
           </G>
         )}
 
-        {/* Cute Round Helmet & Face */}
-        <Circle cx="50" cy="38" r="24" fill="#CBD5E1" stroke="#475569" strokeWidth="2.5" />
+        {/* Cute Round Head */}
+        <Circle cx="50" cy="38" r="22" fill="#FDE68A" stroke="#B45309" strokeWidth="2" />
 
-        {/* Helmet Visor Plate */}
-        <Path d="M28 32 Q50 25 72 32 Q74 44 72 45 Q50 38 28 45 Z" fill="#64748B" />
+        {/* Tousled Scientist Hair */}
+        <Path d="M29 33 Q31 15 50 15 Q69 15 71 33 Q64 25 57 27 Q50 21 43 27 Q36 25 29 33 Z" fill="#7C2D12" />
 
-        {/* Cute Face Peeking Through Helmet */}
-        <Ellipse cx="50" cy="40" rx="15" ry="11" fill="#FDE68A" />
+        {/* Safety Goggles pushed up on the forehead */}
+        <Path d="M29 29 Q50 22 71 29" stroke="#0F766E" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <Circle cx="42" cy="26" r="5.5" fill="#99F6E4" stroke="#0F766E" strokeWidth="2" />
+        <Circle cx="58" cy="26" r="5.5" fill="#99F6E4" stroke="#0F766E" strokeWidth="2" />
 
         {/* Eyes */}
         {isCheering ? (
@@ -121,16 +132,10 @@ export const SquireMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 
           <Path d="M47 44 Q50 47 53 44" stroke="#1E293B" strokeWidth="2" strokeLinecap="round" fill="none" />
         )}
 
-        {/* Helmet Feather Plume (Crimson Knight Plume!) */}
-        <Path
-          d="M50 15 C52 5, 68 8, 64 22 C62 18, 55 16, 50 15 Z"
-          fill="#EF4444"
-          stroke="#B91C1C"
-          strokeWidth="1.5"
-        />
-        <Circle cx="50" cy="15" r="3" fill="#F59E0B" />
+        {/* Stray Cowlick Curl */}
+        <Path d="M50 15 Q46 7 54 6" stroke="#7C2D12" strokeWidth="2.5" strokeLinecap="round" fill="none" />
 
-        {/* Victory Laurel or Star Sparkles */}
+        {/* Eureka Star Sparkles */}
         {mood === 'victorious' && (
           <G>
             <Polygon points="20,18 22,23 27,24 23,28 24,33 20,30 16,33 17,28 13,24 18,23" fill="#F59E0B" />
@@ -143,9 +148,9 @@ export const SquireMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 
 };
 
 /**
- * Archmage Barnaby: Wise Owl Wizard with purple starry hat!
+ * Professor Barnaby: Wise owl scientist with spectacles and a graduation cap!
  */
-export const WizardOwlMascot: React.FC<{ size?: number }> = ({ size = 90 }) => {
+export const ProfessorOwlMascot: React.FC<{ size?: number }> = ({ size = 90 }) => {
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} viewBox="0 0 100 100">
@@ -174,7 +179,7 @@ export const WizardOwlMascot: React.FC<{ size?: number }> = ({ size = 90 }) => {
         <Circle cx="41" cy="44" r="2.2" fill="#FFFFFF" />
         <Circle cx="63" cy="44" r="2.2" fill="#FFFFFF" />
 
-        {/* Wizard Spectacles */}
+        {/* Professor Spectacles */}
         <Circle cx="39" cy="46" r="12" fill="none" stroke="#F59E0B" strokeWidth="2.5" />
         <Circle cx="61" cy="46" r="12" fill="none" stroke="#F59E0B" strokeWidth="2.5" />
         <Path d="M51 46 L49 46" stroke="#F59E0B" strokeWidth="2.5" />
@@ -182,11 +187,13 @@ export const WizardOwlMascot: React.FC<{ size?: number }> = ({ size = 90 }) => {
         {/* Little Beak */}
         <Polygon points="50,48 46,55 54,55" fill="#EA580C" />
 
-        {/* Wizard Hat */}
-        <Polygon points="50,2 25,32 75,32" fill="#6D28D9" stroke="#4C1D95" strokeWidth="2" />
-        <Ellipse cx="50" cy="32" rx="30" ry="6" fill="#7C3AED" stroke="#4C1D95" strokeWidth="2" />
-        {/* Hat Gold Star */}
-        <Polygon points="50,14 52,18 56,18 53,21 54,25 50,23 46,25 47,21 44,18 48,18" fill="#FBBF24" />
+        {/* Graduation Cap (Mortarboard) */}
+        <Path d="M34 31 L34 21 Q50 17 66 21 L66 31 Q50 35 34 31 Z" fill="#1E293B" />
+        <Polygon points="50,6 82,17 50,28 18,17" fill="#334155" stroke="#0F172A" strokeWidth="2" />
+        {/* Gold Tassel */}
+        <Circle cx="50" cy="17" r="2" fill="#FBBF24" />
+        <Path d="M50 17 Q68 19 76 23 L76 33" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <Rect x="74" y="32" width="4" height="6" rx="1" fill="#FBBF24" />
       </Svg>
     </View>
   );

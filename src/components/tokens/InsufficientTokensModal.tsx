@@ -11,7 +11,7 @@ import {
 import {
   AlertCircle,
   Tv,
-  Crown,
+  Rocket,
   X,
   Sparkles,
 } from 'lucide-react-native';
@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 import { TOKEN_CONFIG } from '../../config/secrets';
 import { adMobService } from '../../services/adMobService';
-import { SquireMascot } from '../mascot/Mascots';
+import { LabMascot } from '../mascot/Mascots';
 
 interface InsufficientTokensModalProps {
   visible: boolean;
@@ -101,7 +101,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
           </TouchableOpacity>
 
           <View style={styles.mascotContainer}>
-            <SquireMascot size={72} mood="thinking" />
+            <LabMascot size={72} mood="thinking" />
           </View>
 
           <View style={styles.badgeRow}>
@@ -184,7 +184,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   }}
                   activeOpacity={0.7}
                 >
-                  <Crown size={16} color="#4F46E5" />
+                  <Rocket size={16} color="#4F46E5" />
                   <Text style={styles.plusOutlineBtnText}>
                     {t('tokens.unlock_unlimited_plus', {
                       defaultValue: 'Or Unlock Unlimited with Plus',
@@ -220,7 +220,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   }}
                   activeOpacity={0.8}
                 >
-                  <Crown size={18} color="#FFFFFF" />
+                  <Rocket size={18} color="#FFFFFF" />
                   <Text style={styles.plusFullBtnText}>
                     {t('tokens.upgrade_to_plus_cta', {
                       defaultValue: 'Upgrade to Plus',

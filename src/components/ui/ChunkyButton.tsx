@@ -20,37 +20,37 @@ const COLOR_MAP: Record<
   { bg: string; border: string; text: string; subtext: string }
 > = {
   green: {
-    bg: '#10B981', // Emerald Forest
+    bg: '#10B981', // Reagent Green
     border: '#047857',
     text: '#FFFFFF',
     subtext: '#D1FAE5',
   },
   blue: {
-    bg: '#3B82F6', // Royal Knight Blue
+    bg: '#3B82F6', // Lab Coat Blue
     border: '#1D4ED8',
     text: '#FFFFFF',
     subtext: '#DBEAFE',
   },
   crimson: {
-    bg: '#EF4444', // Red Shield / Again
+    bg: '#EF4444', // Warning Red / Again
     border: '#B91C1C',
     text: '#FFFFFF',
     subtext: '#FEE2E2',
   },
   amber: {
-    bg: '#F59E0B', // Royal Gold / Hard
+    bg: '#F59E0B', // Caution Amber / Hard
     border: '#B45309',
     text: '#FFFFFF',
     subtext: '#FEF3C7',
   },
   wood: {
-    bg: '#78350F', // Fortress Timber
+    bg: '#78350F', // Lab Bench Wood
     border: '#451A03',
     text: '#FDE68A',
     subtext: '#D97706',
   },
   slate: {
-    bg: '#334155', // Castle Stone
+    bg: '#334155', // Fume Hood Slate
     border: '#1E293B',
     text: '#F1F5F9',
     subtext: '#94A3B8',

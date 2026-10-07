@@ -9,13 +9,13 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
-import { Castle, Scroll, Volume2, Check, Plus, Shield, TreePine, Swords, Coins, Key } from 'lucide-react-native';
+import { Microscope, Home, Volume2, Check, Plus, FlaskConical, TreePine, Target, Coins, Key, Beaker } from 'lucide-react-native';
 import { Domain, Lexeme, CEFRLevel } from '../../types';
 import { getDomainsHierarchy, getLexemesByDomain, addCardToQueue } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
-import { ShieldBadge } from '../../components/ui/ShieldBadge';
+import { LevelBadge } from '../../components/ui/LevelBadge';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
-import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { LabCard } from '../../components/ui/LabCard';
 import { tokenWallet } from '../../services/tokenWallet';
 import { formatLanguageCode } from '../../locales/languages';
 
@@ -86,7 +86,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#F59E0B" />
-        <Text style={styles.loadingText}>Unrolling kingdom map...</Text>
+        <Text style={styles.loadingText}>Loading lab map...</Text>
       </View>
     );
   }
@@ -110,11 +110,11 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Top Realm Selector Tabs */}
+      {/* Top Domain Selector Tabs */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Castle size={20} color="#78350F" style={{ marginRight: 8 }} />
-          <Text style={styles.headerTitle}>KINGDOM ARCHIVES</Text>
+          <Microscope size={20} color="#78350F" style={{ marginRight: 8 }} />
+          <Text style={styles.headerTitle}>LAB LIBRARY</Text>
         </View>
         <Text style={styles.headerSubtitle}>Select a territory to explore its ancient tongue</Text>
       </View>
@@ -129,10 +129,10 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
 
           const renderTabIcon = () => {
             const iconColor = isSelected ? '#78350F' : '#94A3B8';
-            if (d.id.includes('castle')) return <Castle size={18} color={iconColor} />;
-            if (d.id.includes('academy')) return <Scroll size={18} color={iconColor} />;
+            if (d.id.includes('castle')) return <Home size={18} color={iconColor} />;
+            if (d.id.includes('academy')) return <Microscope size={18} color={iconColor} />;
             if (d.id.includes('wilderness')) return <TreePine size={18} color={iconColor} />;
-            if (d.id.includes('armory')) return <Swords size={18} color={iconColor} />;
+            if (d.id.includes('armory')) return <Target size={18} color={iconColor} />;
             if (d.id.includes('market')) return <Coins size={18} color={iconColor} />;
             return <Key size={18} color={iconColor} />;
           };
@@ -164,7 +164,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         })}
       </ScrollView>
 
-      {/* CEFR Level Shield Filter Bar */}
+      {/* CEFR Level Badge Filter Bar */}
       <View style={styles.cefrFilterRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cefrScroll}>
           {CEFR_LEVELS.map((level) => {
@@ -176,7 +176,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 style={[styles.cefrChip, isSelected && styles.cefrChipSelected]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {level === 'ALL' && <Shield size={12} color={isSelected ? '#78350F' : '#64748B'} style={{ marginRight: 4 }} />}
+                  {level === 'ALL' && <FlaskConical size={12} color={isSelected ? '#78350F' : '#64748B'} style={{ marginRight: 4 }} />}
                   <Text style={[styles.cefrChipText, isSelected && styles.cefrChipTextSelected]}>
                     {level === 'ALL' ? 'ALL' : `${level}`}
                   </Text>
@@ -199,18 +199,18 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Scroll size={40} color="#D97706" style={{ marginBottom: 10 }} />
-            <Text style={styles.emptyTitle}>No cards inscribed yet</Text>
+            <Beaker size={40} color="#D97706" style={{ marginBottom: 10 }} />
+            <Text style={styles.emptyTitle}>No cards recorded yet</Text>
             <Text style={styles.emptySubtitle}>Try selecting a different CEFR shield rank above.</Text>
           </View>
         }
         renderItem={renderLexemeItem}
       />
 
-      {/* Bottom Embark on Quest Bar */}
+      {/* Bottom Start Review Bar */}
       <View style={styles.bottomBar}>
         <ChunkyButton
-          title="EMBARK ON REVIEW QUEST"
+          title="START REVIEW SESSION"
           subtitle={`${lexemes.length} words in this province`}
           color="green"
           onPress={onStartTraining}
@@ -235,7 +235,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
   onSpeak,
 }) => {
   return (
-    <ParchmentCard style={styles.lexemeCard}>
+    <LabCard style={styles.lexemeCard}>
       <View style={styles.cardTopRow}>
         <View style={styles.wordInfo}>
           <Text style={styles.wordTerm}>{item.term}</Text>
@@ -243,7 +243,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
             {formatLanguageCode(item.language)} • {item.pos || 'noun'}
           </Text>
         </View>
-        <ShieldBadge level={item.cefr_level} size="sm" />
+        <LevelBadge level={item.cefr_level} size="sm" />
       </View>
 
       <View style={styles.cardActionsRow}>
@@ -292,7 +292,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
           )}
         </Pressable>
       </View>
-    </ParchmentCard>
+    </LabCard>
   );
 });
 

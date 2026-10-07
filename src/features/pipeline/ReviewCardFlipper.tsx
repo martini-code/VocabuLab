@@ -10,8 +10,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Volume2 } from 'lucide-react-native';
 import { CardWithDetails } from '../../types';
-import { ShieldBadge } from '../../components/ui/ShieldBadge';
-import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { LevelBadge } from '../../components/ui/LevelBadge';
+import { LabCard } from '../../components/ui/LabCard';
 import { formatLanguageCode } from '../../locales/languages';
 
 interface ReviewCardFlipperProps {
@@ -85,10 +85,10 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
         style={[styles.cardFace, frontAnimatedStyle]}
         pointerEvents={isFlipped ? 'none' : 'auto'}
       >
-        <ParchmentCard variant="light" style={styles.cardContent}>
+        <LabCard variant="light" style={styles.cardContent}>
           {/* Card Header */}
           <View style={styles.cardHeaderRow}>
-            <ShieldBadge level={card.front_cefr} size="md" />
+            <LevelBadge level={card.front_cefr} size="md" />
             <Text style={styles.langTag}>
               {formatLanguageCode(card.front_lang)} ➔ {formatLanguageCode(card.back_lang)}
             </Text>
@@ -120,7 +120,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
           <View style={styles.tapToRevealBox}>
             <Text style={styles.tapToRevealText}>Tap card to reveal translation</Text>
           </View>
-        </ParchmentCard>
+        </LabCard>
       </Animated.View>
 
       {/* Back Face */}
@@ -128,10 +128,10 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
         style={[styles.cardFace, styles.cardFaceBack, backAnimatedStyle]}
         pointerEvents={isFlipped ? 'auto' : 'none'}
       >
-        <ParchmentCard variant="aged" style={styles.cardContent}>
+        <LabCard variant="tinted" style={styles.cardContent}>
           {/* Card Header */}
           <View style={styles.cardHeaderRow}>
-            <ShieldBadge level={card.front_cefr} size="md" />
+            <LevelBadge level={card.front_cefr} size="md" />
             <Text style={styles.langTag}>
               {formatLanguageCode(card.front_lang)} ➔ {formatLanguageCode(card.back_lang)}
             </Text>
@@ -151,7 +151,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
             <Text style={styles.backTranslationLabel}>TRANSLATION</Text>
             <Text style={styles.backTermText}>{card.back_term}</Text>
           </View>
-        </ParchmentCard>
+        </LabCard>
       </Animated.View>
     </Pressable>
   );

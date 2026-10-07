@@ -27,7 +27,7 @@ export const DEFAULT_PRODUCTS: AdFreeProductItem[] = [
   {
     id: IAP_SKUS.AD_FREE_MONTHLY,
     title: 'Ad-Free Monthly Patron',
-    description: 'Banish merchant banners with monthly flexibility. Cancel anytime.',
+    description: 'Remove sponsor banners with monthly flexibility. Cancel anytime.',
     price: '$1.99 / mo',
     type: 'subs',
   },
@@ -228,7 +228,7 @@ class IAPService {
         products.push({
           id: monthly.id,
           title: monthly.title || 'Ad-Free Monthly Patron',
-          description: monthly.description || 'Banish merchant banners with monthly flexibility.',
+          description: monthly.description || 'Remove sponsor banners with monthly flexibility.',
           price: monthly.displayPrice || '$1.99 / mo',
           type: 'subs',
         });

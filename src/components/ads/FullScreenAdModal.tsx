@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Compass } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { SquireMascot } from '../mascot/Mascots';
+import { LabMascot } from '../mascot/Mascots';
 
 interface FullScreenAdModalProps {
   visible: boolean;
@@ -68,7 +68,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
           <View style={styles.sponsorBadge}>
             <Shield size={14} color="#F59E0B" />
             <Text style={styles.sponsorBadgeText}>
-              {t('ad_free.banner_badge', { defaultValue: 'SPONSORED ROYAL CARD' })}
+              {t('ad_free.banner_badge', { defaultValue: 'SPONSORED LAB CARD' })}
             </Text>
           </View>
 
@@ -79,7 +79,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
               activeOpacity={0.8}
             >
               <Text style={styles.closeBtnText}>
-                {t('ad_free.interstitial_skip_ready', { defaultValue: 'RESUME QUEST' })}
+                {t('ad_free.interstitial_skip_ready', { defaultValue: 'RESUME EXPERIMENT' })}
               </Text>
               <X size={16} color="#FFFFFF" />
             </TouchableOpacity>
@@ -96,24 +96,24 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
         <View style={styles.content}>
           <View style={styles.adCard}>
             <View style={styles.illustrationWrap}>
-              <SquireMascot mood="thinking" size={140} />
+              <LabMascot mood="thinking" size={140} />
             </View>
 
             <View style={styles.merchantHeader}>
               <Award size={22} color="#F59E0B" />
               <Text style={styles.merchantGuildTitle}>
-                {t('ad_free.interstitial_title', { defaultValue: 'THE MERCHANT GUILD ALLIANCE' })}
+                {t('ad_free.interstitial_title', { defaultValue: 'OUR RESEARCH SPONSORS' })}
               </Text>
             </View>
 
             <Text style={styles.adHeadline}>
-              {t('ad_free.interstitial_subtitle', { defaultValue: 'Expand Your Realm of Knowledge' })}
+              {t('ad_free.interstitial_subtitle', { defaultValue: 'Expand Your Field of Knowledge' })}
             </Text>
 
             <Text style={styles.adDescription}>
               {t('ad_free.interstitial_desc', {
                 defaultValue:
-                  'This free training session is made possible by our Kingdom Sponsors. Defend your fortress streak and master 50 global languages offline!',
+                  'This free training session is made possible by our Lab Sponsors. Keep your study streak alive and master 50 global languages offline!',
               })}
             </Text>
 
@@ -128,7 +128,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
               </View>
               <View style={styles.featureItem}>
                 <Check size={14} color="#10B981" />
-                <Text style={styles.featureText}>50 Language Multilingual Scriptorium</Text>
+                <Text style={styles.featureText}>50 Language Multilingual Lab</Text>
               </View>
             </View>
           </View>

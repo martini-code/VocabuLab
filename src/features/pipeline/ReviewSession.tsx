@@ -12,10 +12,10 @@ import { CardWithDetails, MascotMood, EnrolledLanguagePair } from '../../types';
 import { getDueCards, getDeckCardsForReview, recordCardReview, getEnrolledLanguagePairs } from '../../db/vault';
 import { getReviewOptions, gradeCardFSRS } from '../../services/fsrsService';
 import { speakWord } from '../../utils/tts';
-import { SquireMascot } from '../../components/mascot/Mascots';
+import { LabMascot } from '../../components/mascot/Mascots';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
-import { ShieldBadge } from '../../components/ui/ShieldBadge';
-import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { LevelBadge } from '../../components/ui/LevelBadge';
+import { LabCard } from '../../components/ui/LabCard';
 import { Volume2, Layers, X, Zap, Globe } from 'lucide-react-native';
 import { srsManager } from '../../srs';
 import { ReviewCardFlipper } from './ReviewCardFlipper';
@@ -53,7 +53,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [loading, setLoading] = useState(true);
   const [randomDiscoveryActive, setRandomDiscoveryActive] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
-  const [mascotQuote, setMascotQuote] = useState("Train hard, Squire! The realm counts on your memory.");
+  const [mascotQuote, setMascotQuote] = useState("Train hard, scientist! Every review is a data point for your memory.");
   const [sessionHistory, setSessionHistory] = useState<ReviewSessionWordSummary[]>([]);
 
   const activeAlgorithm = srsManager.getActiveAlgorithm();
@@ -105,7 +105,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       const next = !prev;
       if (next) {
         setMascotMood('thinking');
-        setMascotQuote("Inspect the ancient meaning and grade thy memory!");
+        setMascotQuote("Examine the meaning and grade your memory!");
       }
       return next;
     });
@@ -123,10 +123,10 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       setMascotQuote("Grit and steel! It is holding in memory.");
     } else if (rating === Rating.Good) {
       setMascotMood('happy');
-      setMascotQuote("Well struck, brave knight!");
+      setMascotQuote("Solid result, scientist!");
     } else if (rating === Rating.Easy) {
       setMascotMood('cheering');
-      setMascotQuote("Huzzah! Pure mastery!");
+      setMascotQuote("Eureka! Pure mastery!");
     }
 
     // 2. Persist FSRS state & review logs asynchronously in SQLite within a single transaction
@@ -180,7 +180,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#F59E0B" />
-        <Text style={styles.loadingText}>Gathering fortress cards...</Text>
+        <Text style={styles.loadingText}>Gathering lab cards...</Text>
       </View>
     );
   }
@@ -288,19 +288,19 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         )}
 
         <View style={styles.victoryCard}>
-          <SquireMascot mood="victorious" size={130} />
+          <LabMascot mood="victorious" size={130} />
           <Text style={styles.victoryTitle}>
-            {deckFilter ? 'DECK COMPLETED!' : 'QUEST COMPLETED!'}
+            {deckFilter ? 'DECK COMPLETED!' : 'EXPERIMENT COMPLETE!'}
           </Text>
           <Text style={styles.victorySubtitle}>
             {deckFilter
-              ? `Thou hast reviewed all cards in "${deckFilter.name}". The fortress gates remain steadfast!`
-              : 'Thou hast reviewed all scheduled cards for today. The fortress gates remain steadfast!'}
+              ? `You've reviewed all cards in "${deckFilter.name}". The results are in: your memory is holding strong!`
+              : 'You\'ve reviewed all scheduled cards for today. The results are in: your memory is holding strong!'}
           </Text>
 
           {deckFilter && onClearDeckFilter && (
             <ChunkyButton
-              title="TRAIN ALL KINGDOM DECKS"
+              title="TRAIN ALL LAB DECKS"
               subtitle="Return to general training queue"
               color="wood"
               onPress={onClearDeckFilter}
@@ -309,7 +309,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           )}
 
           <ChunkyButton
-            title="EXPLORE THE ARCHIVES"
+            title="EXPLORE THE LIBRARY"
             subtitle="Browse progressive difficulty decks"
             color="green"
             onPress={onExploreArchives || loadCards}
@@ -430,14 +430,14 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
         {/* Staging Information Card */}
         <View style={styles.stagingCard}>
-          <SquireMascot mood={mascotMood} size={105} />
+          <LabMascot mood={mascotMood} size={105} />
           <Text style={styles.stagingTitle}>
             {deckFilter ? 'DECK REVIEW' : 'DAILY REVIEW'}
           </Text>
           <Text style={styles.stagingSubtitle}>
             {deckFilter
-              ? `Prepare thy memory to master cards in "${deckFilter.name}".`
-              : 'Sharpen thy vocabulary cards with spaced repetition.'}
+              ? `Prepare your memory to master cards in "${deckFilter.name}".`
+              : 'Sharpen your vocabulary with spaced repetition.'}
           </Text>
 
           {/* Staging Data Summary Box */}
@@ -481,7 +481,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
           {deckFilter && onClearDeckFilter && (
             <ChunkyButton
-              title="TRAIN ALL KINGDOM DECKS"
+              title="TRAIN ALL LAB DECKS"
               subtitle="Return to general training queue"
               color="wood"
               onPress={onClearDeckFilter}
@@ -499,7 +499,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
 
           {onExploreArchives && (
             <ChunkyButton
-              title="EXPLORE THE ARCHIVES"
+              title="EXPLORE THE LIBRARY"
               subtitle="Browse progressive difficulty decks"
               color="wood"
               onPress={onExploreArchives}
@@ -559,7 +559,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         {/* Actions directly below the centered card */}
         {isFlipped && (
           <View style={styles.gradingSection}>
-            <Text style={styles.gradeSectionTitle}>HOW WELL DID THOU RECALL?</Text>
+            <Text style={styles.gradeSectionTitle}>HOW WELL DID YOU RECALL?</Text>
             <View style={styles.gradingButtonsGrid}>
               {/* Again (Crimson) */}
               <ChunkyButton
@@ -588,7 +588,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                 style={styles.gradeButton}
               />
 
-              {/* Easy (Royal Blue) */}
+              {/* Easy (Lab Coat Blue) */}
               <ChunkyButton
                 title="EASY"
                 subtitle={reviewOptions[3]?.intervalText || '12d'}

@@ -63,8 +63,8 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('../../../components/mascot/Mascots', () => {
   const React = require('react');
   return {
-    SquireMascot: (props: any) =>
-      React.createElement('View', { testID: 'squire-mascot', ...props }),
+    LabMascot: (props: any) =>
+      React.createElement('View', { testID: 'lab-mascot', ...props }),
   };
 });
 
@@ -96,7 +96,7 @@ jest.mock('lucide-react-native', () => {
     X: icon('X'),
     Zap: icon('Zap'),
     Globe: icon('Globe'),
-    Shield: icon('Shield'),
+    FlaskConical: icon('FlaskConical'),
     Sparkles: icon('Sparkles'),
     TrendingUp: icon('TrendingUp'),
     Brain: icon('Brain'),
