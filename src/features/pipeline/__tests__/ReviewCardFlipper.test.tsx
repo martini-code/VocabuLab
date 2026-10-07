@@ -86,7 +86,8 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       expect(getAllByText('biblioteca').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('[noun]').length).toBeGreaterThanOrEqual(1);
       expect(getAllByText('ES ➔ EN').length).toBeGreaterThanOrEqual(1);
-      expect(getAllByText('A1').length).toBeGreaterThanOrEqual(1);
+      expect(getAllByText('Level 1').length).toBeGreaterThanOrEqual(1);
+      expect(queryByText('A1')).toBeNull();
       expect(getByText('Tap card to reveal translation')).toBeTruthy();
       expect(getByTestId('pronounce-btn')).toBeTruthy();
       expect(queryByText('Pronounce')).toBeNull();
@@ -215,7 +216,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       expect(queryByText('[noun]')).toBeNull();
     });
 
-    it('renders C2 level badge correctly', async () => {
+    it('renders the hardest (C2) word as Level 6', async () => {
       const c2Card: CardWithDetails = {
         ...mockCard,
         front_cefr: 'C2',
@@ -230,7 +231,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
         />
       );
 
-      expect(getAllByText('C2').length).toBeGreaterThanOrEqual(1);
+      expect(getAllByText('Level 6').length).toBeGreaterThanOrEqual(1);
     });
 
     it('handles multiple flip state transitions cleanly in interactive session', async () => {

@@ -10,7 +10,7 @@ import {
 import { DeckWithProgress } from '../../types';
 import { DeckIcon } from '../../components/icons/DeckIcon';
 
-import { colors } from '../../theme';
+import { colors, levelColorsFor, levelLabel } from '../../theme';
 
 interface DeckCardNodeProps {
   deck: DeckWithProgress;
@@ -19,6 +19,7 @@ interface DeckCardNodeProps {
 }
 
 export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, index }) => {
+  const levelColors = levelColorsFor(deck.difficulty_level);
   const isMastered = deck.card_count > 0 && deck.mastered_count >= deck.card_count;
   const queuedCount = deck.queued_count ?? 0;
   const isQueued = queuedCount > 0;
@@ -63,15 +64,16 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
           </View>
 
           <View style={styles.badgeRow}>
-            {/* CEFR Tier Pill */}
+            {/* Difficulty level pill */}
             <View
               style={[
                 styles.tierBadge,
-                isMastered && { backgroundColor: colors.success[600] },
-                isQueued && !isMastered && { backgroundColor: colors.primary[600] },
+                { backgroundColor: levelColors.solid, borderColor: levelColors.solidBorder },
               ]}
             >
-              <Text style={styles.tierBadgeText}>{deck.cefr_level}</Text>
+              <Text style={[styles.tierBadgeText, { color: levelColors.onSolid }]}>
+                {levelLabel(deck.difficulty_level)}
+              </Text>
             </View>
 
             {/* Deck Card Count Tag */}
@@ -225,6 +227,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tierBadge: {
+    borderWidth: 1,
     backgroundColor: colors.neutral[500],
     paddingHorizontal: 7,
     paddingVertical: 3,

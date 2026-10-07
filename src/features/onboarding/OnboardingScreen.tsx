@@ -17,7 +17,7 @@ import { CEFRLevel, LanguagePairSettings, MascotMood } from '../../types';
 import { completeOnboarding, isLanguageDownloaded } from '../../db/vault';
 import { downloadLanguagePack } from '../../db/downloader';
 import { LanguageOption, SUPPORTED_LANGUAGES, resolveLanguageCode } from '../../locales/languages';
-import { cefrColors, colors, radii, spacing } from '../../theme';
+import { colors, levelColorsFor, levelLabel, radii, spacing, toLevel } from '../../theme';
 
 const MAX_TARGETS = 5;
 const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -255,7 +255,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
     {
       title: t('onboarding.levels_title', { defaultValue: 'How well do you know them?' }),
       body: t('onboarding.levels_body', {
-        defaultValue: "We'll suggest new words around your level. You can study any level whenever you like.",
+        defaultValue:
+          "Levels go from 1 (just starting) to 6 (near-native). We'll suggest new words around your level, and you can study any level whenever you like.",
       }),
     },
     {
@@ -342,7 +343,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
                   <View style={styles.levelChips}>
                     {LEVELS.map((l) => {
                       const on = l === level;
-                      const c = cefrColors[l];
+                      const c = levelColorsFor(l);
                       return (
                         <Pressable
                           key={l}
@@ -353,15 +354,16 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
                           ]}
                           accessibilityRole="radio"
                           accessibilityState={{ selected: on }}
-                          accessibilityLabel={`${l}, ${LEVEL_COPY[l].title}`}
+                          accessibilityLabel={`${levelLabel(l)}, ${LEVEL_COPY[l].title}`}
                           testID={`onboarding-level-${code}-${l}`}
                         >
-                          <Text style={[styles.levelChipText, on && { color: c.onSolid }]}>{l}</Text>
+                          <Text style={[styles.levelChipText, on && { color: c.onSolid }]}>{toLevel(l)}</Text>
                         </Pressable>
                       );
                     })}
                   </View>
                   <Text style={styles.levelTitle}>
+                    {levelLabel(level)} ·{' '}
                     {t(`onboarding.level_${level}_title`, { defaultValue: LEVEL_COPY[level].title })}
                   </Text>
                   <Text style={styles.levelDetail}>

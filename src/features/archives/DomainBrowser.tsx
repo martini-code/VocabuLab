@@ -19,7 +19,7 @@ import { LabCard } from '../../components/ui/LabCard';
 import { tokenWallet } from '../../services/tokenWallet';
 import { formatLanguageCode } from '../../locales/languages';
 
-import { colors } from '../../theme';
+import { colors, levelLabel } from '../../theme';
 
 const CEFR_LEVELS: (CEFRLevel | 'ALL')[] = ['ALL', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
@@ -180,7 +180,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   {level === 'ALL' && <FlaskConical size={12} color={isSelected ? colors.primary[900] : colors.neutral[500]} style={{ marginRight: 4 }} />}
                   <Text style={[styles.cefrChipText, isSelected && styles.cefrChipTextSelected]}>
-                    {level === 'ALL' ? 'ALL' : `${level}`}
+                    {level === 'ALL' ? 'ALL' : levelLabel(level)}
                   </Text>
                 </View>
               </TouchableOpacity>

@@ -97,9 +97,10 @@ describe('OnboardingScreen', () => {
     await fireEvent.press(screen.getByTestId('onboarding-next'));
 
     // Step 3: one level row per language, A1 by default
-    expect(screen.getAllByText('Beginner')).toHaveLength(2);
+    expect(screen.getAllByText('Level 1 · Beginner')).toHaveLength(2);
+    expect(screen.queryByText('B1')).toBeNull();
     await fireEvent.press(screen.getByTestId('onboarding-level-es-B1'));
-    expect(screen.getByText('Intermediate')).toBeTruthy();
+    expect(screen.getByText('Level 3 · Intermediate')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('onboarding-next'));
 
     // Step 4: grading guide explains all four buttons

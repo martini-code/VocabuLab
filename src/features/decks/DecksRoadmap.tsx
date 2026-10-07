@@ -81,7 +81,7 @@ import { tokenWallet } from '../../services/tokenWallet';
 import { RandomDiscoveryView } from '../../components/discovery/RandomDiscoveryView';
 import { SearchResultCard } from '../search/FastSearch';
 
-import { colors, cefrColors as cefrPalette } from '../../theme';
+import { colors, levelColorsFor, levelLabel } from '../../theme';
 
 export interface DecksRoadmapProps {
   onStudyDeck: (deckId: string, deckName: string) => void;
@@ -98,13 +98,20 @@ function renderDeckIcon(iconName: string, size = 20, color = colors.neutral[500]
   return <DeckIcon name={iconName} size={size} color={color} />;
 }
 
-function getCefrBadgeColors(cefr: string) {
-  const level = cefrPalette[cefr as keyof typeof cefrPalette];
-  if (!level) {
-    return { bg: colors.neutral[100], text: colors.neutral[600], border: colors.neutral[300] };
-  }
+function getLevelChipColors(cefr: string) {
+  const level = levelColorsFor(cefr);
   return { bg: level.soft, text: level.onSoft, border: level.softBorder };
 }
+
+/** Deck/subdeck difficulty pill on the level color ramp. */
+const LevelPill: React.FC<{ difficulty: number }> = ({ difficulty }) => {
+  const c = levelColorsFor(difficulty);
+  return (
+    <View style={[styles.tierPill, { backgroundColor: c.soft, borderColor: c.softBorder }]}>
+      <Text style={[styles.tierPillText, { color: c.onSoft }]}>{levelLabel(difficulty)}</Text>
+    </View>
+  );
+};
 function formatNextReview(dueDateStr?: string, t?: (key: string, options?: any) => string): string {
   if (!dueDateStr) return 'New';
   const due = new Date(dueDateStr);
@@ -139,7 +146,7 @@ interface MasteryWordCardProps {
 const MasteryWordCard = React.memo<MasteryWordCardProps>(
   ({ item, isQueued, onAddWord, onSpeak }) => {
     const { t } = useTranslation();
-    const cefrColors = getCefrBadgeColors(item.front_cefr);
+    const levelChip = getLevelChipColors(item.front_cefr);
 
     return (
       <View style={styles.wordItemCard}>
@@ -156,11 +163,11 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
           <View
             style={[
               styles.cefrBadge,
-              { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
+              { backgroundColor: levelChip.bg, borderColor: levelChip.border },
             ]}
           >
-            <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
-              {item.front_cefr}
+            <Text style={[styles.cefrBadgeText, { color: levelChip.text }]}>
+              {levelLabel(item.front_cefr)}
             </Text>
           </View>
         </View>
@@ -253,7 +260,7 @@ interface DeckCardDetailItemProps {
 const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
   ({ item, isQueued, onAddWord, onSpeak }) => {
     const { t } = useTranslation();
-    const cefrColors = getCefrBadgeColors(item.front_cefr);
+    const levelChip = getLevelChipColors(item.front_cefr);
 
     return (
       <View style={styles.modalWordCard}>
@@ -270,11 +277,11 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
           <View
             style={[
               styles.cefrBadge,
-              { backgroundColor: cefrColors.bg, borderColor: cefrColors.border },
+              { backgroundColor: levelChip.bg, borderColor: levelChip.border },
             ]}
           >
-            <Text style={[styles.cefrBadgeText, { color: cefrColors.text }]}>
-              {item.front_cefr}
+            <Text style={[styles.cefrBadgeText, { color: levelChip.text }]}>
+              {levelLabel(item.front_cefr)}
             </Text>
           </View>
         </View>
@@ -372,11 +379,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
         <View style={{ flex: 1 }}>
           <View style={styles.deckTitleRow}>
             <Text style={styles.deckName}>{deck.name}</Text>
-            <View style={styles.tierPill}>
-              <Text style={styles.tierPillText}>
-                Tier {deck.difficulty_level} • {deck.cefr_level}
-              </Text>
-            </View>
+            <LevelPill difficulty={deck.difficulty_level} />
           </View>
           {Boolean(deck.subtitle) && <Text style={styles.deckSubtitle}>{deck.subtitle}</Text>}
         </View>
@@ -1005,7 +1008,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                     <Text style={styles.searchEmptySubtitle}>
                       {isSearching
                         ? 'Querying the dictionary database...'
-                        : 'Try querying with another word stem or CEFR level.'}
+                        : 'Try querying with another word stem or level.'}
                     </Text>
                   </View>
                 }
@@ -1231,7 +1234,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   {selectedDeck?.has_subdecks ? selectedDeck?.subdeck_name : selectedDeck?.deck_name || selectedDeck?.name}
                 </Text>
                 <Text style={styles.modalDeckSub}>
-                  Tier {selectedDeck?.difficulty_level} • {selectedDeck?.cefr_level} •{' '}
+                  {levelLabel(selectedDeck?.difficulty_level ?? 1)} •{' '}
                   {deckCards.length} {t('common.all').toLowerCase()}
                 </Text>
               </View>
@@ -1559,6 +1562,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tierPill: {
+    borderWidth: 1,
     backgroundColor: colors.neutral[100],
     paddingHorizontal: 6,
     paddingVertical: 2,

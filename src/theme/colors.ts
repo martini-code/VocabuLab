@@ -82,19 +82,37 @@ export const palette = {
 };
 
 /**
- * CEFR levels climb the brand ramp: from Lex's eyebrow mist (A1)
- * to the ink of his glasses frames (C2).
+ * Difficulty levels. The database stores CEFR (A1–C2); the app shows them as
+ * Level 1–6 on an easy-to-hard ramp: green, lime, yellow, orange, red, and
+ * Lex's ink for the hardest. Every label/fill pair meets 4.5:1, and the level
+ * number is always shown, so color is never the only signal.
  */
-export const cefrColors: Record<
-  'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2',
-  { solid: string; solidBorder: string; onSolid: string; soft: string; softBorder: string; onSoft: string }
-> = {
-  A1: { solid: palette.primary[100], solidBorder: palette.primary[300], onSolid: palette.primary[800], soft: palette.primary[50], softBorder: palette.primary[100], onSoft: palette.primary[700] },
-  A2: { solid: palette.primary[200], solidBorder: palette.primary[400], onSolid: palette.primary[900], soft: palette.primary[100], softBorder: palette.primary[200], onSoft: palette.primary[700] },
-  B1: { solid: palette.primary[400], solidBorder: palette.primary[600], onSolid: palette.primary[950], soft: palette.primary[100], softBorder: palette.primary[300], onSoft: palette.primary[800] },
-  B2: { solid: palette.primary[700], solidBorder: palette.primary[900], onSolid: palette.neutral[0], soft: palette.primary[200], softBorder: palette.primary[400], onSoft: palette.primary[900] },
-  C1: { solid: palette.primary[900], solidBorder: palette.primary[950], onSolid: palette.neutral[0], soft: palette.primary[800], softBorder: palette.primary[900], onSoft: palette.neutral[0] },
-  C2: { solid: palette.neutral[900], solidBorder: palette.neutral[700], onSolid: palette.primary[300], soft: palette.neutral[800], softBorder: palette.neutral[900], onSoft: palette.primary[200] },
+export interface LevelColorSet {
+  solid: string;
+  solidBorder: string;
+  onSolid: string;
+  soft: string;
+  softBorder: string;
+  onSoft: string;
+}
+
+export const levelColors: Record<1 | 2 | 3 | 4 | 5 | 6, LevelColorSet> = {
+  1: { solid: '#34D399', solidBorder: '#059669', onSolid: '#064E3B', soft: '#ECFDF5', softBorder: '#A7F3D0', onSoft: '#047857' },
+  2: { solid: '#A3E635', solidBorder: '#65A30D', onSolid: '#365314', soft: '#F7FEE7', softBorder: '#D9F99D', onSoft: '#4D7C0F' },
+  3: { solid: '#FACC15', solidBorder: '#CA8A04', onSolid: '#713F12', soft: '#FEFCE8', softBorder: '#FEF08A', onSoft: '#854D0E' },
+  4: { solid: '#FB923C', solidBorder: '#EA580C', onSolid: '#431407', soft: '#FFF7ED', softBorder: '#FED7AA', onSoft: '#C2410C' },
+  5: { solid: '#DC2626', solidBorder: '#991B1B', onSolid: palette.neutral[0], soft: palette.danger[50], softBorder: palette.danger[200], onSoft: palette.danger[700] },
+  6: { solid: palette.neutral[800], solidBorder: palette.neutral[900], onSolid: palette.danger[300], soft: palette.neutral[100], softBorder: palette.neutral[300], onSoft: palette.neutral[800] },
+};
+
+/** The same sets keyed by the CEFR code stored in the database. */
+export const cefrColors: Record<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2', LevelColorSet> = {
+  A1: levelColors[1],
+  A2: levelColors[2],
+  B1: levelColors[3],
+  B2: levelColors[4],
+  C1: levelColors[5],
+  C2: levelColors[6],
 };
 
 /** Exact fills used in the Lex artwork. */
