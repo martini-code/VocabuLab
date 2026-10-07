@@ -3,6 +3,8 @@ import { StyleSheet, Text, Pressable } from 'react-native';
 import { Coins } from 'lucide-react-native';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 
+import { colors } from '../../theme';
+
 interface TokenPillProps {
   onPress: () => void;
   testID?: string;
@@ -37,7 +39,7 @@ export const TokenPill: React.FC<TokenPillProps> = React.memo(({ onPress, testID
         },
       ]}
     >
-      <Coins size={16} color="#D97706" />
+      <Coins size={16} color={colors.primary[600]} />
       <Text style={styles.tokenPillText}>{allowance}</Text>
     </Pressable>
   );
@@ -47,21 +49,21 @@ const styles = StyleSheet.create({
   statPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   tokenPill: {
-    borderColor: '#FDE68A',
-    backgroundColor: '#FEF3C7',
+    borderColor: colors.primary[200],
+    backgroundColor: colors.primary[100],
     gap: 4,
   },
   tokenPillText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#B45309',
+    color: colors.primary[700],
   },
 });

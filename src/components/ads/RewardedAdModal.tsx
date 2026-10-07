@@ -10,7 +10,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Coins, ShieldCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { LabMascot } from '../mascot/Mascots';
+import { LexMascot } from '../mascot/Mascots';
+
+import { colors } from '../../theme';
 
 interface RewardedAdModalProps {
   visible: boolean;
@@ -57,12 +59,12 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
       onRequestClose={rewardReady ? onClose : undefined}
     >
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+        <StatusBar barStyle="light-content" backgroundColor={colors.neutral[900]} />
 
         {/* Top Bar */}
         <View style={styles.topBar}>
           <View style={styles.sponsorBadge}>
-            <Coins size={14} color="#F59E0B" />
+            <Coins size={14} color={colors.primary[500]} />
             <Text style={styles.sponsorBadgeText}>
               {t('tokens.ad_sponsored_badge', { defaultValue: 'REWARDED ADVERTISEMENT' })}
             </Text>
@@ -80,7 +82,7 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
               <Text style={styles.claimBtnText}>
                 {t('tokens.claim_token', { defaultValue: 'CLAIM +1 TOKEN' })}
               </Text>
-              <Check size={16} color="#FFFFFF" />
+              <Check size={16} color={colors.neutral[0]} />
             </TouchableOpacity>
           ) : (
             <View style={styles.countdownPill}>
@@ -95,16 +97,16 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
         <View style={styles.content}>
           <View style={styles.adCard}>
             <View style={styles.illustrationWrap}>
-              <LabMascot mood={rewardReady ? 'cheering' : 'thinking'} size={140} />
+              <LexMascot mood={rewardReady ? 'cheering' : 'thinking'} size={140} />
             </View>
 
             <View style={styles.tokenPill}>
-              <Coins size={18} color="#D97706" />
+              <Coins size={18} color={colors.primary[600]} />
               <Text style={styles.tokenPillText}>+1 TOKEN (+10 WORDS)</Text>
             </View>
 
             <View style={styles.testModeBanner}>
-              <ShieldCheck size={14} color="#10B981" />
+              <ShieldCheck size={14} color={colors.success[500]} />
               <Text style={styles.testModeBannerText}>
                 TEST AD • Safe Mode Active (No Ban Risk)
               </Text>
@@ -131,7 +133,7 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
                 }}
                 activeOpacity={0.8}
               >
-                <Coins size={20} color="#78350F" />
+                <Coins size={20} color={colors.primary[900]} />
                 <Text style={styles.claimActionText}>
                   {t('tokens.claim_token_cta', { defaultValue: 'COLLECT TOKEN & RESUME' })}
                 </Text>
@@ -147,7 +149,7 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.neutral[900],
   },
   topBar: {
     flexDirection: 'row',
@@ -156,35 +158,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: colors.neutral[800],
   },
   sponsorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.neutral[800],
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.neutral[700],
   },
   sponsorBadgeText: {
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   countdownPill: {
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.neutral[800],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#475569',
+    borderColor: colors.neutral[600],
   },
   countdownText: {
-    color: '#E2E8F0',
+    color: colors.neutral[200],
     fontSize: 12,
     fontWeight: '700',
   },
@@ -192,13 +194,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#16A34A',
+    backgroundColor: colors.success[600],
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 16,
   },
   claimBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -211,12 +213,12 @@ const styles = StyleSheet.create({
   },
   adCard: {
     width: '100%',
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.neutral[800],
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.neutral[700],
   },
   illustrationWrap: {
     height: 160,
@@ -228,27 +230,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     marginBottom: 16,
   },
   tokenPillText: {
-    color: '#92400E',
+    color: colors.primary[800],
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   adHeadline: {
-    color: '#F8FAFC',
+    color: colors.neutral[50],
     fontSize: 20,
     fontWeight: '800',
     textAlign: 'center',
     marginBottom: 8,
   },
   adTagline: {
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
@@ -259,19 +261,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#F59E0B',
+    backgroundColor: colors.primary[500],
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 16,
     width: '100%',
-    shadowColor: '#F59E0B',
+    shadowColor: colors.primary[500],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   claimActionText: {
-    color: '#78350F',
+    color: colors.primary[900],
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -280,16 +282,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#064E3B',
+    backgroundColor: colors.success[900],
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: colors.success[600],
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
     marginBottom: 14,
   },
   testModeBannerText: {
-    color: '#A7F3D0',
+    color: colors.success[200],
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.3,

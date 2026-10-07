@@ -1,20 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FlaskConical } from 'lucide-react-native';
+import { cefrColors } from '../../theme';
 
 interface LevelBadgeProps {
   level: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
-const CEFR_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  A1: { bg: '#86EFAC', border: '#15803D', text: '#14532D' }, // Intern Green
-  A2: { bg: '#93C5FD', border: '#1D4ED8', text: '#1E3A8A' }, // Lab Assistant Blue
-  B1: { bg: '#FDE047', border: '#A16207', text: '#713F12' }, // Technician Gold
-  B2: { bg: '#FDBA74', border: '#C2410C', text: '#7C2D12' }, // Researcher Amber
-  C1: { bg: '#F472B6', border: '#BE185D', text: '#831843' }, // Scientist Rose
-  C2: { bg: '#C084FC', border: '#7E22CE', text: '#581C87' }, // Principal Investigator Violet
-};
+const CEFR_COLORS: Record<string, { bg: string; border: string; text: string }> = Object.fromEntries(
+  Object.entries(cefrColors).map(([level, c]) => [
+    level,
+    { bg: c.solid, border: c.solidBorder, text: c.onSolid },
+  ])
+);
 
 export const LevelBadge: React.FC<LevelBadgeProps> = ({ level, size = 'md' }) => {
   const normalized = level?.toUpperCase() || 'A1';

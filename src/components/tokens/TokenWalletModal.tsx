@@ -24,7 +24,9 @@ import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 import { TOKEN_CONFIG } from '../../config/secrets';
 import { adMobService } from '../../services/adMobService';
-import { LabMascot } from '../mascot/Mascots';
+import { LexMascot } from '../mascot/Mascots';
+
+import { colors } from '../../theme';
 
 interface TokenWalletModalProps {
   visible: boolean;
@@ -129,7 +131,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                 onLongPress={handleInspectMediation}
                 activeOpacity={0.8}
               >
-                <Coins size={22} color="#D97706" />
+                <Coins size={22} color={colors.primary[600]} />
               </TouchableOpacity>
               <View>
                 <Text style={styles.title}>
@@ -147,7 +149,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <X size={20} color="#64748B" />
+              <X size={20} color={colors.neutral[500]} />
             </TouchableOpacity>
           </View>
 
@@ -165,7 +167,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                   })}
                 </Text>
               </View>
-              <LabMascot mood="cheering" size={80} />
+              <LexMascot mood="cheering" size={80} />
             </View>
 
             {/* Breakdown Cards */}
@@ -173,7 +175,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               {/* Tokens Pill */}
               <View style={styles.statCard}>
                 <View style={styles.statCardHeader}>
-                  <Coins size={18} color="#D97706" />
+                  <Coins size={18} color={colors.primary[600]} />
                   <Text style={styles.statCardTitle}>
                     {t('tokens.token_units', { defaultValue: 'Tokens' })}
                   </Text>
@@ -192,7 +194,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               {/* Daily Card Pass */}
               <View style={styles.statCard}>
                 <View style={styles.statCardHeader}>
-                  <TestTube size={18} color="#0D9488" />
+                  <TestTube size={18} color={colors.success[600]} />
                   <Text style={styles.statCardTitle}>
                     {t('tokens.daily_card_title', { defaultValue: 'Daily Card' })}
                   </Text>
@@ -211,7 +213,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
             {/* Rewarded Ads Section */}
             <View style={styles.adSectionCard}>
               <View style={styles.adSectionHeader}>
-                <Tv size={20} color="#2563EB" />
+                <Tv size={20} color={colors.primary[700]} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.adSectionTitle}>
                     {t('tokens.watch_ad_title', { defaultValue: 'Rewarded Card (AdMob)' })}
@@ -225,7 +227,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               </View>
 
               <View style={styles.adProgressRow}>
-                <Clock size={14} color="#64748B" />
+                <Clock size={14} color={colors.neutral[500]} />
                 <Text style={styles.adProgressText}>
                   {wallet.canWatchAd
                     ? t('tokens.ads_remaining', {
@@ -249,7 +251,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                   disabled={isAdLoading}
                   activeOpacity={0.8}
                 >
-                  <Coins size={18} color="#78350F" />
+                  <Coins size={18} color={colors.primary[900]} />
                   <Text style={styles.actionBtnText}>
                     {t('tokens.watch_ad_cta', { defaultValue: 'WATCH AD (+1 TOKEN)' })}
                   </Text>
@@ -263,7 +265,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                   }}
                   activeOpacity={0.8}
                 >
-                  <Rocket size={18} color="#FFFFFF" />
+                  <Rocket size={18} color={colors.neutral[0]} />
                   <Text style={styles.plusUpgradeBtnText}>
                     {t('tokens.unlock_unlimited_plus', {
                       defaultValue: 'UNLOCK UNLIMITED WITH PLUS',
@@ -276,8 +278,8 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
             {/* AdMob Safe Mode Status & Live Toggle */}
             <View style={styles.adModeContainer}>
               <View style={[styles.adModeBadge, isTestMode ? styles.adModeBadgeSafe : styles.adModeBadgeLive]}>
-                <ShieldCheck size={14} color={isTestMode ? '#16A34A' : '#EA580C'} />
-                <Text style={[styles.adModeBadgeText, { color: isTestMode ? '#16A34A' : '#EA580C' }]}>
+                <ShieldCheck size={14} color={isTestMode ? colors.success[600] : colors.warning[600]} />
+                <Text style={[styles.adModeBadgeText, { color: isTestMode ? colors.success[600] : colors.warning[600] }]}>
                   {isTestMode ? 'Safe Mode: Test Ads (No Ban Risk)' : 'Live Production Ads Active'}
                 </Text>
               </View>
@@ -298,7 +300,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               onPress={handleInspectMediation}
               activeOpacity={0.7}
             >
-              <Sliders size={13} color="#92400E" />
+              <Sliders size={13} color={colors.primary[800]} />
               <Text style={styles.inspectorBtnText}>
                 {t('tokens.inspect_mediation', { defaultValue: 'Inspect AdMob Mediation' })}
               </Text>
@@ -322,22 +324,22 @@ const styles = StyleSheet.create({
   inspectorBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#92400E',
+    color: colors.primary[800],
     textDecorationLine: 'underline',
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.primary[50],
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '85%',
     paddingBottom: 30,
     borderTopWidth: 3,
-    borderTopColor: '#F59E0B',
+    borderTopColor: colors.primary[500],
   },
   header: {
     flexDirection: 'row',
@@ -347,7 +349,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#FDE68A',
+    borderBottomColor: colors.primary[200],
   },
   headerLeft: {
     flexDirection: 'row',
@@ -358,28 +360,28 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 2,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#92400E',
+    color: colors.primary[800],
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -393,12 +395,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 20,
     padding: 18,
     borderWidth: 2,
-    borderColor: '#FDE68A',
-    shadowColor: '#78350F',
+    borderColor: colors.primary[200],
+    shadowColor: colors.primary[900],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -411,19 +413,19 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
     letterSpacing: 0.5,
   },
   heroValue: {
     fontSize: 36,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     marginVertical: 2,
   },
   heroSub: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#64748B',
+    color: colors.neutral[500],
     lineHeight: 16,
   },
   breakdownRow: {
@@ -432,11 +434,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 18,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   statCardHeader: {
     flexDirection: 'row',
@@ -447,25 +449,25 @@ const styles = StyleSheet.create({
   statCardTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#334155',
+    color: colors.neutral[700],
   },
   statCardValue: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.neutral[900],
     marginBottom: 4,
   },
   statCardSub: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   adSectionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 20,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     gap: 12,
   },
   adSectionHeader: {
@@ -476,12 +478,12 @@ const styles = StyleSheet.create({
   adSectionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
   },
   adSectionSub: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     lineHeight: 16,
   },
@@ -489,7 +491,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
@@ -497,17 +499,17 @@ const styles = StyleSheet.create({
   adProgressText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#F59E0B',
+    backgroundColor: colors.primary[500],
     paddingVertical: 14,
     borderRadius: 14,
-    shadowColor: '#F59E0B',
+    shadowColor: colors.primary[500],
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -519,7 +521,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
   plusUpgradeBtn: {
@@ -527,10 +529,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#7C3AED',
+    backgroundColor: colors.primary[700],
     paddingVertical: 14,
     borderRadius: 14,
-    shadowColor: '#7C3AED',
+    shadowColor: colors.primary[700],
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -539,16 +541,16 @@ const styles = StyleSheet.create({
   plusUpgradeBtnText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     letterSpacing: 0.5,
   },
   adModeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -573,14 +575,14 @@ const styles = StyleSheet.create({
   adModeToggleBtn: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: colors.neutral[300],
     borderRadius: 8,
   },
   adModeToggleText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.neutral[600],
   },
 });

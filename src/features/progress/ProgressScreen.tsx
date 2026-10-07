@@ -9,15 +9,17 @@ import {
 } from 'react-native';
 import { getProgressOverview } from '../../db/vault';
 import { ProgressOverview, ActivityDay } from '../../types';
-import { LabMascot } from '../../components/mascot/Mascots';
+import { LexMascot } from '../../components/mascot/Mascots';
 import { LabCard } from '../../components/ui/LabCard';
 
+import { colors } from '../../theme';
+
 const LEVEL_COLORS: Record<number, { bg: string; border: string }> = {
-  0: { bg: '#E2E8F0', border: '#CBD5E1' }, // 0 reviews
-  1: { bg: '#86EFAC', border: '#4ADE80' }, // 1-3 reviews
-  2: { bg: '#4ADE80', border: '#22C55E' }, // 4-7 reviews
-  3: { bg: '#16A34A', border: '#15803D' }, // 8-14 reviews
-  4: { bg: '#14532D', border: '#052E16' }, // 15+ reviews
+  0: { bg: colors.neutral[200], border: colors.neutral[300] }, // 0 reviews
+  1: { bg: colors.primary[200], border: colors.primary[300] }, // 1-3 reviews
+  2: { bg: colors.primary[400], border: colors.primary[500] }, // 4-7 reviews
+  3: { bg: colors.primary[600], border: colors.primary[700] }, // 8-14 reviews
+  4: { bg: colors.primary[900], border: colors.primary[950] }, // 15+ reviews
 };
 
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
@@ -55,7 +57,7 @@ export const ProgressScreen: React.FC = () => {
   if (loading || !data) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color={colors.success[500]} />
         <Text style={styles.loadingText}>Opening the lab notebook...</Text>
       </View>
     );
@@ -90,7 +92,7 @@ export const ProgressScreen: React.FC = () => {
 
       {/* Mascot & Streak Banner */}
       <View style={styles.mascotBanner}>
-        <LabMascot mood={data.currentStreak >= 3 ? 'happy' : 'idle'} size={85} />
+        <LexMascot mood={data.currentStreak >= 3 ? 'happy' : 'idle'} size={85} />
         <View style={styles.speechBubble}>
           <Text style={styles.speechText}>
             {data.currentStreak >= 4
@@ -174,7 +176,7 @@ export const ProgressScreen: React.FC = () => {
                           styles.dayCell,
                           {
                             backgroundColor: palette.bg,
-                            borderColor: isSelected ? '#1E293B' : palette.border,
+                            borderColor: isSelected ? colors.neutral[800] : palette.border,
                             borderWidth: isSelected ? 2 : 1,
                             transform: [{ scale: isSelected ? 1.15 : 1 }],
                           },
@@ -278,7 +280,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     fontSize: 16,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   header: {
     paddingTop: 8,
@@ -287,12 +289,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     fontWeight: '600',
   },
@@ -303,21 +305,21 @@ const styles = StyleSheet.create({
   },
   speechBubble: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 4,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     marginLeft: 10,
     position: 'relative',
   },
   speechText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
+    color: colors.neutral[700],
     lineHeight: 18,
   },
   speechTail: {
@@ -331,7 +333,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 7,
     borderBottomColor: 'transparent',
     borderRightWidth: 8,
-    borderRightColor: '#CBD5E1',
+    borderRightColor: colors.neutral[300],
   },
   statsRow: {
     flexDirection: 'row',
@@ -340,25 +342,25 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 4,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     alignItems: 'center',
   },
   statValue: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   statLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 4,
     letterSpacing: 0.5,
   },
@@ -372,12 +374,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   sectionSub: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.neutral[500],
     fontWeight: '600',
     marginTop: 2,
   },
@@ -403,7 +405,7 @@ const styles = StyleSheet.create({
   monthLabelText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   matrixBody: {
     flexDirection: 'row',
@@ -421,7 +423,7 @@ const styles = StyleSheet.create({
   dayLabelText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: colors.neutral[400],
   },
   weekColumn: {
     flexDirection: 'column',
@@ -449,7 +451,7 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginHorizontal: 4,
   },
   legendCell: {
@@ -459,10 +461,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   inspectorBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     padding: 12,
     marginTop: 14,
   },
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
   inspectorDate: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   badge: {
     borderWidth: 1,
@@ -486,12 +488,12 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
   },
   inspectorMessage: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: colors.neutral[600],
     lineHeight: 16,
     marginTop: 2,
   },
@@ -515,26 +517,26 @@ const styles = StyleSheet.create({
   barCount: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginBottom: 4,
   },
   barTrack: {
     width: 14,
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     borderRadius: 7,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   barFill: {
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success[500],
     borderRadius: 7,
     width: '100%',
   },
   barDay: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
     marginTop: 6,
   },
 });

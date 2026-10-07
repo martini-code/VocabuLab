@@ -9,6 +9,8 @@ import { ArrowDown } from 'lucide-react-native';
 import { DeckWithProgress } from '../../types';
 import { DeckCardNode } from './DeckCardNode';
 
+import { colors } from '../../theme';
+
 interface DifficultyProgressionMapProps {
   decks: DeckWithProgress[];
   loading: boolean;
@@ -35,8 +37,8 @@ const PathConnector: React.FC<{
   };
 
   const offsets = getOffsets();
-  const dotColor = isCompleted ? '#10B981' : '#CBD5E1';
-  const dotBorder = isCompleted ? '#059669' : '#94A3B8';
+  const dotColor = isCompleted ? colors.success[500] : colors.neutral[300];
+  const dotBorder = isCompleted ? colors.success[600] : colors.neutral[400];
 
   return (
     <View style={styles.pathConnectorContainer}>
@@ -53,7 +55,7 @@ const PathConnector: React.FC<{
           ]}
         >
           {idx === 1 && (
-            <ArrowDown size={10} color={isCompleted ? '#065F46' : '#64748B'} />
+            <ArrowDown size={10} color={isCompleted ? colors.success[800] : colors.neutral[500]} />
           )}
         </View>
       ))}
@@ -140,7 +142,7 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
   if (loading) {
     return (
       <View style={styles.centerLoading}>
-        <ActivityIndicator size="large" color="#D97706" />
+        <ActivityIndicator size="large" color={colors.primary[600]} />
       </View>
     );
   }
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,

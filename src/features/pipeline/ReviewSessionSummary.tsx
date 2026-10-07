@@ -20,6 +20,8 @@ import {
 } from 'lucide-react-native';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 
+import { colors } from '../../theme';
+
 export interface ReviewSessionWordSummary {
   cardId: string;
   frontTerm: string;
@@ -57,29 +59,29 @@ function formatInterval(days: number): string {
 function getRatingConfig(rating: Grade) {
   switch (rating) {
     case Rating.Again:
-      return { label: 'AGAIN', color: '#EF4444', bg: '#FEE2E2', border: '#FCA5A5' };
+      return { label: 'AGAIN', color: colors.danger[500], bg: colors.danger[100], border: colors.danger[300] };
     case Rating.Hard:
-      return { label: 'HARD', color: '#D97706', bg: '#FEF3C7', border: '#FDE68A' };
+      return { label: 'HARD', color: colors.warning[600], bg: colors.warning[100], border: colors.warning[200] };
     case Rating.Good:
-      return { label: 'GOOD', color: '#059669', bg: '#D1FAE5', border: '#A7F3D0' };
+      return { label: 'GOOD', color: colors.success[600], bg: colors.success[100], border: colors.success[200] };
     case Rating.Easy:
-      return { label: 'EASY', color: '#2563EB', bg: '#DBEAFE', border: '#BFDBFE' };
+      return { label: 'EASY', color: colors.primary[700], bg: colors.primary[100], border: colors.primary[200] };
     default:
-      return { label: 'GOOD', color: '#059669', bg: '#D1FAE5', border: '#A7F3D0' };
+      return { label: 'GOOD', color: colors.success[600], bg: colors.success[100], border: colors.success[200] };
   }
 }
 
 function getStabilityColor(days: number): string {
-  if (days >= 10) return '#10B981'; // High stability (mastered)
-  if (days >= 4) return '#0D9488';  // Good stability
-  if (days >= 1) return '#F59E0B';  // Learning / short stability
-  return '#EF4444';                 // Low stability / needs review
+  if (days >= 10) return colors.success[500]; // High stability (mastered)
+  if (days >= 4) return colors.success[600];  // Good stability
+  if (days >= 1) return colors.warning[500];  // Learning / short stability
+  return colors.danger[500];                 // Low stability / needs review
 }
 
 function getDifficultyColor(diff: number): string {
-  if (diff <= 4.0) return '#10B981'; // Easy
-  if (diff <= 6.5) return '#F59E0B'; // Medium
-  return '#EF4444';                  // Hard
+  if (diff <= 4.0) return colors.success[500]; // Easy
+  if (diff <= 6.5) return colors.warning[500]; // Medium
+  return colors.danger[500];                  // Hard
 }
 
 export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
@@ -107,7 +109,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
       {/* Top Header Card */}
       <View style={styles.headerCard}>
         <View style={styles.iconCircle}>
-          <Sparkles size={28} color="#D97706" />
+          <Sparkles size={28} color={colors.primary[600]} />
         </View>
 
         <Text style={styles.title}>SESSION COMPLETE!</Text>
@@ -121,7 +123,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
         <View style={styles.recallBox}>
           <View style={styles.recallHeader}>
             <View style={styles.recallTitleRow}>
-              <CheckCircle2 size={16} color="#059669" />
+              <CheckCircle2 size={16} color={colors.success[600]} />
               <Text style={styles.recallTitle}>Session Retention Rate</Text>
             </View>
             <Text style={styles.recallPercent}>{recallRate}%</Text>
@@ -133,7 +135,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                 styles.overallProgressBarFill,
                 {
                   width: `${Math.max(5, recallRate)}%`,
-                  backgroundColor: recallRate >= 80 ? '#10B981' : recallRate >= 60 ? '#F59E0B' : '#EF4444',
+                  backgroundColor: recallRate >= 80 ? colors.success[500] : recallRate >= 60 ? colors.primary[500] : colors.danger[500],
                 },
               ]}
             />
@@ -151,7 +153,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
               <View
                 style={[
                   styles.stackedBarSegment,
-                  { flex: againCount, backgroundColor: '#EF4444' },
+                  { flex: againCount, backgroundColor: colors.danger[500] },
                 ]}
               />
             )}
@@ -159,7 +161,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
               <View
                 style={[
                   styles.stackedBarSegment,
-                  { flex: hardCount, backgroundColor: '#F59E0B' },
+                  { flex: hardCount, backgroundColor: colors.primary[500] },
                 ]}
               />
             )}
@@ -167,7 +169,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
               <View
                 style={[
                   styles.stackedBarSegment,
-                  { flex: goodCount, backgroundColor: '#10B981' },
+                  { flex: goodCount, backgroundColor: colors.success[500] },
                 ]}
               />
             )}
@@ -175,7 +177,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
               <View
                 style={[
                   styles.stackedBarSegment,
-                  { flex: easyCount, backgroundColor: '#3B82F6' },
+                  { flex: easyCount, backgroundColor: colors.primary[500] },
                 ]}
               />
             )}
@@ -183,19 +185,19 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
 
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.danger[500] }]} />
               <Text style={styles.legendLabel}>Again: {againCount}</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.primary[500] }]} />
               <Text style={styles.legendLabel}>Hard: {hardCount}</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.success[500] }]} />
               <Text style={styles.legendLabel}>Good: {goodCount}</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.primary[500] }]} />
               <Text style={styles.legendLabel}>Easy: {easyCount}</Text>
             </View>
           </View>
@@ -204,7 +206,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
         {/* Session Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCell}>
-            <TrendingUp size={16} color="#059669" />
+            <TrendingUp size={16} color={colors.success[600]} />
             <Text style={styles.statNumber}>
               {avgGain >= 0 ? `+${avgGain.toFixed(1)}d` : `${avgGain.toFixed(1)}d`}
             </Text>
@@ -212,13 +214,13 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
           </View>
 
           <View style={styles.statCell}>
-            <Brain size={16} color="#2563EB" />
+            <Brain size={16} color={colors.primary[700]} />
             <Text style={styles.statNumber}>{masteredCount}</Text>
             <Text style={styles.statDesc}>Mastered (S ≥ 10d)</Text>
           </View>
 
           <View style={styles.statCell}>
-            <Zap size={16} color="#D97706" />
+            <Zap size={16} color={colors.primary[600]} />
             <Text style={styles.statNumber}>FSRS v5</Text>
             <Text style={styles.statDesc}>SRS Algorithm</Text>
           </View>
@@ -289,7 +291,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                       <Text
                         style={[
                           styles.gainBadge,
-                          { color: diffGain > 0 ? '#059669' : '#DC2626' },
+                          { color: diffGain > 0 ? colors.success[600] : colors.danger[600] },
                         ]}
                       >
                         {diffGain > 0 ? `(+${diffGain.toFixed(1)}d)` : `(${diffGain.toFixed(1)}d)`}
@@ -334,7 +336,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
               {/* Card Footer: Next Scheduled Interval & SRS Stage */}
               <View style={styles.wordFooter}>
                 <View style={styles.intervalBox}>
-                  <Clock size={12} color="#78350F" />
+                  <Clock size={12} color={colors.primary[900]} />
                   <Text style={styles.intervalText}>
                     Next review: <Text style={styles.intervalValue}>{formatInterval(item.scheduledDays)}</Text>
                   </Text>
@@ -356,7 +358,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
         <ChunkyButton
           title="CONTINUE"
           subtitle="Return to study dashboard"
-          color="green"
+          color="primary"
           onPress={onDone}
           style={{ width: '100%', marginBottom: 12 }}
         />
@@ -365,7 +367,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
           <ChunkyButton
             title="EXPLORE MORE DECKS"
             subtitle="Discover new progressive topics"
-            color="wood"
+            color="secondary"
             onPress={onExploreArchives}
             style={{ width: '100%', marginBottom: 12 }}
           />
@@ -377,7 +379,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
             onPress={onTrainAgain}
             activeOpacity={0.8}
           >
-            <RotateCcw size={16} color="#78350F" />
+            <RotateCcw size={16} color={colors.primary[900]} />
             <Text style={styles.trainAgainText}>REFRESH QUEUE</Text>
           </TouchableOpacity>
         )}
@@ -392,13 +394,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#B45309',
+    shadowColor: colors.primary[700],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -408,9 +410,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderWidth: 2,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -418,27 +420,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 13,
-    color: '#92400E',
+    color: colors.primary[800],
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18,
   },
   subtitleBold: {
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   recallBox: {
     width: '100%',
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.primary[50],
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#FEF08A',
+    borderColor: colors.primary[200],
     padding: 14,
     marginTop: 16,
   },
@@ -456,16 +458,16 @@ const styles = StyleSheet.create({
   recallTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   recallPercent: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#059669',
+    color: colors.success[600],
   },
   overallProgressBarTrack: {
     height: 10,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     borderRadius: 5,
     overflow: 'hidden',
   },
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
   },
   recallCaption: {
     fontSize: 11,
-    color: '#92400E',
+    color: colors.primary[800],
     marginTop: 6,
     textAlign: 'right',
   },
@@ -486,7 +488,7 @@ const styles = StyleSheet.create({
   distributionTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
     marginBottom: 6,
   },
   stackedBarTrack: {
@@ -494,7 +496,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
   },
   stackedBarSegment: {
     height: '100%',
@@ -517,7 +519,7 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   statsGrid: {
     flexDirection: 'row',
@@ -525,13 +527,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.neutral[100],
     gap: 8,
   },
   statCell: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 4,
@@ -539,13 +541,13 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     marginTop: 4,
   },
   statDesc: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     textAlign: 'center',
   },
@@ -556,24 +558,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
   sectionSubtitle: {
     fontSize: 11,
-    color: '#92400E',
+    color: colors.primary[800],
     marginTop: 2,
   },
   wordsList: {
     gap: 12,
   },
   wordCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     padding: 14,
-    shadowColor: '#64748B',
+    shadowColor: colors.neutral[500],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -598,29 +600,29 @@ const styles = StyleSheet.create({
   frontTermText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
   },
   cefrBadge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.primary[50],
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: colors.primary[200],
   },
   cefrText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: colors.primary[700],
   },
   posText: {
     fontSize: 11,
     fontStyle: 'italic',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   backTermText: {
     fontSize: 13,
-    color: '#475569',
+    color: colors.neutral[600],
     marginTop: 2,
   },
   ratingBadge: {
@@ -646,7 +648,7 @@ const styles = StyleSheet.create({
   metricName: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   metricValueWithGain: {
     flexDirection: 'row',
@@ -663,7 +665,7 @@ const styles = StyleSheet.create({
   },
   progressBarTrack: {
     height: 6,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -678,7 +680,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
+    borderTopColor: colors.neutral[50],
   },
   intervalBox: {
     flexDirection: 'row',
@@ -687,24 +689,24 @@ const styles = StyleSheet.create({
   },
   intervalText: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   intervalValue: {
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   stageBox: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   stageText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   actionControls: {
     marginTop: 24,
@@ -715,17 +717,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     paddingVertical: 12,
     marginTop: 4,
   },
   trainAgainText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: 0.5,
   },
 });

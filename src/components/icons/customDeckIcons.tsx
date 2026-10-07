@@ -1,6 +1,8 @@
 import React from 'react';
 import Svg, { Path, Circle, Rect, Line, Polyline, Polygon, G } from 'react-native-svg';
 
+import { colors } from '../../theme';
+
 export interface IconRendererProps {
   size?: number;
   color?: string;
@@ -105,7 +107,7 @@ export interface CustomLucideIconProps extends IconRendererProps {
 export const CustomLucideIcon: React.FC<CustomLucideIconProps> = ({
   definition,
   size = 20,
-  color = '#64748B',
+  color = colors.neutral[500],
   strokeWidth = 2,
   style,
   testID,

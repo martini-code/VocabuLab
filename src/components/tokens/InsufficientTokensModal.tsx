@@ -19,7 +19,9 @@ import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 import { TOKEN_CONFIG } from '../../config/secrets';
 import { adMobService } from '../../services/adMobService';
-import { LabMascot } from '../mascot/Mascots';
+import { LexMascot } from '../mascot/Mascots';
+
+import { colors } from '../../theme';
 
 interface InsufficientTokensModalProps {
   visible: boolean;
@@ -97,16 +99,16 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
             onPress={onClose}
             activeOpacity={0.7}
           >
-            <X size={20} color="#64748B" />
+            <X size={20} color={colors.neutral[500]} />
           </TouchableOpacity>
 
           <View style={styles.mascotContainer}>
-            <LabMascot size={72} mood="thinking" />
+            <LexMascot size={72} mood="thinking" />
           </View>
 
           <View style={styles.badgeRow}>
             <View style={styles.warningBadge}>
-              <AlertCircle size={14} color="#D97706" />
+              <AlertCircle size={14} color={colors.primary[600]} />
               <Text style={styles.warningBadgeText}>
                 {t('tokens.insufficient_badge', { defaultValue: 'ALLOWANCE NEEDED' })}
               </Text>
@@ -132,14 +134,14 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
               <Text style={styles.statLabel}>
                 {t('tokens.required_label', { defaultValue: 'Required' })}
               </Text>
-              <Text style={[styles.statValue, { color: '#EF4444' }]}>{requiredWords}</Text>
+              <Text style={[styles.statValue, { color: colors.danger[500] }]}>{requiredWords}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>
                 {t('tokens.available_label', { defaultValue: 'Available' })}
               </Text>
-              <Text style={[styles.statValue, { color: '#D97706' }]}>
+              <Text style={[styles.statValue, { color: colors.primary[600] }]}>
                 {wallet.totalWordsAllowance}
               </Text>
             </View>
@@ -156,10 +158,10 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   activeOpacity={0.8}
                 >
                   {isAdLoading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
+                    <ActivityIndicator color={colors.neutral[0]} size="small" />
                   ) : (
                     <>
-                      <Tv size={18} color="#FFFFFF" />
+                      <Tv size={18} color={colors.neutral[0]} />
                       <Text style={styles.watchAdBtnText}>
                         {t('tokens.watch_ad_cta', {
                           defaultValue: 'Watch Ad (+1 Token / 10 Words)',
@@ -184,7 +186,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   }}
                   activeOpacity={0.7}
                 >
-                  <Rocket size={16} color="#4F46E5" />
+                  <Rocket size={16} color={colors.neutral[800]} />
                   <Text style={styles.plusOutlineBtnText}>
                     {t('tokens.unlock_unlimited_plus', {
                       defaultValue: 'Or Unlock Unlimited with Plus',
@@ -220,13 +222,13 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   }}
                   activeOpacity={0.8}
                 >
-                  <Rocket size={18} color="#FFFFFF" />
+                  <Rocket size={18} color={colors.neutral[0]} />
                   <Text style={styles.plusFullBtnText}>
                     {t('tokens.upgrade_to_plus_cta', {
                       defaultValue: 'Upgrade to Plus',
                     })}
                   </Text>
-                  <Sparkles size={16} color="#FEF08A" />
+                  <Sparkles size={16} color={colors.primary[200]} />
                 </TouchableOpacity>
               </>
             )}
@@ -240,7 +242,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -248,11 +250,11 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
     right: 16,
     padding: 6,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     zIndex: 10,
   },
   mascotContainer: {
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -287,19 +289,19 @@ const styles = StyleSheet.create({
   warningBadgeText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
     letterSpacing: 0.5,
   },
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
     marginBottom: 8,
     textAlign: 'center',
   },
   description: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.neutral[500],
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 18,
@@ -307,14 +309,14 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 20,
     width: '100%',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   statBox: {
     flex: 1,
@@ -323,7 +325,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginBottom: 2,
   },
   statValue: {
@@ -333,7 +335,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 28,
-    backgroundColor: '#CBD5E1',
+    backgroundColor: colors.neutral[300],
   },
   actionsContainer: {
     width: '100%',
@@ -345,11 +347,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.neutral[800],
     width: '100%',
     paddingVertical: 14,
     borderRadius: 16,
-    shadowColor: '#4F46E5',
+    shadowColor: colors.neutral[800],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -359,13 +361,13 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   watchAdBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 15,
     fontWeight: '800',
   },
   adSubtext: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontWeight: '500',
   },
   plusOutlineBtn: {
@@ -377,19 +379,19 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#E0E7FF',
-    backgroundColor: '#EEF2FF',
+    borderColor: colors.primary[100],
+    backgroundColor: colors.primary[50],
     marginTop: 4,
   },
   plusOutlineBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#4F46E5',
+    color: colors.neutral[800],
   },
   limitReachedBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.danger[50],
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: colors.danger[200],
     borderRadius: 14,
     padding: 12,
     width: '100%',
@@ -399,12 +401,12 @@ const styles = StyleSheet.create({
   limitReachedTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#B91C1C',
+    color: colors.danger[700],
     marginBottom: 4,
   },
   limitReachedDesc: {
     fontSize: 12,
-    color: '#7F1D1D',
+    color: colors.danger[800],
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -413,18 +415,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.neutral[800],
     width: '100%',
     paddingVertical: 14,
     borderRadius: 16,
-    shadowColor: '#4F46E5',
+    shadowColor: colors.neutral[800],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
   },
   plusFullBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 15,
     fontWeight: '800',
   },

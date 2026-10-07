@@ -11,6 +11,8 @@ import {
 import { X, Check, Shield, Zap, Sparkles, RefreshCw, Layers } from 'lucide-react-native';
 import { USER_PROFILES, UserProfilePreset, seedMockUserProfile } from '../../db/mockProfiles';
 
+import { colors } from '../../theme';
+
 interface MockProfileModalProps {
   visible: boolean;
   onClose: () => void;
@@ -50,13 +52,13 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
   const getProfileIcon = (preset: UserProfilePreset) => {
     switch (preset) {
       case 'beginner':
-        return <Shield size={20} color="#2563EB" />;
+        return <Shield size={20} color={colors.primary[700]} />;
       case 'intermediate':
-        return <Zap size={20} color="#D97706" />;
+        return <Zap size={20} color={colors.primary[600]} />;
       case 'advanced':
-        return <Sparkles size={20} color="#059669" />;
+        return <Sparkles size={20} color={colors.success[600]} />;
       case 'clean':
-        return <RefreshCw size={20} color="#64748B" />;
+        return <RefreshCw size={20} color={colors.neutral[500]} />;
     }
   };
 
@@ -68,7 +70,7 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.headerIconContainer}>
-                <Layers size={22} color="#1E293B" />
+                <Layers size={22} color={colors.neutral[800]} />
               </View>
               <View>
                 <Text style={styles.title}>Testing Profiles</Text>
@@ -81,7 +83,7 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <X size={20} color="#64748B" />
+              <X size={20} color={colors.neutral[500]} />
             </TouchableOpacity>
           </View>
 
@@ -110,10 +112,10 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
                       </View>
                     </View>
                     {isLoading ? (
-                      <ActivityIndicator size="small" color="#2563EB" />
+                      <ActivityIndicator size="small" color={colors.primary[700]} />
                     ) : isSelected ? (
                       <View style={styles.activeCheck}>
-                        <Check size={14} color="#FFFFFF" />
+                        <Check size={14} color={colors.neutral[0]} />
                       </View>
                     ) : null}
                   </View>
@@ -153,11 +155,11 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -171,7 +173,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: colors.neutral[100],
   },
   headerLeft: {
     flexDirection: 'row',
@@ -183,25 +185,25 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.neutral[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
   },
   subtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -210,15 +212,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   profileCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     padding: 16,
   },
   profileCardActive: {
-    borderColor: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    borderColor: colors.primary[700],
+    backgroundColor: colors.primary[50],
   },
   cardHeader: {
     flexDirection: 'row',
@@ -235,34 +237,34 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   profileTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   profileBadge: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 1,
   },
   activeCheck: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary[700],
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileDesc: {
     fontSize: 13,
-    color: '#475569',
+    color: colors.neutral[600],
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -270,12 +272,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   statBox: {
     alignItems: 'center',
@@ -283,12 +285,12 @@ const styles = StyleSheet.create({
   statNum: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.neutral[900],
   },
   statLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     textTransform: 'uppercase',
   },

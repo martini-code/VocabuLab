@@ -19,6 +19,8 @@ import { LabCard } from '../../components/ui/LabCard';
 import { tokenWallet } from '../../services/tokenWallet';
 import { formatLanguageCode } from '../../locales/languages';
 
+import { colors } from '../../theme';
+
 const CEFR_LEVELS: (CEFRLevel | 'ALL')[] = ['ALL', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 interface DomainBrowserProps {
@@ -85,7 +87,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#F59E0B" />
+        <ActivityIndicator size="large" color={colors.primary[500]} />
         <Text style={styles.loadingText}>Loading lab map...</Text>
       </View>
     );
@@ -113,7 +115,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
       {/* Top Domain Selector Tabs */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Microscope size={20} color="#78350F" style={{ marginRight: 8 }} />
+          <Microscope size={20} color={colors.primary[900]} style={{ marginRight: 8 }} />
           <Text style={styles.headerTitle}>LAB LIBRARY</Text>
         </View>
         <Text style={styles.headerSubtitle}>Select a territory to explore its ancient tongue</Text>
@@ -128,7 +130,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
           const isSelected = selectedDomain?.id === d.id;
 
           const renderTabIcon = () => {
-            const iconColor = isSelected ? '#78350F' : '#94A3B8';
+            const iconColor = isSelected ? colors.primary[900] : colors.neutral[400];
             if (d.id.includes('castle')) return <Home size={18} color={iconColor} />;
             if (d.id.includes('academy')) return <Microscope size={18} color={iconColor} />;
             if (d.id.includes('wilderness')) return <TreePine size={18} color={iconColor} />;
@@ -176,7 +178,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 style={[styles.cefrChip, isSelected && styles.cefrChipSelected]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {level === 'ALL' && <FlaskConical size={12} color={isSelected ? '#78350F' : '#64748B'} style={{ marginRight: 4 }} />}
+                  {level === 'ALL' && <FlaskConical size={12} color={isSelected ? colors.primary[900] : colors.neutral[500]} style={{ marginRight: 4 }} />}
                   <Text style={[styles.cefrChipText, isSelected && styles.cefrChipTextSelected]}>
                     {level === 'ALL' ? 'ALL' : `${level}`}
                   </Text>
@@ -199,7 +201,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Beaker size={40} color="#D97706" style={{ marginBottom: 10 }} />
+            <Beaker size={40} color={colors.primary[600]} style={{ marginBottom: 10 }} />
             <Text style={styles.emptyTitle}>No cards recorded yet</Text>
             <Text style={styles.emptySubtitle}>Try selecting a different CEFR shield rank above.</Text>
           </View>
@@ -212,7 +214,7 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
         <ChunkyButton
           title="START REVIEW SESSION"
           subtitle={`${lexemes.length} words in this province`}
-          color="green"
+          color="primary"
           onPress={onStartTraining}
           style={{ width: '100%' }}
         />
@@ -258,7 +260,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
           ]}
           onPress={() => onSpeak(item.term, item.language)}
         >
-          <Volume2 size={16} color="#78350F" style={{ marginRight: 4 }} />
+          <Volume2 size={16} color={colors.primary[900]} style={{ marginRight: 4 }} />
           <Text style={styles.audioText}>Listen</Text>
         </Pressable>
 
@@ -277,14 +279,14 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
         >
           {isQueued ? (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Check size={14} color="#166534" style={{ marginRight: 4 }} />
+              <Check size={14} color={colors.success[800]} style={{ marginRight: 4 }} />
               <Text style={[styles.queueButtonText, styles.queueButtonTextDone]}>
                 Learned
               </Text>
             </View>
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+              <Plus size={14} color={colors.neutral[0]} style={{ marginRight: 4 }} />
               <Text style={styles.queueButtonText}>
                 Learn Word
               </Text>
@@ -299,7 +301,7 @@ const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.neutral[50],
   },
   center: {
     flex: 1,
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     fontSize: 16,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   header: {
     paddingHorizontal: 16,
@@ -321,12 +323,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
     letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     fontWeight: '600',
   },
@@ -338,20 +340,20 @@ const styles = StyleSheet.create({
   domainTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     borderBottomWidth: 4,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: colors.neutral[300],
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginRight: 8,
   },
   domainTabSelected: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B',
-    borderBottomColor: '#D97706',
+    backgroundColor: colors.primary[100],
+    borderColor: colors.primary[500],
+    borderBottomColor: colors.primary[600],
   },
   domainTabLocked: {
     opacity: 0.8,
@@ -363,18 +365,18 @@ const styles = StyleSheet.create({
   domainName: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   domainNameSelected: {
-    color: '#92400E',
+    color: colors.primary[800],
   },
   domainNameLocked: {
-    color: '#64748B',
+    color: colors.neutral[500],
   },
   lockBadge: {
     marginLeft: 6,
-    backgroundColor: '#EF4444',
-    color: '#FFFFFF',
+    backgroundColor: colors.danger[500],
+    color: colors.neutral[0],
     fontSize: 9,
     fontWeight: '900',
     paddingHorizontal: 6,
@@ -385,32 +387,32 @@ const styles = StyleSheet.create({
   cefrFilterRow: {
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
   cefrScroll: {
     paddingHorizontal: 16,
     gap: 6,
   },
   cefrChip: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: colors.neutral[300],
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 6,
   },
   cefrChipSelected: {
-    backgroundColor: '#1E293B',
-    borderColor: '#0F172A',
+    backgroundColor: colors.neutral[800],
+    borderColor: colors.neutral[900],
   },
   cefrChipText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   cefrChipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
   },
   listContainer: {
     padding: 16,
@@ -431,12 +433,12 @@ const styles = StyleSheet.create({
   wordTerm: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#1E293B',
+    color: colors.neutral[800],
   },
   wordPos: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
   },
   cardActionsRow: {
@@ -445,18 +447,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 14,
     borderTopWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: colors.neutral[100],
     paddingTop: 10,
   },
   audioButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
   },
   audioIcon: {
     fontSize: 14,
@@ -465,27 +467,27 @@ const styles = StyleSheet.create({
   audioText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
   },
   queueButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success[500],
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 14,
     borderBottomWidth: 3,
-    borderBottomColor: '#047857',
+    borderBottomColor: colors.success[700],
   },
   queueButtonDone: {
-    backgroundColor: '#94A3B8',
-    borderBottomColor: '#64748B',
+    backgroundColor: colors.neutral[400],
+    borderBottomColor: colors.neutral[500],
   },
   queueButtonText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontWeight: '800',
     fontSize: 12,
   },
   queueButtonTextDone: {
-    color: '#F1F5F9',
+    color: colors.neutral[100],
   },
   emptyBox: {
     alignItems: 'center',
@@ -498,11 +500,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.neutral[600],
   },
   emptySubtitle: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.neutral[400],
     marginTop: 4,
   },
   bottomBar: {
@@ -510,11 +512,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 24,
     borderTopWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
   },
 });

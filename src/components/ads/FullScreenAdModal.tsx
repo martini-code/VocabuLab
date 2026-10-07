@@ -10,7 +10,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Compass } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { LabMascot } from '../mascot/Mascots';
+import { LexMascot } from '../mascot/Mascots';
+
+import { colors } from '../../theme';
 
 interface FullScreenAdModalProps {
   visible: boolean;
@@ -61,12 +63,12 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
       onRequestClose={canDismiss ? onClose : undefined}
     >
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+        <StatusBar barStyle="light-content" backgroundColor={colors.neutral[900]} />
 
         {/* Top Bar with Dismiss / Countdown */}
         <View style={styles.topBar}>
           <View style={styles.sponsorBadge}>
-            <Shield size={14} color="#F59E0B" />
+            <Shield size={14} color={colors.primary[500]} />
             <Text style={styles.sponsorBadgeText}>
               {t('ad_free.banner_badge', { defaultValue: 'SPONSORED LAB CARD' })}
             </Text>
@@ -81,7 +83,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
               <Text style={styles.closeBtnText}>
                 {t('ad_free.interstitial_skip_ready', { defaultValue: 'RESUME EXPERIMENT' })}
               </Text>
-              <X size={16} color="#FFFFFF" />
+              <X size={16} color={colors.neutral[0]} />
             </TouchableOpacity>
           ) : (
             <View style={styles.countdownPill}>
@@ -96,11 +98,11 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
         <View style={styles.content}>
           <View style={styles.adCard}>
             <View style={styles.illustrationWrap}>
-              <LabMascot mood="thinking" size={140} />
+              <LexMascot mood="thinking" size={140} />
             </View>
 
             <View style={styles.merchantHeader}>
-              <Award size={22} color="#F59E0B" />
+              <Award size={22} color={colors.primary[500]} />
               <Text style={styles.merchantGuildTitle}>
                 {t('ad_free.interstitial_title', { defaultValue: 'OUR RESEARCH SPONSORS' })}
               </Text>
@@ -119,15 +121,15 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
 
             <View style={styles.featuresList}>
               <View style={styles.featureItem}>
-                <Check size={14} color="#10B981" />
+                <Check size={14} color={colors.success[500]} />
                 <Text style={styles.featureText}>100% Offline SQLite Flashcards</Text>
               </View>
               <View style={styles.featureItem}>
-                <Check size={14} color="#10B981" />
+                <Check size={14} color={colors.success[500]} />
                 <Text style={styles.featureText}>FSRS v4.2 Spaced Repetition</Text>
               </View>
               <View style={styles.featureItem}>
-                <Check size={14} color="#10B981" />
+                <Check size={14} color={colors.success[500]} />
                 <Text style={styles.featureText}>50 Language Multilingual Lab</Text>
               </View>
             </View>
@@ -150,7 +152,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
               onOpenAdFreeModal();
             }}
           >
-            <Sparkles size={16} color="#FFFFFF" />
+            <Sparkles size={16} color={colors.neutral[0]} />
             <Text style={styles.upgradeBtnText}>
               {t('ad_free.go_ad_free', { defaultValue: 'UPGRADE TO AD-FREE' })}
             </Text>
@@ -176,7 +178,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.neutral[900],
   },
   topBar: {
     flexDirection: 'row',
@@ -189,29 +191,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.neutral[800],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.neutral[700],
   },
   sponsorBadgeText: {
-    color: '#F59E0B',
+    color: colors.primary[500],
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   countdownPill: {
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.neutral[800],
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.neutral[700],
   },
   countdownText: {
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontSize: 12,
     fontWeight: '700',
   },
@@ -219,13 +221,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#059669',
+    backgroundColor: colors.success[600],
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
   },
   closeBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -237,10 +239,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   adCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.neutral[800],
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#334155',
+    borderColor: colors.neutral[700],
     padding: 24,
     width: '100%',
     alignItems: 'center',
@@ -255,20 +257,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   merchantGuildTitle: {
-    color: '#F59E0B',
+    color: colors.primary[500],
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1,
   },
   adHeadline: {
-    color: '#F8FAFC',
+    color: colors.neutral[50],
     fontSize: 20,
     fontWeight: '900',
     textAlign: 'center',
     marginBottom: 8,
   },
   adDescription: {
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
@@ -277,7 +279,7 @@ const styles = StyleSheet.create({
   },
   featuresList: {
     width: '100%',
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.neutral[900],
     borderRadius: 14,
     padding: 14,
     gap: 8,
@@ -288,7 +290,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   featureText: {
-    color: '#CBD5E1',
+    color: colors.neutral[300],
     fontSize: 12,
     fontWeight: '600',
   },
@@ -299,7 +301,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   bottomPrompt: {
-    color: '#94A3B8',
+    color: colors.neutral[400],
     fontSize: 12,
     fontWeight: '600',
   },
@@ -307,16 +309,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#D97706',
+    backgroundColor: colors.primary[600],
     width: '100%',
     paddingVertical: 14,
     borderRadius: 16,
     gap: 8,
     borderBottomWidth: 3,
-    borderBottomColor: '#B45309',
+    borderBottomColor: colors.primary[700],
   },
   upgradeBtnText: {
-    color: '#FFFFFF',
+    color: colors.neutral[0],
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   secondaryDismissText: {
-    color: '#64748B',
+    color: colors.neutral[500],
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,

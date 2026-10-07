@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254">
+  <title>Lex — VocabuLab mascot</title>
+
+  <!-- ===== LEGS ===== -->
+  <g id="leg-left">
+    <path d="M558,920 L624,920 L624,996 L616,997 L591,1125 L482,1110 L486,1044 L549,1039 Z" fill="#1F2328" stroke="#1F2328" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="leg-right" transform="translate(1243,0) scale(-1,1)">
+    <path d="M558,920 L624,920 L624,996 L616,997 L591,1125 L482,1110 L486,1044 L549,1039 Z" fill="#1F2328" stroke="#1F2328" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+
+  <!-- ===== SHOES ===== -->
+  <g id="shoe-left">
+    <path d="M486,1100 C455,1104 436,1114 423,1128 C415,1137 411,1148 414,1160 C417,1170 424,1174 432,1174 L580,1174 C589,1174 594,1166 594,1157 L591,1122 C560,1110 520,1100 486,1100 Z" fill="#141619"/>
+  </g>
+  <g id="shoe-right" transform="translate(1243,0) scale(-1,1)">
+    <path d="M486,1100 C455,1104 436,1114 423,1128 C415,1137 411,1148 414,1160 C417,1170 424,1174 432,1174 L580,1174 C589,1174 594,1166 594,1157 L591,1122 C560,1110 520,1100 486,1100 Z" fill="#141619"/>
+  </g>
+
+  <!-- ===== TORSO (shirt, tie, belt) ===== -->
+  <g id="torso">
+    <rect x="557" y="690" width="131" height="230" fill="#9B9B9B"/>
+    <g id="shirt-collar" fill="#9B9B9B" stroke="#8C8C8C" stroke-width="4" stroke-linejoin="round">
+      <path id="collar-shirt-left" d="M566,706 L608,711 L588,746 Z"/>
+      <path id="collar-shirt-right" d="M677,706 L635,711 L655,746 Z"/>
+    </g>
+    <g id="belt">
+      <rect x="558" y="908" width="128" height="40" fill="#111114"/>
+      <rect x="591" y="905" width="63" height="44" rx="4" fill="#808080"/>
+      <rect x="603" y="917" width="40" height="22" fill="#111114"/>
+    </g>
+    <g id="tie" stroke-linejoin="round">
+      <path id="tie-blade" d="M607,766 L637,764 L657,850 L622,886 L586,850 Z" fill="#17171B" stroke="#17171B" stroke-width="4" stroke-linejoin="miter"/>
+      <path id="tie-knot" d="M615,715 L629,715 L649,741 L637,765 L607,766 L595,741 Z" fill="#1E1E24" stroke="#1E1E24" stroke-width="4"/>
+    </g>
+  </g>
+
+  <!-- ===== LAB COAT ===== -->
+  <g id="coat-left">
+    <path d="M522,701 L492,759 L521,775 L502,801 L558,881 L549,1043 L437,1041 L445,994 L455,942 L481,807 L481,726 Z"
+          fill="#FFFFFF" stroke="#B4B4B4" stroke-width="5" stroke-linejoin="round"/>
+    <path id="collar" d="M522,701 L492,759 L521,775 L502,801 L558,881 L558,706 Z"
+          fill="#FFFFFF" stroke="#B4B4B4" stroke-width="5" stroke-linejoin="round"/>
+    <path id="pocket" d="M476,925 L529,918 L532,972 L470,980 Z" fill="#FFFFFF" stroke="#B4B4B4" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+  <g id="coat-right" transform="translate(1243,0) scale(-1,1)">
+    <path d="M522,701 L492,759 L521,775 L502,801 L558,881 L549,1043 L437,1041 L445,994 L455,942 L481,807 L481,726 Z"
+          fill="#FFFFFF" stroke="#B4B4B4" stroke-width="5" stroke-linejoin="round"/>
+    <path id="collar" d="M522,701 L492,759 L521,775 L502,801 L558,881 L558,706 Z"
+          fill="#FFFFFF" stroke="#B4B4B4" stroke-width="5" stroke-linejoin="round"/>
+    <path id="pocket" d="M476,925 L529,918 L532,972 L470,980 Z" fill="#FFFFFF" stroke="#B4B4B4" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+
+  <!-- ===== ARMS (sleeve + hand), each a standalone group with no static transform ===== -->
+  <!-- pivot at shoulder (481,740); rotate this whole group to swing the arm -->
+  <g id="arm-left" style="transform-origin:481px 740px">
+    <g id="sleeve-left">
+      <path d="M481,726 L418,805 L383,860 L362,903 L453,942 L481,807 Z" fill="#FFFFFF"/>
+      <path d="M481,726 L418,805 L383,860 L362,903 L453,942 L481,807" fill="none" stroke="#B4B4B4" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <!-- pivot at wrist (407,922); rotate this to wave the hand -->
+    <g id="hand-left" style="transform-origin:407px 922px">
+      <path d="M377,911 L420,932 L451,942 C449,975 443,995 432,1005 C422,1014 408,1018 394,1017 C376,1014 361,1003 357,987 C353,970 356,955 362,940 C366,928 372,918 377,911 Z" fill="#111114"/>
+    </g>
+  </g>
+  <!-- pivot at shoulder (762,740); rotate this whole group to swing the arm -->
+  <g id="arm-right" style="transform-origin:762px 740px">
+    <g id="sleeve-right">
+      <path d="M762,726 L825,805 L860,860 L881,903 L790,942 L762,807 Z" fill="#FFFFFF"/>
+      <path d="M762,726 L825,805 L860,860 L881,903 L790,942 L762,807" fill="none" stroke="#B4B4B4" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <!-- pivot at wrist (836,922); rotate this to wave the hand -->
+    <g id="hand-right" style="transform-origin:836px 922px">
+      <path d="M866,911 L823,932 L792,942 C794,975 800,995 811,1005 C821,1014 835,1018 849,1017 C867,1014 882,1003 886,987 C890,970 887,955 881,940 C877,928 871,918 866,911 Z" fill="#111114"/>
+    </g>
+  </g>
+
+  <!-- ===== HAIR (back) ===== -->
+  <g id="hair">
+    <path d="M660,78 C665,100 660,115 672,128 C690,150 710,152 745,168 C800,190 850,215 868,262 C872,285 868,298 866,306 C900,290 930,275 955,265 C975,300 990,340 975,385 C965,420 950,445 932,466 C960,475 990,485 1015,496 C1000,525 975,565 915,612 L937,650 C900,670 840,690 770,690 L470,690 C400,690 340,670 305,645 L328,614 C280,590 250,550 230,508 C260,495 285,480 304,466 C280,440 270,400 245,370 L228,350 C270,320 320,300 370,306 C360,280 355,250 365,215 C375,185 395,165 415,157 C430,175 450,190 480,198 C510,205 530,208 549,213 C545,180 555,140 590,110 C620,92 645,85 660,78 Z"
+          fill="#0077FF"/>
+  </g>
+
+  <!-- ===== HEAD (skin) ===== -->
+  <g id="head">
+    <path d="M380,600 C380,500 425,410 625,405 C825,410 860,500 860,600 C860,660 780,705 620,705 C460,705 380,660 380,600 Z" fill="#FFF0E6"/>
+  </g>
+
+
+  <!-- ===== HAIR (front fringe / hairline) ===== -->
+  <g id="hair-front">
+    <path d="M383,380 L383,505 C387,500 398,482 405,473 C412,464 419,458 428,450 C437,442 448,434 458,427 C468,420 480,414 490,410 C500,406 510,406 520,405 C530,404 542,404 552,405 C562,406 572,410 582,414 C592,418 601,423 609,427 C617,431 622,438 629,438 C636,438 640,431 648,427 C656,423 666,419 676,416 C686,413 696,410 706,408 C716,406 728,406 738,407 C748,408 758,408 768,412 C778,416 790,422 800,431 C810,440 820,458 827,467 C834,476 837,480 842,488 C847,496 854,508 857,512 L857,380 Z" fill="#0077FF"/>
+  </g>
+
+  <!-- ===== EYEBROWS ===== -->
+  <g id="eyebrow-left" transform="translate(0,24)">
+    <path d="M410,435 C405,405 435,382 470,376 C468,366 464,358 466,350 C500,338 548,342 578,368 C592,382 594,402 584,414 C560,402 530,400 495,412 C462,424 445,448 424,456 C414,452 411,444 410,435 Z" fill="#E8F0FD" stroke="#E8F0FD" stroke-width="10" stroke-linejoin="round"/>
+  </g>
+  <g id="eyebrow-right" transform="translate(1240,24) scale(-1,1)">
+    <path d="M410,435 C405,405 435,382 470,376 C468,366 464,358 466,350 C500,338 548,342 578,368 C592,382 594,402 584,414 C560,402 530,400 495,412 C462,424 445,448 424,456 C414,452 411,444 410,435 Z" fill="#E8F0FD" stroke="#E8F0FD" stroke-width="10" stroke-linejoin="round"/>
+  </g>
+
+  <!-- ===== EYES: two separate entities, each with its own eyeball, glasses and pupil ===== -->
+  <g id="eye-left">
+    <!-- 1. eyeball: white circle with thin black border -->
+    <circle id="eyeball-left" cx="513" cy="530" r="74" fill="#FFFFFF" stroke="#111114" stroke-width="6"/>
+    <!-- 2. glasses lens + frame: white lens hides the eyeball border (hide this layer to remove the glasses) -->
+    <circle id="glasses-left" cx="513" cy="527" r="100" fill="#FFFFFF" stroke="#111114" stroke-width="25"/>
+    <!-- 3. pupil, on top of everything -->
+    <ellipse id="pupil-left" cx="540" cy="530" rx="28" ry="41" fill="#111114"/>
+  </g>
+
+  <g id="eye-right">
+    <!-- 1. eyeball: white circle with thin black border -->
+    <circle id="eyeball-right" cx="727" cy="530" r="74" fill="#FFFFFF" stroke="#111114" stroke-width="6"/>
+    <!-- 2. glasses lens + frame: white lens hides the eyeball border (hide this layer to remove the glasses) -->
+    <circle id="glasses-right" cx="727" cy="527" r="100" fill="#FFFFFF" stroke="#111114" stroke-width="25"/>
+    <!-- 3. pupil, on top of everything -->
+    <ellipse id="pupil-right" cx="700" cy="530" rx="28" ry="41" fill="#111114"/>
+  </g>
+</svg>

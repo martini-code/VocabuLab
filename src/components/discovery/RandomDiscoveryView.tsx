@@ -30,6 +30,8 @@ import { getRandomUnlearnedWords, addWordToQueue } from '../../db/vault';
 import { tokenWallet } from '../../services/tokenWallet';
 import { MasteryWordItem } from '../../types';
 
+import { colors } from '../../theme';
+
 const SCREEN_WIDTH = typeof Dimensions?.get === 'function' ? Dimensions.get('window')?.width || 375 : 375;
 const CARD_WIDTH = Math.min(SCREEN_WIDTH - 48, 380);
 
@@ -147,7 +149,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           {/* Deck Info & CEFR */}
           <View style={styles.cardHeaderRow}>
             <View style={styles.deckInfoPill}>
-              <Layers size={13} color="#92400E" style={{ marginRight: 4 }} />
+              <Layers size={13} color={colors.primary[800]} style={{ marginRight: 4 }} />
               <Text style={styles.deckInfoText} numberOfLines={1}>
                 {item.theme_name} • {item.deck_name}
               </Text>
@@ -173,7 +175,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
                 speakWord(item.front_term, item.front_lang);
               }}
             >
-              <Volume2 size={18} color="#78350F" />
+              <Volume2 size={18} color={colors.primary[900]} />
             </TouchableOpacity>
           </View>
 
@@ -204,12 +206,12 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
               subtitle={isLearned ? undefined : '+1 Token'}
               icon={
                 isLearned ? (
-                  <Check size={18} color="#FFFFFF" />
+                  <Check size={18} color={colors.neutral[0]} />
                 ) : (
-                  <Plus size={18} color="#FFFFFF" />
+                  <Plus size={18} color={colors.neutral[0]} />
                 )
               }
-              color={isLearned ? 'green' : 'amber'}
+              color={isLearned ? 'success' : 'primary'}
               disabled={isLearned}
               onPress={() => handleLearnCard(item)}
               style={styles.learnBtn}
@@ -230,13 +232,13 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           testID="exit-random-discovery-btn"
           accessibilityLabel="Exit Discovery"
         >
-          <ArrowLeft size={16} color="#78350F" style={{ marginRight: 4 }} />
+          <ArrowLeft size={16} color={colors.primary[900]} style={{ marginRight: 4 }} />
           <Text style={styles.exitBtnText}>Exit Discovery</Text>
         </TouchableOpacity>
 
         <View style={styles.headerTitleGroup}>
           <View style={styles.titleWithIcon}>
-            <Dices size={18} color="#B45309" style={{ marginRight: 6 }} />
+            <Dices size={18} color={colors.primary[700]} style={{ marginRight: 6 }} />
             <Text style={styles.viewTitle}>
               {t('random_discovery.title', { defaultValue: 'Random Discovery' })}
             </Text>
@@ -265,7 +267,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
       {/* Main Content Area */}
       {loading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color="#B45309" />
+          <ActivityIndicator size="large" color={colors.primary[700]} />
           <Text style={styles.loadingText}>
             {t('random_discovery.loading', {
               defaultValue: 'Sampling random words from the library...',
@@ -287,7 +289,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           </Text>
           <ChunkyButton
             title="Back to Decks"
-            color="wood"
+            color="secondary"
             onPress={handleExit}
             style={{ marginTop: 20, width: 180 }}
           />
@@ -329,7 +331,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
             >
               <ChevronLeft
                 size={18}
-                color={currentIndex === 0 ? '#CBD5E1' : '#78350F'}
+                color={currentIndex === 0 ? colors.neutral[300] : colors.primary[900]}
               />
               <Text
                 style={[
@@ -362,7 +364,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
               <ChevronRight
                 size={18}
                 color={
-                  currentIndex === cards.length - 1 ? '#CBD5E1' : '#78350F'
+                  currentIndex === cards.length - 1 ? colors.neutral[300] : colors.primary[900]
                 }
               />
             </TouchableOpacity>
@@ -376,7 +378,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.primary[50],
     paddingHorizontal: 12,
     paddingTop: 8,
   },
@@ -384,14 +386,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral[0],
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.neutral[200],
     marginBottom: 8,
-    shadowColor: '#000',
+    shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -400,17 +402,17 @@ const styles = StyleSheet.create({
   exitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
   },
   exitBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   headerTitleGroup: {
     alignItems: 'center',
@@ -424,33 +426,33 @@ const styles = StyleSheet.create({
   viewTitle: {
     fontSize: 15,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
     letterSpacing: -0.3,
   },
   viewSubtitle: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#92400E',
+    color: colors.primary[800],
     marginTop: 1,
   },
   counterBadge: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
   },
   counterText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#B45309',
+    color: colors.primary[700],
   },
   ephemeralBanner: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.primary[50],
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: colors.primary[200],
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginBottom: 10,
@@ -459,7 +461,7 @@ const styles = StyleSheet.create({
   ephemeralText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#B45309',
+    color: colors.primary[700],
     textAlign: 'center',
   },
   centerBox: {
@@ -472,18 +474,18 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
     marginTop: 14,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   emptyDesc: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.neutral[500],
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18,
@@ -516,7 +518,7 @@ const styles = StyleSheet.create({
   deckInfoPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDE68A',
+    backgroundColor: colors.primary[200],
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -525,7 +527,7 @@ const styles = StyleSheet.create({
   deckInfoText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#78350F',
+    color: colors.primary[900],
   },
   termBox: {
     alignItems: 'center',
@@ -534,30 +536,30 @@ const styles = StyleSheet.create({
   termText: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.neutral[900],
     textAlign: 'center',
   },
   posText: {
     fontSize: 13,
     fontStyle: 'italic',
-    color: '#64748B',
+    color: colors.neutral[500],
     marginTop: 2,
     fontWeight: '600',
   },
   ttsButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     width: 38,
     height: 38,
     borderRadius: 19,
     marginTop: 10,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: colors.primary[500],
   },
   divider: {
     height: 1.5,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.neutral[200],
     marginVertical: 10,
     width: '85%',
     alignSelf: 'center',
@@ -569,20 +571,20 @@ const styles = StyleSheet.create({
   translationLabel: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#A16207',
+    color: colors.primary[700],
     letterSpacing: 1,
     marginBottom: 4,
   },
   backTermText: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.neutral[800],
     textAlign: 'center',
   },
   conceptDescText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#64748B',
+    color: colors.neutral[500],
     textAlign: 'center',
     marginTop: 4,
     paddingHorizontal: 8,
@@ -604,25 +606,25 @@ const styles = StyleSheet.create({
   navBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.primary[100],
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#D97706',
+    borderColor: colors.primary[600],
   },
   navBtnDisabled: {
     opacity: 0.4,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#F1F5F9',
+    borderColor: colors.neutral[300],
+    backgroundColor: colors.neutral[100],
   },
   navBtnText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#78350F',
+    color: colors.primary[900],
     marginHorizontal: 4,
   },
   navBtnTextDisabled: {
-    color: '#94A3B8',
+    color: colors.neutral[400],
   },
 });

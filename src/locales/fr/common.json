@@ -71,7 +71,7 @@
   },
   "chronicles": {
     "title": "CARNET DE LABO",
-    "subtitle": "Le registre des expériences de répétition espacée de Pip",
+    "subtitle": "Le registre des expériences de répétition espacée de Lex",
     "defense_streak": "SÉRIE D'ÉTUDE",
     "longest_defense": "MEILLEURE SÉRIE",
     "campaign_reviews": "RÉVISIONS TOTALES",
@@ -525,7 +525,7 @@
     "unlock_unlimited_desc": "Apprenez sans limites ni restrictions de jetons.",
     "how_it_works_title": "COMMENT FONCTIONNE LA RÉSERVE DE JETONS",
     "rule_1": "Vous commencez au labo avec 2 Jetons du Labo (valeur de 20 mots).",
-    "rule_2": "Chaque jour de visite, Pip vous remet 1 Carte Quotidienne (+5 mots).",
+    "rule_2": "Chaque jour de visite, Lex vous remet 1 Carte Quotidienne (+5 mots).",
     "rule_3": "Regardez jusqu'à 3 pubs par jour pour gagner +1 Jeton (+10 mots) par pub.",
     "rule_4": "Les mots du carte quotidien sont consommés en premier.",
     "insufficient_badge": "QUOTA REQUIS",
