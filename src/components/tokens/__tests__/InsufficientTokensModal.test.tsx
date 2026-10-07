@@ -70,10 +70,10 @@ jest.mock('lucide-react-native', () => {
     HardDrive: icon('HardDrive'),
     AlertCircle: icon('AlertCircle'),
     Tv: icon('Tv'),
-    Crown: icon('Crown'),
+    Rocket: icon('Rocket'),
     Sparkles: icon('Sparkles'),
     Coins: icon('Coins'),
-    Scroll: icon('Scroll'),
+    TestTube: icon('TestTube'),
     ShieldCheck: icon('ShieldCheck'),
     CheckCircle2: icon('CheckCircle2'),
     Clock: icon('Clock'),
@@ -129,11 +129,11 @@ jest.mock('../../../services/adMobService', () => ({
   },
 }));
 
-// ─── SquireMascot mock ────────────────────────────────────────────────────────
+// ─── LabMascot mock ────────────────────────────────────────────────────────
 jest.mock('../../mascot/Mascots', () => {
   const React = require('react');
   return {
-    SquireMascot: ({ mood }: any) =>
+    LabMascot: ({ mood }: any) =>
       React.createElement('View', { testID: `mascot-${mood}` }),
   };
 });

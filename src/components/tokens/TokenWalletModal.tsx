@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import {
   Coins,
-  Scroll,
+  TestTube,
   ShieldCheck,
   X,
   Tv,
-  Crown,
+  Rocket,
   Sparkles,
   CheckCircle2,
   Clock,
@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { tokenWallet, TokenWalletState } from '../../services/tokenWallet';
 import { TOKEN_CONFIG } from '../../config/secrets';
 import { adMobService } from '../../services/adMobService';
-import { SquireMascot } from '../mascot/Mascots';
+import { LabMascot } from '../mascot/Mascots';
 
 interface TokenWalletModalProps {
   visible: boolean;
@@ -133,7 +133,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               </TouchableOpacity>
               <View>
                 <Text style={styles.title}>
-                  {t('tokens.wallet_title', { defaultValue: 'ROYAL TOKENS' })}
+                  {t('tokens.wallet_title', { defaultValue: 'LAB TOKENS' })}
                 </Text>
                 <Text style={styles.subtitle}>
                   {t('tokens.wallet_subtitle', { defaultValue: 'Learning Allowance & Passes' })}
@@ -161,11 +161,11 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                 <Text style={styles.heroValue}>{wallet.totalWordsAllowance}</Text>
                 <Text style={styles.heroSub}>
                   {t('tokens.allowance_desc', {
-                    defaultValue: 'Available capacity to unlock and learn new cards in the arena.',
+                    defaultValue: 'Available capacity to unlock and learn new cards in the lab.',
                   })}
                 </Text>
               </View>
-              <SquireMascot mood="cheering" size={80} />
+              <LabMascot mood="cheering" size={80} />
             </View>
 
             {/* Breakdown Cards */}
@@ -192,7 +192,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               {/* Daily Card Pass */}
               <View style={styles.statCard}>
                 <View style={styles.statCardHeader}>
-                  <Scroll size={18} color="#0D9488" />
+                  <TestTube size={18} color="#0D9488" />
                   <Text style={styles.statCardTitle}>
                     {t('tokens.daily_card_title', { defaultValue: 'Daily Card' })}
                   </Text>
@@ -263,7 +263,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                   }}
                   activeOpacity={0.8}
                 >
-                  <Crown size={18} color="#FFFFFF" />
+                  <Rocket size={18} color="#FFFFFF" />
                   <Text style={styles.plusUpgradeBtnText}>
                     {t('tokens.unlock_unlimited_plus', {
                       defaultValue: 'UNLOCK UNLIMITED WITH PLUS',

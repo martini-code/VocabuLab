@@ -65,7 +65,7 @@ jest.mock('lucide-react-native', () => {
     Check: icon('Check'),
     Plus: icon('Plus'),
     Layers: icon('Layers'),
-    Shield: icon('Shield'),
+    FlaskConical: icon('FlaskConical'),
   };
 });
 
@@ -116,7 +116,7 @@ const mock10Words: MasteryWordItem[] = Array.from({ length: 10 }, (_, i) => ({
   back_term: `Word_${i + 1}`,
   back_lang: 'en',
   deck_name: 'Great Hall',
-  theme_name: 'Castle Grounds',
+  theme_name: 'Lab Grounds',
   is_queued: false,
   stage: 'available',
 }));
@@ -144,7 +144,7 @@ describe('RandomDiscoveryView', () => {
     expect(result.getByText('Random Discovery')).toBeTruthy();
     expect(result.getByText('Palabra_1')).toBeTruthy();
     expect(result.getByText('Word_1')).toBeTruthy();
-    expect(result.getAllByText('Castle Grounds • Great Hall').length).toBe(10);
+    expect(result.getAllByText('Lab Grounds • Great Hall').length).toBe(10);
     expect(result.getByText('Exit Discovery')).toBeTruthy();
   });
 

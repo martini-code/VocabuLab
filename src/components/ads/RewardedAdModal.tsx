@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Coins, ShieldCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { SquireMascot } from '../mascot/Mascots';
+import { LabMascot } from '../mascot/Mascots';
 
 interface RewardedAdModalProps {
   visible: boolean;
@@ -95,7 +95,7 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
         <View style={styles.content}>
           <View style={styles.adCard}>
             <View style={styles.illustrationWrap}>
-              <SquireMascot mood={rewardReady ? 'cheering' : 'thinking'} size={140} />
+              <LabMascot mood={rewardReady ? 'cheering' : 'thinking'} size={140} />
             </View>
 
             <View style={styles.tokenPill}>

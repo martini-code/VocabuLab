@@ -1,22 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Shield } from 'lucide-react-native';
+import { FlaskConical } from 'lucide-react-native';
 
-interface ShieldBadgeProps {
+interface LevelBadgeProps {
   level: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
 const CEFR_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  A1: { bg: '#86EFAC', border: '#15803D', text: '#14532D' }, // Novice Green
-  A2: { bg: '#93C5FD', border: '#1D4ED8', text: '#1E3A8A' }, // Apprentice Blue
-  B1: { bg: '#FDE047', border: '#A16207', text: '#713F12' }, // Adept Gold
-  B2: { bg: '#FDBA74', border: '#C2410C', text: '#7C2D12' }, // Veteran Amber
-  C1: { bg: '#F472B6', border: '#BE185D', text: '#831843' }, // Master Rose
-  C2: { bg: '#C084FC', border: '#7E22CE', text: '#581C87' }, // Grandmaster Arcana
+  A1: { bg: '#86EFAC', border: '#15803D', text: '#14532D' }, // Intern Green
+  A2: { bg: '#93C5FD', border: '#1D4ED8', text: '#1E3A8A' }, // Lab Assistant Blue
+  B1: { bg: '#FDE047', border: '#A16207', text: '#713F12' }, // Technician Gold
+  B2: { bg: '#FDBA74', border: '#C2410C', text: '#7C2D12' }, // Researcher Amber
+  C1: { bg: '#F472B6', border: '#BE185D', text: '#831843' }, // Scientist Rose
+  C2: { bg: '#C084FC', border: '#7E22CE', text: '#581C87' }, // Principal Investigator Violet
 };
 
-export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) => {
+export const LevelBadge: React.FC<LevelBadgeProps> = ({ level, size = 'md' }) => {
   const normalized = level?.toUpperCase() || 'A1';
   const theme = CEFR_COLORS[normalized] || CEFR_COLORS.A1;
 
@@ -27,7 +27,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
   return (
     <View
       style={[
-        styles.shield,
+        styles.badge,
         {
           backgroundColor: theme.bg,
           borderColor: theme.border,
@@ -37,7 +37,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
         },
       ]}
     >
-      <Shield size={iconSize} color={theme.text} style={{ marginRight: 4 }} />
+      <FlaskConical size={iconSize} color={theme.text} style={{ marginRight: 4 }} />
       <Text
         style={[
           styles.text,
@@ -54,7 +54,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
 };
 
 const styles = StyleSheet.create({
-  shield: {
+  badge: {
     borderRadius: 12,
     borderWidth: 1.5,
     alignItems: 'center',
