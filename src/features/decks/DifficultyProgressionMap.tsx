@@ -15,6 +15,8 @@ interface DifficultyProgressionMapProps {
   decks: DeckWithProgress[];
   loading: boolean;
   onSelectDeck: (deck: DeckWithProgress) => void;
+  /** Difficulty (1–6) of the learner's level; the trail opens at the first deck of that tier. */
+  startDifficulty?: number;
 }
 
 type NodeAlignment = 'left' | 'center' | 'right';
@@ -110,7 +112,23 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
   decks,
   loading,
   onSelectDeck,
+  startDifficulty,
 }) => {
+  const listRef = React.useRef<FlatList<DeckWithProgress>>(null);
+  const startIndex = React.useMemo(() => {
+    if (!startDifficulty || startDifficulty <= 1) return 0;
+    const i = decks.findIndex((d) => d.difficulty_level >= startDifficulty);
+    return i === -1 ? 0 : i;
+  }, [decks, startDifficulty]);
+
+  React.useEffect(() => {
+    if (loading || startIndex === 0) return;
+    const id = setTimeout(() => {
+      listRef.current?.scrollToIndex({ index: startIndex, animated: false, viewPosition: 0 });
+    }, 0);
+    return () => clearTimeout(id);
+  }, [loading, startIndex]);
+
   // Alignments sequence for a meandering natural map trail
   const alignmentPattern: NodeAlignment[] = ['left', 'center', 'right', 'center'];
 
@@ -149,7 +167,13 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
 
   return (
     <FlatList
+      ref={listRef}
       data={decks}
+      onScrollToIndexFailed={({ averageItemLength, index }) => {
+        // Rows not measured yet: jump close, then settle on the exact row.
+        listRef.current?.scrollToOffset({ offset: averageItemLength * index, animated: false });
+        setTimeout(() => listRef.current?.scrollToIndex({ index, animated: false, viewPosition: 0 }), 50);
+      }}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       style={styles.container}

@@ -26,7 +26,7 @@ import { LabCard } from '../ui/LabCard';
 import { LevelBadge } from '../ui/LevelBadge';
 import { ChunkyButton } from '../ui/ChunkyButton';
 import { speakWord } from '../../utils/tts';
-import { getRandomUnlearnedWords, addWordToQueue } from '../../db/vault';
+import { getRandomUnlearnedWords, addWordToQueue, getPairLevel } from '../../db/vault';
 import { tokenWallet } from '../../services/tokenWallet';
 import { MasteryWordItem } from '../../types';
 
@@ -64,7 +64,10 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
     const fetchWords = async () => {
       setLoading(true);
       try {
-        const words = await getRandomUnlearnedWords(10, targetLang, originLang);
+        const level = await getPairLevel({ origin_lang: originLang, destination_lang: targetLang }).catch(
+          () => undefined
+        );
+        const words = await getRandomUnlearnedWords(10, targetLang, originLang, undefined, level);
         if (isMounted) {
           setCards(words);
           setCurrentIndex(0);

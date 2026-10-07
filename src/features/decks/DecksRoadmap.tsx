@@ -58,6 +58,8 @@ import {
 } from '../../types';
 import {
   getThemesWithProgressiveDecks,
+  getPairLevel,
+  cefrToDifficulty,
   getAllDecksOrderedByDifficulty,
   getCardsByDeck,
   addEntireDeckToQueue,
@@ -538,6 +540,17 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   // Tab 2: Difficulty (CEFR / Tiers) State
   const [loadingDifficulty, setLoadingDifficulty] = useState(false);
   const [mapDecks, setMapDecks] = useState<DeckWithProgress[]>([]);
+  const [startDifficulty, setStartDifficulty] = useState(1);
+
+  useEffect(() => {
+    let active = true;
+    getPairLevel({ origin_lang: originLang, destination_lang: targetLang })
+      .then((level) => active && setStartDifficulty(cefrToDifficulty(level)))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [targetLang, originLang]);
 
   // Tab 3: Mastery (SRS Status) State
   const [masteryStage, setMasteryStage] = useState<MasteryStage>('slipping');
@@ -1020,6 +1033,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           decks={mapDecks}
           loading={loadingDifficulty}
           onSelectDeck={(deck) => handleOpenDeck(deck)}
+          startDifficulty={startDifficulty}
         />
       )}
 

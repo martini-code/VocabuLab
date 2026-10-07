@@ -489,6 +489,80 @@ export async function removeEnrolledLanguagePair(pairId: string): Promise<void> 
   );
 }
 
+const pairKey = (pair: LanguagePairSettings) =>
+  `${resolveLanguageCode(pair.destination_lang).toLowerCase()}:${resolveLanguageCode(pair.origin_lang || 'en').toLowerCase()}`;
+
+async function readJsonSetting<T>(key: string, fallback: T): Promise<T> {
+  const userDb = await getUserDb();
+  const row = await userDb.getFirstAsync<{ value: string }>('SELECT value FROM Settings WHERE key = ?;', [key]);
+  if (!row) return fallback;
+  try {
+    return JSON.parse(row.value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+async function writeJsonSetting(key: string, value: unknown): Promise<void> {
+  const userDb = await getUserDb();
+  await userDb.runAsync('INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);', [
+    key,
+    JSON.stringify(value),
+    new Date().toISOString(),
+  ]);
+}
+
+/** The learner's self-assessed CEFR level for a language pair (A1 when never set). */
+export async function getPairLevel(pair?: LanguagePairSettings): Promise<CEFRLevel> {
+  const effective = pair || (await getLanguagePairSettings());
+  const levels = await readJsonSetting<Record<string, CEFRLevel>>('pair_levels', {});
+  return levels[pairKey(effective)] || 'A1';
+}
+
+export async function setPairLevel(pair: LanguagePairSettings, level: CEFRLevel): Promise<void> {
+  const levels = await readJsonSetting<Record<string, CEFRLevel>>('pair_levels', {});
+  levels[pairKey(pair)] = level;
+  await writeJsonSetting('pair_levels', levels);
+}
+
+/**
+ * True when the first-run onboarding should be shown. People who already
+ * study cards (installed before onboarding existed) are marked done instead.
+ */
+export async function shouldShowOnboarding(): Promise<boolean> {
+  const done = await readJsonSetting<boolean>('onboarding_completed', false);
+  if (done) return false;
+  const userDb = await getUserDb();
+  const existing = await userDb.getFirstAsync<{ count: number }>('SELECT count(*) as count FROM User_Cards;');
+  if (existing && existing.count > 0) {
+    await writeJsonSetting('onboarding_completed', true);
+    return false;
+  }
+  return true;
+}
+
+export interface OnboardingSelection {
+  origin_lang: string;
+  /** Languages to learn, in the order chosen; the first becomes the active pair. */
+  targets: { destination_lang: string; level: CEFRLevel }[];
+}
+
+/** Saves the onboarding choices: enrolls every pair with its level and activates the first. */
+export async function completeOnboarding(selection: OnboardingSelection): Promise<LanguagePairSettings> {
+  const pairs = selection.targets.map((t) => ({
+    pair: { origin_lang: selection.origin_lang, destination_lang: t.destination_lang },
+    level: t.level,
+  }));
+  for (const { pair, level } of pairs) {
+    await enrollLanguagePair(pair);
+    await setPairLevel(pair, level);
+  }
+  const active = pairs[0]?.pair ?? (await getLanguagePairSettings());
+  await setLanguagePairSettings(active);
+  await writeJsonSetting('onboarding_completed', true);
+  return active;
+}
+
 /**
  * Returns all downloaded languages currently stored in user_vault.sqlite.
  */
@@ -2093,7 +2167,9 @@ export async function getRandomUnlearnedWords(
   limit = 10,
   targetLang = 'es',
   originLang?: string,
-  titleLangPreference?: DeckTitleLanguageMode
+  titleLangPreference?: DeckTitleLanguageMode,
+  /** When set, prefer words within one CEFR step of this level. */
+  level?: CEFRLevel
 ): Promise<MasteryWordItem[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
@@ -2108,7 +2184,8 @@ export async function getRandomUnlearnedWords(
   );
   const queuedIds = queuedRows.map((r) => r.card_id);
 
-  let query = `
+  const buildQuery = (band?: [number, number]) => {
+    let query = `
     SELECT 
       c.card_id,
       c.deck_id,
@@ -2121,16 +2198,23 @@ export async function getRandomUnlearnedWords(
     FROM cards c
     JOIN decks d ON d.deck_id = c.deck_id
   `;
-  const params: any[] = [];
-  if (queuedIds.length > 0) {
-    const placeholders = queuedIds.map(() => '?').join(',');
-    query += ` WHERE c.card_id NOT IN (${placeholders})`;
-    params.push(...queuedIds);
-  }
-  query += ' ORDER BY RANDOM() LIMIT ?;';
-  params.push(limit);
+    const where: string[] = [];
+    const params: any[] = [];
+    if (queuedIds.length > 0) {
+      where.push(`c.card_id NOT IN (${queuedIds.map(() => '?').join(',')})`);
+      params.push(...queuedIds);
+    }
+    if (band) {
+      where.push('c.difficulty BETWEEN ? AND ?');
+      params.push(band[0], band[1]);
+    }
+    if (where.length > 0) query += ` WHERE ${where.join(' AND ')}`;
+    query += ' ORDER BY RANDOM() LIMIT ?;';
+    params.push(limit);
+    return { query, params };
+  };
 
-  const randomCards = await staticDb.getAllAsync<{
+  type RandomCardRow = {
     card_id: number;
     deck_id: number;
     primary_term: string;
@@ -2139,7 +2223,18 @@ export async function getRandomUnlearnedWords(
     difficulty: number;
     theme: string;
     deck: string;
-  }>(query, params);
+  };
+  const target = level ? cefrToDifficulty(level) : null;
+  let randomCards: RandomCardRow[] = [];
+  if (target !== null) {
+    const { query, params } = buildQuery([Math.max(1, target - 1), Math.min(6, target + 1)]);
+    randomCards = await staticDb.getAllAsync<RandomCardRow>(query, params);
+  }
+  // Nothing left near the learner's level (or no level): fall back to any unlearned word.
+  if (randomCards.length === 0) {
+    const { query, params } = buildQuery();
+    randomCards = await staticDb.getAllAsync<RandomCardRow>(query, params);
+  }
 
   if (randomCards.length === 0) return [];
 
