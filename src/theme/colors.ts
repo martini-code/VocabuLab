@@ -91,8 +91,8 @@ export const cefrColors: Record<
 > = {
   A1: { solid: palette.primary[100], solidBorder: palette.primary[300], onSolid: palette.primary[800], soft: palette.primary[50], softBorder: palette.primary[100], onSoft: palette.primary[700] },
   A2: { solid: palette.primary[200], solidBorder: palette.primary[400], onSolid: palette.primary[900], soft: palette.primary[100], softBorder: palette.primary[200], onSoft: palette.primary[700] },
-  B1: { solid: palette.primary[400], solidBorder: palette.primary[600], onSolid: palette.neutral[0], soft: palette.primary[100], softBorder: palette.primary[300], onSoft: palette.primary[800] },
-  B2: { solid: palette.primary[600], solidBorder: palette.primary[800], onSolid: palette.neutral[0], soft: palette.primary[200], softBorder: palette.primary[400], onSoft: palette.primary[900] },
+  B1: { solid: palette.primary[400], solidBorder: palette.primary[600], onSolid: palette.primary[950], soft: palette.primary[100], softBorder: palette.primary[300], onSoft: palette.primary[800] },
+  B2: { solid: palette.primary[700], solidBorder: palette.primary[900], onSolid: palette.neutral[0], soft: palette.primary[200], softBorder: palette.primary[400], onSoft: palette.primary[900] },
   C1: { solid: palette.primary[900], solidBorder: palette.primary[950], onSolid: palette.neutral[0], soft: palette.primary[800], softBorder: palette.primary[900], onSoft: palette.neutral[0] },
   C2: { solid: palette.neutral[900], solidBorder: palette.neutral[700], onSolid: palette.primary[300], soft: palette.neutral[800], softBorder: palette.neutral[900], onSoft: palette.primary[200] },
 };
