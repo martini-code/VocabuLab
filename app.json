@@ -8,7 +8,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.vocabulab"
+      "bundleIdentifier": "com.anonymous.vocabulab",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -39,7 +42,12 @@
         }
       ],
       "./plugins/withAdMobMediation"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "05ebff9d-e454-41a6-b29b-6478d69ef1c4"
+      }
+    }
   },
   "react-native-google-mobile-ads": {
     "android_app_id": "ca-app-pub-1330371800127240~1760647065",
