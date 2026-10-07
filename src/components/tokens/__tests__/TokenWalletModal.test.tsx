@@ -70,10 +70,10 @@ jest.mock('lucide-react-native', () => {
     HardDrive: icon('HardDrive'),
     AlertCircle: icon('AlertCircle'),
     Tv: icon('Tv'),
-    Crown: icon('Crown'),
+    Rocket: icon('Rocket'),
     Sparkles: icon('Sparkles'),
     Coins: icon('Coins'),
-    Scroll: icon('Scroll'),
+    TestTube: icon('TestTube'),
     ShieldCheck: icon('ShieldCheck'),
     CheckCircle2: icon('CheckCircle2'),
     Clock: icon('Clock'),
@@ -160,18 +160,18 @@ describe('TokenWalletModal', () => {
       <TokenWalletModal {...defaultProps} visible={false} />
     );
     // With visible=false, Modal returns null → wallet useEffect never fires → component returns null
-    expect(queryByText('ROYAL TOKENS')).toBeNull();
+    expect(queryByText('LAB TOKENS')).toBeNull();
   });
 
-  it('renders ROYAL TOKENS title when visible and wallet loads', async () => {
+  it('renders LAB TOKENS title when visible and wallet loads', async () => {
     const { findByText } = await render(<TokenWalletModal {...defaultProps} />);
-    const title = await findByText('ROYAL TOKENS');
+    const title = await findByText('LAB TOKENS');
     expect(title).toBeTruthy();
   });
 
   it('shows subtitle when wallet loads', async () => {
     const { findByText } = await render(<TokenWalletModal {...defaultProps} />);
-    await findByText('ROYAL TOKENS');
+    await findByText('LAB TOKENS');
     const subtitle = await findByText('Learning Allowance & Passes');
     expect(subtitle).toBeTruthy();
   });
@@ -181,7 +181,7 @@ describe('TokenWalletModal', () => {
     const { findByText, getAllByTestId } = await render(
       <TokenWalletModal {...defaultProps} onClose={onClose} />
     );
-    await findByText('ROYAL TOKENS');
+    await findByText('LAB TOKENS');
     // X icon is inside the close button (TouchableOpacity rendered as View with onPress)
     const xIcons = getAllByTestId('icon-X');
     // Press the first X icon's parent (the close button View renders the icon as a child)
@@ -197,7 +197,7 @@ describe('TokenWalletModal', () => {
 
   it('shows ads remaining text when canWatchAd is true', async () => {
     const { findByText } = await render(<TokenWalletModal {...defaultProps} />);
-    await findByText('ROYAL TOKENS');
+    await findByText('LAB TOKENS');
     const remaining = Math.max(0, BASE_WALLET_STATE.maxDailyAds - BASE_WALLET_STATE.adsWatchedToday);
     const adText = await findByText(`${remaining} of ${BASE_WALLET_STATE.maxDailyAds} rewarded ads left today`);
     expect(adText).toBeTruthy();

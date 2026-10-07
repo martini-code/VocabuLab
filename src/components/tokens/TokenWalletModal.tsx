@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import {
   Coins,
-  Scroll,
+  TestTube,
   ShieldCheck,
   X,
   Tv,
-  Crown,
+  Rocket,
   Sparkles,
   CheckCircle2,
   Clock,
@@ -135,7 +135,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               </TouchableOpacity>
               <View>
                 <Text style={styles.title}>
-                  {t('tokens.wallet_title', { defaultValue: 'ROYAL TOKENS' })}
+                  {t('tokens.wallet_title', { defaultValue: 'LAB TOKENS' })}
                 </Text>
                 <Text style={styles.subtitle}>
                   {t('tokens.wallet_subtitle', { defaultValue: 'Learning Allowance & Passes' })}
@@ -163,7 +163,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                 <Text style={styles.heroValue}>{wallet.totalWordsAllowance}</Text>
                 <Text style={styles.heroSub}>
                   {t('tokens.allowance_desc', {
-                    defaultValue: 'Available capacity to unlock and learn new cards in the arena.',
+                    defaultValue: 'Available capacity to unlock and learn new cards in the lab.',
                   })}
                 </Text>
               </View>
@@ -194,7 +194,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
               {/* Daily Card Pass */}
               <View style={styles.statCard}>
                 <View style={styles.statCardHeader}>
-                  <Scroll size={18} color={colors.success[600]} />
+                  <TestTube size={18} color={colors.success[600]} />
                   <Text style={styles.statCardTitle}>
                     {t('tokens.daily_card_title', { defaultValue: 'Daily Card' })}
                   </Text>
@@ -265,7 +265,7 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                   }}
                   activeOpacity={0.8}
                 >
-                  <Crown size={18} color={colors.neutral[0]} />
+                  <Rocket size={18} color={colors.neutral[0]} />
                   <Text style={styles.plusUpgradeBtnText}>
                     {t('tokens.unlock_unlimited_plus', {
                       defaultValue: 'UNLOCK UNLIMITED WITH PLUS',

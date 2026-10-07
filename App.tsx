@@ -40,12 +40,12 @@ import { iapService } from './src/services/iapService';
 import { srsManager } from './src/srs';
 import { configureAudioSession } from './src/utils/tts';
 import {
-  Swords,
+  FlaskConical,
   Library,
   Activity,
   Coins,
   Flame,
-  Shield,
+  TestTube,
   ShieldCheck,
   Globe,
   Sparkles,
@@ -62,7 +62,7 @@ export default function App() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [isVaultReady, setIsVaultReady] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('Opening the fortress gates...');
+  const [statusMessage, setStatusMessage] = useState('Powering up the lab...');
   const [languageModalMode, setLanguageModalMode] = useState<'origin' | 'destination'>('destination');
   const [languagePair, setLanguagePair] = useState<LanguagePairSettings>(() => {
     const dev = getDeviceLanguage();
@@ -125,15 +125,15 @@ export default function App() {
       // Preload AdMob rewarded ads in background immediately
       adMobService.preload();
       configureAudioSession().catch(() => {});
-      setStatusMessage('Checking kingdom cards...');
+      setStatusMessage('Checking lab cards...');
       await syncDatabaseFromR2();
 
-      setStatusMessage('Inscribing SQLite vault with WAL mode & FTS5...');
+      setStatusMessage('Preparing SQLite vault with WAL mode & FTS5...');
       await initVault();
       await srsManager.init();
       setActiveAlgoName(srsManager.getActiveAlgorithm().meta.name);
 
-      setStatusMessage('Detecting kingdom language & cards...');
+      setStatusMessage('Detecting lab language & cards...');
       const deviceLang = getDeviceLanguage();
       await ensureDefaultLanguagePairInstalled(deviceLang);
       const currentPair = await getLanguagePairSettings();
@@ -173,7 +173,7 @@ export default function App() {
         <SafeAreaView style={styles.splashContainer}>
           <LexMascot mood="idle" size={130} />
           <Text style={styles.splashTitle}>VOCABULAB</Text>
-          <Text style={styles.splashTagline}>The Medieval Fortress of Spaced Memory</Text>
+          <Text style={styles.splashTagline}>The Language Lab of Spaced Memory</Text>
           <ActivityIndicator size="large" color={colors.primary[500]} style={{ marginTop: 24 }} />
           <Text style={styles.splashStatus}>{statusMessage}</Text>
         </SafeAreaView>
@@ -186,7 +186,7 @@ export default function App() {
       <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary[50]} />
 
-      {/* Top Medieval Stats Header (Vector Icons - Strictly No Emojis) */}
+      {/* Top Lab Stats Header (Vector Icons - Strictly No Emojis) */}
       {!isReviewInProgress && (
         <View style={styles.topStatsBar}>
           {/* Streak Flame */}
@@ -195,9 +195,9 @@ export default function App() {
             <Text style={styles.statValue}>{stats.streakDays}</Text>
           </View>
 
-          {/* Due Cards Shield */}
+          {/* Due Cards Test Tube */}
           <View style={styles.statPill}>
-            <Shield size={16} color={colors.success[600]} />
+            <TestTube size={16} color={colors.success[600]} />
             <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
           </View>
 
@@ -272,8 +272,8 @@ export default function App() {
             showsVerticalScrollIndicator={false}
           >
             <LexMascot mood="victorious" size={120} />
-            <Text style={styles.treasuryTitle}>THE ROYAL TREASURY</Text>
-            <Text style={styles.treasurySub}>Zero Cloud Overhead • 100% Local Fortress</Text>
+            <Text style={styles.treasuryTitle}>{t('treasury.title', { defaultValue: 'THE LAB CONSOLE' })}</Text>
+            <Text style={styles.treasurySub}>{t('treasury.subtitle', { defaultValue: 'Zero Cloud Overhead • 100% Local Lab' })}</Text>
 
             <View style={styles.statsCard}>
               <View style={styles.statRow}>
@@ -302,7 +302,7 @@ export default function App() {
               </View>
             </View>
 
-            {/* SRS Engine Card in Treasury (FSRS v5 Exclusively) */}
+            {/* SRS Engine Card in Lab Console (FSRS v5 Exclusively) */}
             <View style={styles.treasuryAlgoBtn}>
               <Zap size={20} color={colors.primary[700]} />
               <View style={{ flex: 1 }}>
@@ -319,7 +319,7 @@ export default function App() {
               </View>
             </View>
 
-            {/* Ad-Free Status in Treasury */}
+            {/* Ad-Free Status in Lab Console */}
             {isAdFree ? (
               <View style={styles.treasuryAdFreeCard}>
                 <ShieldCheck size={22} color={colors.success[700]} />
@@ -444,7 +444,7 @@ export default function App() {
         )}
       </View>
 
-      {/* Medieval Cartoon Bottom Tab Bar */}
+      {/* Lab Cartoon Bottom Tab Bar */}
       {!isReviewInProgress && (
         <View style={styles.bottomNav}>
           <TouchableOpacity
@@ -455,7 +455,7 @@ export default function App() {
             }}
             style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
           >
-            <Swords size={20} color={activeTab === 'pipeline' ? colors.primary[700] : colors.neutral[500]} />
+            <FlaskConical size={20} color={activeTab === 'pipeline' ? colors.primary[700] : colors.neutral[500]} />
             <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
               {t('nav.training')}
             </Text>
@@ -526,7 +526,7 @@ export default function App() {
       />
 
 
-      {/* Royal Token Wallet Modal */}
+      {/* Lab Token Wallet Modal */}
       <TokenWalletModal
         visible={tokenWalletModalOpen}
         onClose={() => setTokenWalletModalOpen(false)}

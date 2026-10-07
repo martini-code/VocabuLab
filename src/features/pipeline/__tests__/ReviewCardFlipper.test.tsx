@@ -31,7 +31,7 @@ jest.mock('lucide-react-native', () => {
   const React = require('react');
   return {
     Volume2: (props: any) => React.createElement('View', { testID: 'volume-icon', ...props }),
-    Shield: (props: any) => React.createElement('View', { testID: 'shield-icon', ...props }),
+    FlaskConical: (props: any) => React.createElement('View', { testID: 'flask-icon', ...props }),
   };
 });
 
@@ -215,7 +215,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       expect(queryByText('[noun]')).toBeNull();
     });
 
-    it('renders C2 level shield badge correctly', async () => {
+    it('renders C2 level badge correctly', async () => {
       const c2Card: CardWithDetails = {
         ...mockCard,
         front_cefr: 'C2',

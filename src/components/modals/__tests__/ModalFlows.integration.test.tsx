@@ -87,10 +87,10 @@ jest.mock('lucide-react-native', () => {
     HardDrive: icon('HardDrive'),
     AlertCircle: icon('AlertCircle'),
     Tv: icon('Tv'),
-    Crown: icon('Crown'),
+    Rocket: icon('Rocket'),
     Sparkles: icon('Sparkles'),
     Coins: icon('Coins'),
-    Scroll: icon('Scroll'),
+    TestTube: icon('TestTube'),
     ShieldCheck: icon('ShieldCheck'),
     CheckCircle2: icon('CheckCircle2'),
     Clock: icon('Clock'),
@@ -334,14 +334,14 @@ describe('Modal Openings & Closings Integration Tests', () => {
       );
 
       // Initially closed
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
 
       // Open Token Wallet via TokenPill
       const tokenPill = getByTestId('token-pill-btn');
       await fireEvent.press(tokenPill);
 
       // Verify modal content is rendered
-      const walletTitle = await findByText('ROYAL TOKENS');
+      const walletTitle = await findByText('LAB TOKENS');
       expect(walletTitle).toBeTruthy();
       expect(await findByText('WORDS READY TO LEARN')).toBeTruthy();
       const allowanceElements = await findAllByText('25');
@@ -351,7 +351,7 @@ describe('Modal Openings & Closings Integration Tests', () => {
       await fireEvent.press(getByTestId('modal-close-btn'));
 
       // Verify modal is closed
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
     });
 
     it('re-opens cleanly after previous dismissal without lingering state', async () => {
@@ -359,19 +359,19 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // First open
       await fireEvent.press(getByTestId('token-pill-btn'));
-      expect(await findByText('ROYAL TOKENS')).toBeTruthy();
+      expect(await findByText('LAB TOKENS')).toBeTruthy();
 
       // First close
       await fireEvent.press(getByTestId('modal-close-btn'));
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
 
       // Second open
       await fireEvent.press(getByTestId('token-pill-btn'));
-      expect(await findByText('ROYAL TOKENS')).toBeTruthy();
+      expect(await findByText('LAB TOKENS')).toBeTruthy();
 
       // Second close
       await fireEvent.press(getByTestId('modal-close-btn'));
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
     });
   });
 
@@ -380,13 +380,13 @@ describe('Modal Openings & Closings Integration Tests', () => {
       const { queryByText, findByText, getByTestId } = await render(<AppModalCoordinator />);
 
       // Initially closed
-      expect(queryByText('Language Fortress')).toBeNull();
+      expect(queryByText('Language Lab')).toBeNull();
 
       // Open in destination mode
       await fireEvent.press(getByTestId('open-dest-lang-pill'));
 
       // Modal is visible
-      const modalTitle = await findByText('Language Fortress');
+      const modalTitle = await findByText('Language Lab');
       expect(modalTitle).toBeTruthy();
       expect(await findByText('Select the language you want to learn')).toBeTruthy();
 
@@ -394,7 +394,7 @@ describe('Modal Openings & Closings Integration Tests', () => {
       await fireEvent.press(getByTestId('modal-close-btn'));
 
       // Modal dismissed
-      expect(queryByText('Language Fortress')).toBeNull();
+      expect(queryByText('Language Lab')).toBeNull();
     });
 
     it('opens origin mode from origin pill with origin notice bar', async () => {
@@ -404,14 +404,14 @@ describe('Modal Openings & Closings Integration Tests', () => {
       await fireEvent.press(getByTestId('open-origin-lang-pill'));
 
       // Modal is visible with origin prompt
-      expect(await findByText('Language Fortress')).toBeTruthy();
+      expect(await findByText('Language Lab')).toBeTruthy();
       expect(
         await findByText('Configuring App Interface & Explanation Language')
       ).toBeTruthy();
 
       // Close modal
       await fireEvent.press(getByTestId('modal-close-btn'));
-      expect(queryByText('Language Fortress')).toBeNull();
+      expect(queryByText('Language Lab')).toBeNull();
     });
   });
 
@@ -468,22 +468,22 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Open Token Wallet only
       await fireEvent.press(getByTestId('token-pill-btn'));
-      expect(await findByText('ROYAL TOKENS')).toBeTruthy();
+      expect(await findByText('LAB TOKENS')).toBeTruthy();
 
       // Verify other modals are not open
-      expect(queryByText('Language Fortress')).toBeNull();
+      expect(queryByText('Language Lab')).toBeNull();
       expect(queryByText('More Words Needed')).toBeNull();
 
       // Close Token Wallet
       await fireEvent.press(getByTestId('modal-close-btn'));
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
 
       // Open Language Selector only
       await fireEvent.press(getByTestId('open-dest-lang-pill'));
-      expect(await findByText('Language Fortress')).toBeTruthy();
+      expect(await findByText('Language Lab')).toBeTruthy();
 
       // Verify others are closed
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
       expect(queryByText('More Words Needed')).toBeNull();
     });
   });
@@ -497,14 +497,14 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Open in destination mode
       await fireEvent.press(getByTestId('open-dest-lang-pill'));
-      expect(await findByText('Language Fortress')).toBeTruthy();
+      expect(await findByText('Language Lab')).toBeTruthy();
 
       // Select French from the list
       const frenchRow = await findByText('Français');
       await fireEvent.press(frenchRow);
 
       // Modal should automatically close
-      expect(queryByText('Language Fortress')).toBeNull();
+      expect(queryByText('Language Lab')).toBeNull();
 
       // onPairChanged callback should be called with updated pair
       expect(onPairChanged).toHaveBeenCalledWith({
@@ -524,7 +524,7 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Open in destination mode
       await fireEvent.press(getByTestId('open-dest-lang-pill'));
-      await findByText('Language Fortress');
+      await findByText('Language Lab');
 
       // Press the swap languages button
       const swapBtn = getByTestId('swap-lang-btn');
@@ -590,14 +590,14 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Open Token Wallet
       await fireEvent.press(getByTestId('token-pill-btn'));
-      expect(await findByText('ROYAL TOKENS')).toBeTruthy();
+      expect(await findByText('LAB TOKENS')).toBeTruthy();
 
       // Tap WATCH AD CTA
       const watchAdBtn = await findByText('WATCH AD (+1 TOKEN)');
       await fireEvent.press(watchAdBtn);
 
       // Token Wallet should close and Plus modal should open
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
       expect(await findByText('Plus Membership Gateway')).toBeTruthy();
       expect(onPlusOpened).toHaveBeenCalledTimes(1);
     });
@@ -609,14 +609,14 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Open Token Wallet
       await fireEvent.press(getByTestId('token-pill-btn'));
-      expect(await findByText('ROYAL TOKENS')).toBeTruthy();
+      expect(await findByText('LAB TOKENS')).toBeTruthy();
 
       // Trigger onRequestClose on modal container
       const modalContainer = getByTestId('modal-container');
       await fireEvent(modalContainer, 'requestClose');
 
       // Modal dismissed
-      expect(queryByText('ROYAL TOKENS')).toBeNull();
+      expect(queryByText('LAB TOKENS')).toBeNull();
     });
 
     it('onRequestClose on LanguageSelectorModal closes the modal', async () => {
@@ -624,14 +624,14 @@ describe('Modal Openings & Closings Integration Tests', () => {
 
       // Open Language Selector
       await fireEvent.press(getByTestId('open-dest-lang-pill'));
-      expect(await findByText('Language Fortress')).toBeTruthy();
+      expect(await findByText('Language Lab')).toBeTruthy();
 
       // Trigger onRequestClose
       const modalContainer = getByTestId('modal-container');
       await fireEvent(modalContainer, 'requestClose');
 
       // Modal dismissed
-      expect(queryByText('Language Fortress')).toBeNull();
+      expect(queryByText('Language Lab')).toBeNull();
     });
 
     it('onRequestClose on InsufficientTokensModal closes the modal', async () => {

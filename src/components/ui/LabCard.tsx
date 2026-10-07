@@ -2,27 +2,27 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { colors } from '../../theme';
 
-interface ParchmentCardProps {
+interface LabCardProps {
   children: React.ReactNode;
   style?: ViewStyle;
-  variant?: 'light' | 'aged';
+  variant?: 'light' | 'tinted';
 }
 
-export const ParchmentCard: React.FC<ParchmentCardProps> = ({
+export const LabCard: React.FC<LabCardProps> = ({
   children,
   style,
   variant = 'light',
 }) => {
-  const isAged = variant === 'aged';
+  const isTinted = variant === 'tinted';
 
   return (
     <View
       style={[
         styles.card,
         {
-          backgroundColor: isAged ? colors.primary[50] : colors.neutral[0],
-          borderColor: isAged ? colors.primary[200] : colors.neutral[200],
-          borderBottomColor: isAged ? colors.primary[500] : colors.neutral[300],
+          backgroundColor: isTinted ? colors.primary[50] : colors.neutral[0],
+          borderColor: isTinted ? colors.primary[200] : colors.neutral[200],
+          borderBottomColor: isTinted ? colors.primary[500] : colors.neutral[300],
         },
         style,
       ]}

@@ -12,8 +12,8 @@ import { Search, Sparkles, Volume2, Check, Plus, X } from 'lucide-react-native';
 import { searchLexemesFTS, addCardToQueue } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
 import { LexMascot } from '../../components/mascot/Mascots';
-import { ShieldBadge } from '../../components/ui/ShieldBadge';
-import { ParchmentCard } from '../../components/ui/ParchmentCard';
+import { LevelBadge } from '../../components/ui/LevelBadge';
+import { LabCard } from '../../components/ui/LabCard';
 import { tokenWallet } from '../../services/tokenWallet';
 import { formatLanguageCode } from '../../locales/languages';
 
@@ -33,7 +33,7 @@ export interface SearchResultCardProps {
 export const SearchResultCard = React.memo<SearchResultCardProps>(
   ({ item, isQueued, onLearn, onSpeak }) => {
     return (
-      <ParchmentCard style={styles.resultCard}>
+      <LabCard style={styles.resultCard}>
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
             <Text style={styles.term}>{item.term}</Text>
@@ -41,7 +41,7 @@ export const SearchResultCard = React.memo<SearchResultCardProps>(
               {formatLanguageCode(item.language)} • {item.pos || 'noun'}
             </Text>
           </View>
-          <ShieldBadge level={item.cefr_level} size="sm" />
+          <LevelBadge level={item.cefr_level} size="sm" />
         </View>
 
         <View style={styles.cardFooter}>
@@ -84,7 +84,7 @@ export const SearchResultCard = React.memo<SearchResultCardProps>(
             )}
           </Pressable>
         </View>
-      </ParchmentCard>
+      </LabCard>
     );
   }
 );
@@ -138,23 +138,23 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
 
   return (
     <View style={styles.container}>
-      {/* Scriptorium Header with Archmage Barnaby */}
+      {/* Research Library Header with Lex */}
       <View style={styles.headerBox}>
         <LexMascot mood="thinking" size={75} />
         <View style={styles.headerTextBox}>
-          <Text style={styles.title}>THE WIZARD'S SCRIPTORIUM</Text>
+          <Text style={styles.title}>THE PROFESSOR'S RESEARCH LIBRARY</Text>
           <Text style={styles.subtitle}>
-            FTS5 Full-Text Search across kingdom cards
+            FTS5 Full-Text Search across lab cards
           </Text>
         </View>
       </View>
 
-      {/* Medieval Input Field */}
+      {/* Lab Input Field */}
       <View style={styles.searchBarContainer}>
         <Search size={18} color={colors.primary[900]} style={{ marginRight: 8 }} />
         <TextInput
           style={styles.input}
-          placeholder="Search archaic cards by prefix or rune..."
+          placeholder="Search cards by prefix or keyword..."
           placeholderTextColor={colors.textSubtle}
           value={query}
           onChangeText={handleSearch}
@@ -183,7 +183,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
           <View style={styles.emptyContainer}>
             <Sparkles size={44} color={colors.primary[600]} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>
-              {query ? 'No matching runes found' : 'The enchanted archives await thy query'}
+              {query ? 'No matching results found' : 'The research library awaits your query'}
             </Text>
             <Text style={styles.emptySubtitle}>
               {query

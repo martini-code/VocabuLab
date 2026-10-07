@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Shield } from 'lucide-react-native';
+import { FlaskConical } from 'lucide-react-native';
 import { cefrColors } from '../../theme';
 
-interface ShieldBadgeProps {
+interface LevelBadgeProps {
   level: string;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -15,7 +15,7 @@ const CEFR_COLORS: Record<string, { bg: string; border: string; text: string }> 
   ])
 );
 
-export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) => {
+export const LevelBadge: React.FC<LevelBadgeProps> = ({ level, size = 'md' }) => {
   const normalized = level?.toUpperCase() || 'A1';
   const theme = CEFR_COLORS[normalized] || CEFR_COLORS.A1;
 
@@ -26,7 +26,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
   return (
     <View
       style={[
-        styles.shield,
+        styles.badge,
         {
           backgroundColor: theme.bg,
           borderColor: theme.border,
@@ -36,7 +36,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
         },
       ]}
     >
-      <Shield size={iconSize} color={theme.text} style={{ marginRight: 4 }} />
+      <FlaskConical size={iconSize} color={theme.text} style={{ marginRight: 4 }} />
       <Text
         style={[
           styles.text,
@@ -53,7 +53,7 @@ export const ShieldBadge: React.FC<ShieldBadgeProps> = ({ level, size = 'md' }) 
 };
 
 const styles = StyleSheet.create({
-  shield: {
+  badge: {
     borderRadius: 12,
     borderWidth: 1.5,
     alignItems: 'center',

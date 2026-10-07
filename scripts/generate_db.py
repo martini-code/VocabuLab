@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ETL Pipeline script for VocabuLab (Medieval Theme).
+ETL Pipeline script for VocabuLab (Lab Theme).
 Generates the SQLite master payload with:
-- Hierarchical Domains (Castle Grounds, Royal Alchemy, Grand Scriptorium, Knight Armory, Mystic Forest, etc.)
+- Hierarchical Domains (Daily Life, Field Studies, Economics, Research Library, Advanced Research Wing, etc.)
 - OMW V2 CILI Concepts
 - Multilingual Lexemes with CEFR ratings (A1 to C2)
 - FTS5 virtual table & synchronization triggers
@@ -152,49 +152,49 @@ def create_database(db_path: str):
     # (id, parent_id, name, description, difficulty_level, icon_name)
     domains = [
         # Top-level Themes
-        ("domain_castle", None, "The Castle Keep & Court", "Palace etiquette, pantry provisions, and festival banquets", 1, "castle"),
-        ("domain_wilderness", None, "The Enchanted Forest & Nature", "Wayfaring trails, tempest storms, and wild beasts", 2, "tree"),
-        ("domain_market", None, "The Merchant Guild & Trade", "Royal currency, marketplace barter, and commerce contracts", 2, "coins"),
-        ("domain_armory", None, "The Royal Armory & Strategy", "Bladed armaments, shield defenses, and battlefield valor", 3, "swords"),
-        ("domain_academy", None, "The Grand Scriptorium & Lore", "Celestial stars, epistemology, hypotheses, and logic axioms", 3, "book"),
-        ("domain_forbidden", None, "The Forbidden Royal Archives (Pro)", "High court statecraft, incorporeal metaphysics, and ancient mazes", 5, "crown"),
+        ("domain_castle", None, "Daily Life & Dining", "Everyday etiquette, pantry provisions, and festive banquets", 1, "home"),
+        ("domain_wilderness", None, "Field Studies & Nature", "Hiking trails, storm systems, and wild animals", 2, "tree"),
+        ("domain_market", None, "Economics & Trade", "Currency, marketplace exchange, and commerce contracts", 2, "coins"),
+        ("domain_armory", None, "Conflict & Strategy", "Bladed tools, protective gear, and courage under pressure", 3, "award"),
+        ("domain_academy", None, "The Research Library", "Astronomy, epistemology, hypotheses, and logic axioms", 3, "book"),
+        ("domain_forbidden", None, "The Advanced Research Wing (Pro)", "Diplomacy, metaphysics, and intricate conceptual puzzles", 5, "microscope"),
 
-        # Theme 1: Castle Keep & Court (Progressive Decks)
+        # Theme 1: Daily Life & Dining (Progressive Decks)
         ("sub_castle_daily", "domain_castle", "Everyday Courtesies & Greetings", "Essential greetings and bonds of friendship", 1, "handshake"),
         ("sub_castle_dining", "domain_castle", "Pantry & Dining Provisions", "Daily meals, sweet sugar crystals, and provisions", 2, "utensils"),
-        ("sub_castle_feasts", "domain_castle", "Royal Banquets & Celebrations", "Grand feast dining and vintage wine toasts", 3, "goblet"),
+        ("sub_castle_feasts", "domain_castle", "Banquets & Celebrations", "Festive dining and celebratory toasts", 3, "goblet"),
 
-        # Theme 2: Enchanted Forest & Nature (Progressive Decks)
-        ("sub_wild_creatures", "domain_wilderness", "Beasts & Royal Menagerie", "Carnivorous lions and fierce creatures of the woods", 2, "paw"),
-        ("sub_wild_weather", "domain_wilderness", "Wayfaring & Tempest Storms", "Surviving violent gale squalls and tempest rains", 3, "cloud-lightning"),
-        ("sub_wild_travel", "domain_wilderness", "Untamed Wilderness & Badlands", "Misty rugged terrain and mysterious badlands", 4, "compass"),
+        # Theme 2: Field Studies & Nature (Progressive Decks)
+        ("sub_wild_creatures", "domain_wilderness", "Animals & Wildlife", "Carnivorous lions and other wild creatures", 2, "paw"),
+        ("sub_wild_weather", "domain_wilderness", "Weather & Storms", "Gale-force winds, squalls, and heavy rain", 3, "cloud-lightning"),
+        ("sub_wild_travel", "domain_wilderness", "Rugged Terrain & Badlands", "Misty rugged terrain and remote badlands", 4, "compass"),
 
-        # Theme 3: Merchant Guild & Trade (Progressive Decks)
-        ("sub_market_goods", "domain_market", "Coinage & Royal Mint", "Stamped currency coins and standard traded wares", 2, "coins"),
-        ("sub_market_trade", "domain_market", "Guild Bargains & Trade Pacts", "Merchant exchange agreements and trade transactions", 3, "scale"),
+        # Theme 3: Economics & Trade (Progressive Decks)
+        ("sub_market_goods", "domain_market", "Coins & Currency", "Minted currency coins and standard traded goods", 2, "coins"),
+        ("sub_market_trade", "domain_market", "Bargains & Trade Agreements", "Exchange agreements and trade transactions", 3, "scale"),
 
-        # Theme 4: Royal Armory & Strategy (Progressive Decks)
-        ("sub_armory_weapons", "domain_armory", "Steel Blades & Armaments", "Forged swords and bladed melee weaponry", 2, "sword"),
-        ("sub_armory_defenses", "domain_armory", "Shields & Defensive Plate", "Personal defense shields and protective heraldic armor", 2, "shield"),
-        ("sub_armory_combat", "domain_armory", "Martial Valor & Battlefield Courage", "Chivalric courage, tactics, and battlefield valor", 4, "award"),
+        # Theme 4: Conflict & Strategy (Progressive Decks)
+        ("sub_armory_weapons", "domain_armory", "Blades & Tools", "Swords, knives, and other bladed implements", 2, "sword"),
+        ("sub_armory_defenses", "domain_armory", "Shields & Protective Gear", "Shields, armor, and protective equipment", 2, "shield"),
+        ("sub_armory_combat", "domain_armory", "Courage & Tactics", "Bravery, tactics, and composure under pressure", 4, "award"),
 
-        # Theme 5: Grand Scriptorium & Lore (Progressive Decks)
-        ("sub_script_astronomy", "domain_academy", "Celestial Stars & Heavens", "Luminous stellar bodies and the celestial sphere", 1, "sparkles"),
+        # Theme 5: The Research Library (Progressive Decks)
+        ("sub_script_astronomy", "domain_academy", "Stars & the Cosmos", "Luminous stellar bodies and the celestial sphere", 1, "sparkles"),
         ("sub_script_philosophy", "domain_academy", "Truth & Foundational Epistemology", "The pursuit of genuine reality, veracity, and wisdom", 3, "scroll"),
         ("sub_script_science", "domain_academy", "Natural Hypotheses & Deduction", "Formulating provisional suppositions and theories", 4, "microscope"),
         ("sub_script_logic", "domain_academy", "First Principles & Axioms", "Propositions accepted as self-evidently true", 5, "brain"),
 
-        # Theme 6: Forbidden Royal Archives (Progressive Decks)
-        ("sub_forbid_diplomacy", "domain_forbidden", "Statecraft & High Intrigue", "Secret political maneuvers and oratorical eloquence", 5, "landmark"),
-        ("sub_forbid_arcana", "domain_forbidden", "Incorporeal Metaphysics & Arcana", "Non-physical ideas, spirits, and abstract doctrines", 6, "flame"),
-        ("sub_forbid_labyrinth", "domain_forbidden", "Labyrinthine Riddles of Antiquity", "Intricate, deceptive conceptual mazes of the ancients", 6, "network"),
+        # Theme 6: Advanced Research Wing (Progressive Decks)
+        ("sub_forbid_diplomacy", "domain_forbidden", "Diplomacy & Politics", "Political strategy and persuasive eloquence", 5, "landmark"),
+        ("sub_forbid_arcana", "domain_forbidden", "Abstract Metaphysics", "Non-physical ideas and abstract doctrines", 6, "flame"),
+        ("sub_forbid_labyrinth", "domain_forbidden", "Classical Puzzles & Riddles", "Intricate, deceptive conceptual puzzles from antiquity", 6, "network"),
     ]
     cursor.executemany("INSERT INTO Domains (id, parent_id, name, description, difficulty_level, icon_name) VALUES (?, ?, ?, ?, ?, ?);", domains)
 
     # Rich Multilingual Corpus with CILI concepts & CEFR levels
     # Format: concept_id, domain_id, description, [ (lang, term, pos, cefr, rank) ]
     sample_corpus = [
-        # --- Castle Keep Decks ---
+        # --- Daily Life Decks ---
         ("cili_001", "sub_castle_daily", "A greeting of goodwill exchanged upon meeting", [
             ("en", "greeting", "noun", "A1", 10),
             ("es", "saludo", "noun", "A1", 12),
@@ -244,7 +244,7 @@ def create_database(db_path: str):
             ("it", "vino", "noun", "B1", 52),
         ]),
 
-        # --- Grand Scriptorium Decks ---
+        # --- Research Library Decks ---
         ("cili_009", "sub_script_astronomy", "The luminous celestial body around which the Earth and planets orbit", [
             ("en", "star", "noun", "A1", 30),
             ("es", "estrella", "noun", "A1", 28),
@@ -278,7 +278,7 @@ def create_database(db_path: str):
             ("it", "assioma", "noun", "C1", 418),
         ]),
 
-        # --- Enchanted Forest Decks ---
+        # --- Field Studies Decks ---
         ("cili_011", "sub_wild_creatures", "A large carnivorous feline of the genus Panthera with a regal mane", [
             ("en", "lion", "noun", "A2", 90),
             ("es", "león", "noun", "A2", 88),
@@ -304,7 +304,7 @@ def create_database(db_path: str):
             ("it", "natura selvaggia", "noun", "B2", 318),
         ]),
 
-        # --- Royal Armory Decks ---
+        # --- Conflict & Strategy Decks ---
         ("cili_014", "sub_armory_weapons", "A bladed weapon consisting of a steel blade fitted with a hilt", [
             ("en", "sword", "noun", "A2", 110),
             ("es", "espada", "noun", "A2", 105),
@@ -330,7 +330,7 @@ def create_database(db_path: str):
             ("it", "valore", "noun", "B2", 272),
         ]),
 
-        # --- Merchant Guild Decks ---
+        # --- Economics & Trade Decks ---
         ("cili_017", "sub_market_goods", "A flat rounded piece of metal stamped by royal authority used as money", [
             ("en", "coin", "noun", "A2", 130),
             ("es", "moneda", "noun", "A2", 128),
@@ -348,7 +348,7 @@ def create_database(db_path: str):
             ("it", "affare", "noun", "B1", 192),
         ]),
 
-        # --- Forbidden Royal Archives Decks ---
+        # --- Advanced Research Wing Decks ---
         ("cili_019", "sub_forbid_diplomacy", "Secret art of political maneuvering and cunning negotiation", [
             ("en", "statecraft", "noun", "C1", 490),
             ("es", "arte de gobierno", "noun", "C1", 485),

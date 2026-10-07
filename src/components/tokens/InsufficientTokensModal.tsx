@@ -11,7 +11,7 @@ import {
 import {
   AlertCircle,
   Tv,
-  Crown,
+  Rocket,
   X,
   Sparkles,
 } from 'lucide-react-native';
@@ -186,7 +186,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   }}
                   activeOpacity={0.7}
                 >
-                  <Crown size={16} color={colors.neutral[800]} />
+                  <Rocket size={16} color={colors.neutral[800]} />
                   <Text style={styles.plusOutlineBtnText}>
                     {t('tokens.unlock_unlimited_plus', {
                       defaultValue: 'Or Unlock Unlimited with Plus',
@@ -222,7 +222,7 @@ export const InsufficientTokensModal: React.FC<InsufficientTokensModalProps> = (
                   }}
                   activeOpacity={0.8}
                 >
-                  <Crown size={18} color={colors.neutral[0]} />
+                  <Rocket size={18} color={colors.neutral[0]} />
                   <Text style={styles.plusFullBtnText}>
                     {t('tokens.upgrade_to_plus_cta', {
                       defaultValue: 'Upgrade to Plus',

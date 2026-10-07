@@ -22,8 +22,8 @@ import {
   X,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { ParchmentCard } from '../ui/ParchmentCard';
-import { ShieldBadge } from '../ui/ShieldBadge';
+import { LabCard } from '../ui/LabCard';
+import { LevelBadge } from '../ui/LevelBadge';
 import { ChunkyButton } from '../ui/ChunkyButton';
 import { speakWord } from '../../utils/tts';
 import { getRandomUnlearnedWords, addWordToQueue } from '../../db/vault';
@@ -145,7 +145,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
 
     return (
       <View style={[styles.cardWrapper, { width: CARD_WIDTH }]}>
-        <ParchmentCard variant="aged" style={styles.cardContent}>
+        <LabCard variant="tinted" style={styles.cardContent}>
           {/* Deck Info & CEFR */}
           <View style={styles.cardHeaderRow}>
             <View style={styles.deckInfoPill}>
@@ -154,7 +154,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
                 {item.theme_name} • {item.deck_name}
               </Text>
             </View>
-            <ShieldBadge level={item.front_cefr} size="sm" />
+            <LevelBadge level={item.front_cefr} size="sm" />
           </View>
 
           {/* Target Word & Pronounce (strictly icon only) */}
@@ -217,7 +217,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
               style={styles.learnBtn}
             />
           </View>
-        </ParchmentCard>
+        </LabCard>
       </View>
     );
   };
@@ -245,7 +245,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           </View>
           <Text style={styles.viewSubtitle}>
             {t('random_discovery.subtitle', {
-              defaultValue: '10 unlearned words from across the realm',
+              defaultValue: '10 unlearned words from across the library',
             })}
           </Text>
         </View>
@@ -270,7 +270,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           <ActivityIndicator size="large" color={colors.primary[700]} />
           <Text style={styles.loadingText}>
             {t('random_discovery.loading', {
-              defaultValue: 'Scouting random words across the realm...',
+              defaultValue: 'Sampling random words from the library...',
             })}
           </Text>
         </View>
@@ -284,7 +284,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           <Text style={styles.emptyDesc}>
             {t('random_discovery.empty_desc', {
               defaultValue:
-                'You have learned all available vocabulary in the kingdom!',
+                'You have learned all available vocabulary in the library!',
             })}
           </Text>
           <ChunkyButton

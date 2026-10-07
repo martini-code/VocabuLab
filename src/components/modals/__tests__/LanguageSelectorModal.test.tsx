@@ -70,10 +70,10 @@ jest.mock('lucide-react-native', () => {
     HardDrive: icon('HardDrive'),
     AlertCircle: icon('AlertCircle'),
     Tv: icon('Tv'),
-    Crown: icon('Crown'),
+    Rocket: icon('Rocket'),
     Sparkles: icon('Sparkles'),
     Coins: icon('Coins'),
-    Scroll: icon('Scroll'),
+    TestTube: icon('TestTube'),
     ShieldCheck: icon('ShieldCheck'),
     CheckCircle2: icon('CheckCircle2'),
     Clock: icon('Clock'),
@@ -192,19 +192,19 @@ describe('LanguageSelectorModal', () => {
       <LanguageSelectorModal {...defaultProps} visible={false} />
     );
     // Modal mock returns null when visible=false
-    expect(queryByText('Language Fortress')).toBeNull();
+    expect(queryByText('Language Lab')).toBeNull();
     expect(queryByTestId('modal-container')).toBeNull();
   });
 
-  it('renders Language Fortress title when visible', async () => {
+  it('renders Language Lab title when visible', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
-    const title = await findByText('Language Fortress');
+    const title = await findByText('Language Lab');
     expect(title).toBeTruthy();
   });
 
   it('renders subtitle with pack size info', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     const subtitle = await findByText('123 Languages');
     expect(subtitle).toBeTruthy();
   });
@@ -214,7 +214,7 @@ describe('LanguageSelectorModal', () => {
     const { findByText, getAllByTestId } = await render(
       <LanguageSelectorModal {...defaultProps} onClose={onClose} />
     );
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     const xIcons = getAllByTestId('icon-X');
     await fireEvent.press(xIcons[0]);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -222,14 +222,14 @@ describe('LanguageSelectorModal', () => {
 
   it('shows All Languages filter tab', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     const allTab = await findByText('All Languages (123)');
     expect(allTab).toBeTruthy();
   });
 
   it('shows Downloaded tab with count', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     // downloadedCodesSet always includes 'en', so size >= 1
     // The tab text is "Downloaded (N)"
     const downloadedTab = await findByText(/Downloaded \(\d+\)/);
@@ -240,7 +240,7 @@ describe('LanguageSelectorModal', () => {
     const { findByText, findAllByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     // Banner displays clean codes EN and ES with flags
     const originCodes = await findAllByText('EN');
     expect(originCodes.length).toBeGreaterThanOrEqual(1);
@@ -250,7 +250,7 @@ describe('LanguageSelectorModal', () => {
 
   it('shows Native / App and I am learning labels in pair banner', async () => {
     const { findByText } = await render(<LanguageSelectorModal {...defaultProps} />);
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     const nativeLabel = await findByText('Native / App');
     expect(nativeLabel).toBeTruthy();
     const learningLabel = await findByText('I am learning');
@@ -261,7 +261,7 @@ describe('LanguageSelectorModal', () => {
     const { findByText, findAllByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
     // FlatList mock renders up to 10 items; we have en, es, fr
     // Language rows display clean code (ES, FR) and native script
     const spanishCodes = await findAllByText('ES');
@@ -286,7 +286,7 @@ describe('LanguageSelectorModal', () => {
     const { findByTestId, findByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
 
     const enrolledSection = await findByTestId('enrolled-languages-section');
     expect(enrolledSection).toBeTruthy();
@@ -318,7 +318,7 @@ describe('LanguageSelectorModal', () => {
         onClose={onClose}
       />
     );
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
 
     const frCard = await findByTestId('enrolled-card-fr');
     await act(async () => {
@@ -340,7 +340,7 @@ describe('LanguageSelectorModal', () => {
     const { findByText, findAllByText } = await render(
       <LanguageSelectorModal {...defaultProps} />
     );
-    await findByText('Language Fortress');
+    await findByText('Language Lab');
 
     // Code is displayed cleanly as PT-BR
     const ptCodes = await findAllByText('PT-BR');

@@ -494,9 +494,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 6. Review_Logs Chronicles & Streak Queries
+  // 6. Review_Logs History & Streak Queries
   // ───────────────────────────────────────────────────────────────────────────
-  describe('Review_Logs Chronicles & Streak Queries', () => {
+  describe('Review_Logs History & Streak Queries', () => {
     it('inserts individual review logs and verifies auto-increment primary key', () => {
       const insert = userDb.prepare('INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);');
 

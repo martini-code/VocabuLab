@@ -261,7 +261,7 @@ export async function initVault(): Promise<void> {
     'SELECT count(*) as count FROM Review_Logs;'
   );
   if (!logCheck || logCheck.count === 0) {
-    console.log('[Vault] Inscribing initial activity chronicles...');
+    console.log('[Vault] Seeding initial activity log...');
     await seedSampleReviewLogs(userDb);
   }
 }
@@ -1825,12 +1825,12 @@ export async function getDifficultyStats(
   masteredRows.forEach((r) => masteredMap.set(r.difficulty, r.count));
 
   const tiers: { cefr: CEFRLevel; label: string; tier: number }[] = [
-    { cefr: 'A1', label: 'Wanderer Outpost', tier: 1 },
-    { cefr: 'A2', label: 'Wayfarer Settlement', tier: 2 },
-    { cefr: 'B1', label: 'Frontier Bastion', tier: 3 },
-    { cefr: 'B2', label: 'Scholar Keep', tier: 4 },
-    { cefr: 'C1', label: 'High Sovereign Tower', tier: 5 },
-    { cefr: 'C2', label: 'Grandmaster Citadel', tier: 6 },
+    { cefr: 'A1', label: 'Intern Bench', tier: 1 },
+    { cefr: 'A2', label: 'Lab Assistant Station', tier: 2 },
+    { cefr: 'B1', label: 'Technician Workshop', tier: 3 },
+    { cefr: 'B2', label: 'Researcher Wing', tier: 4 },
+    { cefr: 'C1', label: 'Scientist Institute', tier: 5 },
+    { cefr: 'C2', label: 'Professor Observatory', tier: 6 },
   ];
 
   return tiers.map((t) => {

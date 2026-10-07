@@ -28,13 +28,8 @@ import {
   Play,
   ChevronRight,
   BookOpen,
-  Castle,
   TreePine,
   Coins,
-  Swords,
-  Sword,
-  Shield,
-  Crown,
   Users,
   Utensils,
   Wine,
@@ -719,7 +714,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
       {/* Top Header Row with Screen Title and Refactored 10 Random Words Action Pill */}
       <View style={styles.topHeaderRow}>
         <View style={styles.topHeaderLeft}>
-          <Text style={styles.topHeaderTitle}>KINGDOM ARCHIVES</Text>
+          <Text style={styles.topHeaderTitle}>LAB LIBRARY</Text>
           <Text style={styles.topHeaderSubtitle}>Curated decks & vocabulary roadmap</Text>
         </View>
         <TouchableOpacity
@@ -837,7 +832,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 <Search size={18} color={colors.primary[900]} style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder={t('search.placeholder', { defaultValue: 'Search kingdom vocabulary, runes, or meanings...' })}
+                  placeholder={t('search.placeholder', { defaultValue: 'Search lab vocabulary, keywords, or meanings...' })}
                   placeholderTextColor={colors.textSubtle}
                   value={searchQuery}
                   onChangeText={handleSearch}
@@ -888,12 +883,12 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   <View style={styles.searchEmptyContainer}>
                     <Sparkles size={40} color={colors.primary[600]} style={{ marginBottom: 10 }} />
                     <Text style={styles.searchEmptyTitle}>
-                      {isSearching ? 'Searching kingdom cards...' : 'No matching cards found'}
+                      {isSearching ? 'Searching lab cards...' : 'No matching cards found'}
                     </Text>
                     <Text style={styles.searchEmptySubtitle}>
                       {isSearching
-                        ? 'Inquiring the ancient dictionary archives...'
-                        : 'Try inquiring with another word stem or CEFR rune.'}
+                        ? 'Querying the dictionary database...'
+                        : 'Try querying with another word stem or CEFR level.'}
                     </Text>
                   </View>
                 }
