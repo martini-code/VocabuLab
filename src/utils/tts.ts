@@ -337,7 +337,6 @@ export function normalizeLanguageCode(lang: string = 'en'): string {
   return lower;
 }
 
-
 // In-memory voices cache
 let cachedVoices: Speech.Voice[] | null = null;
 let isFetchingVoices = false;
@@ -488,7 +487,10 @@ export async function speakWord(text: string, langCode: string = 'es'): Promise<
       pitch: 1.05,
       volume: 1.0,
       onError: (error) => {
-        console.warn(`[TTS] Native playback error for "${cleanText}" (${effectiveLanguage}):`, error);
+        console.warn(
+          `[TTS] Native playback error for "${cleanText}" (${effectiveLanguage}):`,
+          error
+        );
         // Fallback without specific voice identifier if customized voice failed
         if (matchedVoice) {
           Speech.speak(cleanText, {
@@ -514,7 +516,6 @@ export async function speakWord(text: string, langCode: string = 'es'): Promise<
     console.warn('[TTS] Speech engine notice:', (error as Error).message);
   }
 }
-
 
 /**
  * Stops any ongoing audio narration immediately.

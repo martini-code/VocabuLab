@@ -13,35 +13,37 @@ interface TokenPillProps {
  * Subscribes to tokenWallet updates internally so wallet state changes
  * only re-render this pill rather than the entire App tree.
  */
-export const TokenPill: React.FC<TokenPillProps> = React.memo(({ onPress, testID = 'token-pill-btn' }) => {
-  const [wallet, setWallet] = useState<TokenWalletState | null>(null);
+export const TokenPill: React.FC<TokenPillProps> = React.memo(
+  ({ onPress, testID = 'token-pill-btn' }) => {
+    const [wallet, setWallet] = useState<TokenWalletState | null>(null);
 
-  useEffect(() => {
-    tokenWallet.getWalletStatus().then(setWallet);
-    const unsub = tokenWallet.subscribe(setWallet);
-    return unsub;
-  }, []);
+    useEffect(() => {
+      tokenWallet.getWalletStatus().then(setWallet);
+      const unsub = tokenWallet.subscribe(setWallet);
+      return unsub;
+    }, []);
 
-  const allowance = wallet ? wallet.totalWordsAllowance : 0;
+    const allowance = wallet ? wallet.totalWordsAllowance : 0;
 
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.statPill,
-        styles.tokenPill,
-        {
-          transform: [{ translateY: pressed ? 1 : 0 }],
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <Coins size={16} color="#D97706" />
-      <Text style={styles.tokenPillText}>{allowance}</Text>
-    </Pressable>
-  );
-});
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.statPill,
+          styles.tokenPill,
+          {
+            transform: [{ translateY: pressed ? 1 : 0 }],
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+      >
+        <Coins size={16} color="#D97706" />
+        <Text style={styles.tokenPillText}>{allowance}</Text>
+      </Pressable>
+    );
+  }
+);
 TokenPill.displayName = 'TokenPill';
 
 const styles = StyleSheet.create({

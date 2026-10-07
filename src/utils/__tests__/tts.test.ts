@@ -80,7 +80,6 @@ describe('TTS Utility Unit & Integration Tests', () => {
       expect(normalizeLanguageCode('')).toBe('en-US');
       expect(normalizeLanguageCode('   ')).toBe('en-US');
     });
-
   });
 
   describe('configureAudioSession', () => {
@@ -106,8 +105,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
   describe('findBestVoice', () => {
     it('finds exact matching voice by language tag', async () => {
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.es-ES.monica', language: 'es-ES', name: 'Monica', quality: 'Default' },
-        { identifier: 'com.apple.voice.en-US.samantha', language: 'en-US', name: 'Samantha', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.es-ES.monica',
+          language: 'es-ES',
+          name: 'Monica',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.apple.voice.en-US.samantha',
+          language: 'en-US',
+          name: 'Samantha',
+          quality: 'Default',
+        },
       ]);
 
       const voice = await findBestVoice('es-ES');
@@ -117,8 +126,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
 
     it('falls back to prefix match when exact match is missing', async () => {
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.es-MX.paulani', language: 'es-MX', name: 'Paulina', quality: 'Default' },
-        { identifier: 'com.apple.voice.en-US.samantha', language: 'en-US', name: 'Samantha', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.es-MX.paulani',
+          language: 'es-MX',
+          name: 'Paulina',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.apple.voice.en-US.samantha',
+          language: 'en-US',
+          name: 'Samantha',
+          quality: 'Default',
+        },
       ]);
 
       const voice = await findBestVoice('es-ES');
@@ -134,8 +153,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
 
     it('falls back to Italian voice for Latin (la) when no native Latin voice exists', async () => {
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.en-US.samantha', language: 'en-US', name: 'Samantha', quality: 'Default' },
-        { identifier: 'com.apple.voice.it-IT.alice', language: 'it-IT', name: 'Alice', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.en-US.samantha',
+          language: 'en-US',
+          name: 'Samantha',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.apple.voice.it-IT.alice',
+          language: 'it-IT',
+          name: 'Alice',
+          quality: 'Default',
+        },
       ]);
 
       const voice = await findBestVoice('la');
@@ -146,8 +175,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
 
     it('falls back to Spanish voice for Basque (eu-ES) when no native Basque voice exists', async () => {
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.en-US.samantha', language: 'en-US', name: 'Samantha', quality: 'Default' },
-        { identifier: 'com.apple.voice.es-ES.monica', language: 'es-ES', name: 'Monica', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.en-US.samantha',
+          language: 'en-US',
+          name: 'Samantha',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.apple.voice.es-ES.monica',
+          language: 'es-ES',
+          name: 'Monica',
+          quality: 'Default',
+        },
       ]);
 
       const voice = await findBestVoice('eu-ES');
@@ -158,8 +197,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
 
     it('prefers native Basque voice when one is installed', async () => {
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.es-ES.monica', language: 'es-ES', name: 'Monica', quality: 'Default' },
-        { identifier: 'com.google.voice.eu-ES.miren', language: 'eu-ES', name: 'Miren', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.es-ES.monica',
+          language: 'es-ES',
+          name: 'Monica',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.google.voice.eu-ES.miren',
+          language: 'eu-ES',
+          name: 'Miren',
+          quality: 'Default',
+        },
       ]);
 
       const voice = await findBestVoice('eu-ES');
@@ -234,8 +283,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
     it('speaks Latin words using Italian phonetic voice when no native Latin voice exists', async () => {
       (Speech.isSpeakingAsync as jest.Mock).mockResolvedValue(false);
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.en-US.samantha', language: 'en-US', name: 'Samantha', quality: 'Default' },
-        { identifier: 'com.apple.voice.it-IT.alice', language: 'it-IT', name: 'Alice', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.en-US.samantha',
+          language: 'en-US',
+          name: 'Samantha',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.apple.voice.it-IT.alice',
+          language: 'it-IT',
+          name: 'Alice',
+          quality: 'Default',
+        },
       ]);
 
       await speakWord('senatus', 'la');
@@ -252,8 +311,18 @@ describe('TTS Utility Unit & Integration Tests', () => {
     it('speaks Basque words using Spanish phonetic voice when no native Basque voice exists', async () => {
       (Speech.isSpeakingAsync as jest.Mock).mockResolvedValue(false);
       (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValueOnce([
-        { identifier: 'com.apple.voice.en-US.samantha', language: 'en-US', name: 'Samantha', quality: 'Default' },
-        { identifier: 'com.apple.voice.es-ES.monica', language: 'es-ES', name: 'Monica', quality: 'Default' },
+        {
+          identifier: 'com.apple.voice.en-US.samantha',
+          language: 'en-US',
+          name: 'Samantha',
+          quality: 'Default',
+        },
+        {
+          identifier: 'com.apple.voice.es-ES.monica',
+          language: 'es-ES',
+          name: 'Monica',
+          quality: 'Default',
+        },
       ]);
 
       await speakWord('egun on', 'eu');

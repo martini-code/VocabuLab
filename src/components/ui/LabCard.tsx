@@ -7,11 +7,7 @@ interface LabCardProps {
   variant?: 'light' | 'tinted';
 }
 
-export const LabCard: React.FC<LabCardProps> = ({
-  children,
-  style,
-  variant = 'light',
-}) => {
+export const LabCard: React.FC<LabCardProps> = ({ children, style, variant = 'light' }) => {
   const isTinted = variant === 'tinted';
 
   return (

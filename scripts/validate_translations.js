@@ -45,7 +45,9 @@ if (action === 'check') {
 
   const checkLangs = targetLang ? [targetLang] : langDirs;
 
-  console.log(`Checking ${checkLangs.length} language(s) against master template (${masterKeys.size} keys)...`);
+  console.log(
+    `Checking ${checkLangs.length} language(s) against master template (${masterKeys.size} keys)...`
+  );
 
   let hasError = false;
   for (const lang of checkLangs) {
@@ -83,7 +85,9 @@ if (action === 'check') {
 } else if (action === 'generate') {
   const newLang = process.argv[3];
   if (!newLang) {
-    console.error('Please specify language code. Example: node scripts/validate_translations.js generate fr');
+    console.error(
+      'Please specify language code. Example: node scripts/validate_translations.js generate fr'
+    );
     process.exit(1);
   }
 

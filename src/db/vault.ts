@@ -325,9 +325,10 @@ export async function getEnrolledLanguagePairs(): Promise<EnrolledLanguagePair[]
   }
 
   // 2. Scan User_Cards for any cards already created in other language pairs
-  const distinctCardLangs = await userDb.getAllAsync<{ target_lang: string; origin_lang: string | null }>(
-    'SELECT DISTINCT target_lang, origin_lang FROM User_Cards;'
-  );
+  const distinctCardLangs = await userDb.getAllAsync<{
+    target_lang: string;
+    origin_lang: string | null;
+  }>('SELECT DISTINCT target_lang, origin_lang FROM User_Cards;');
 
   // 3. Collect unique language pairs
   const pairMap = new Map<string, { destination_lang: string; origin_lang: string }>();
@@ -427,7 +428,9 @@ export async function enrollLanguagePair(pair: LanguagePairSettings): Promise<vo
   const canonOrig = resolveLanguageCode(pair.origin_lang || 'en');
   const key = `${canonDest.toLowerCase()}:${canonOrig.toLowerCase()}`;
   const exists = savedPairs.some(
-    (p) => `${resolveLanguageCode(p.destination_lang).toLowerCase()}:${resolveLanguageCode(p.origin_lang || 'en').toLowerCase()}` === key
+    (p) =>
+      `${resolveLanguageCode(p.destination_lang).toLowerCase()}:${resolveLanguageCode(p.origin_lang || 'en').toLowerCase()}` ===
+      key
   );
   if (!exists) {
     savedPairs.push({ destination_lang: canonDest, origin_lang: canonOrig });
@@ -643,7 +646,10 @@ export async function loadDeckTranslationsForDecks(
   deckIds: number[],
   langParam: string
 ): Promise<Map<number, { category_translation: string; subcategory_translation: string }>> {
-  const result = new Map<number, { category_translation: string; subcategory_translation: string }>();
+  const result = new Map<
+    number,
+    { category_translation: string; subcategory_translation: string }
+  >();
   if (deckIds.length === 0) return result;
 
   const userDb = await getUserDb();
@@ -800,7 +806,9 @@ export async function getThemesWithProgressiveDecks(
     subcategory: string;
     difficulty: number;
     description: string;
-  }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
+  }>(
+    'SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;'
+  );
 
   // 2. Fetch card counts per deck
   const countRows = await staticDb.getAllAsync<{
@@ -816,12 +824,12 @@ export async function getThemesWithProgressiveDecks(
     state: number;
     stability: number;
     reps: number;
-  }>('SELECT card_id, state, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);', [langName, targetLang]);
+  }>('SELECT card_id, state, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);', [
+    langName,
+    targetLang,
+  ]);
 
-  const userProgressMap = new Map<
-    number,
-    { state: number; stability: number; reps: number }
-  >();
+  const userProgressMap = new Map<number, { state: number; stability: number; reps: number }>();
   userProgressRows.forEach((r) => {
     userProgressMap.set(r.card_id, {
       state: r.state,
@@ -1001,15 +1009,13 @@ export async function getAllDecksOrderedByDifficulty(
     card_id: number;
     stability: number;
     reps: number;
-  }>(
-    'SELECT card_id, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);',
-    [langName, targetLang]
-  );
+  }>('SELECT card_id, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);', [
+    langName,
+    targetLang,
+  ]);
 
   const cardMap = new Map<number, { stability: number; reps: number }>();
-  userCards.forEach((c) =>
-    cardMap.set(c.card_id, { stability: c.stability, reps: c.reps })
-  );
+  userCards.forEach((c) => cardMap.set(c.card_id, { stability: c.stability, reps: c.reps }));
 
   // Fetch card (deck_id, difficulty) mapping
   const allCards = await staticDb.getAllAsync<{
@@ -1026,16 +1032,10 @@ export async function getAllDecksOrderedByDifficulty(
     if (!uc) continue;
 
     const sliceKey = `${c.deck_id}_${c.difficulty}`;
-    sliceQueuedCount.set(
-      sliceKey,
-      (sliceQueuedCount.get(sliceKey) || 0) + 1
-    );
+    sliceQueuedCount.set(sliceKey, (sliceQueuedCount.get(sliceKey) || 0) + 1);
 
     if (uc.stability >= 21 || uc.reps >= 3) {
-      sliceMasteredCount.set(
-        sliceKey,
-        (sliceMasteredCount.get(sliceKey) || 0) + 1
-      );
+      sliceMasteredCount.set(sliceKey, (sliceMasteredCount.get(sliceKey) || 0) + 1);
     }
   }
 
@@ -1125,7 +1125,8 @@ export async function getCardsByDeck(
     difficultySlice
   );
 
-  let query = 'SELECT c.card_id, c.deck_id, c.primary_term, c.pos, c.cili_id, c.difficulty FROM cards c WHERE c.deck_id = ?';
+  let query =
+    'SELECT c.card_id, c.deck_id, c.primary_term, c.pos, c.cili_id, c.difficulty FROM cards c WHERE c.deck_id = ?';
   const params: any[] = [realDeckId];
 
   if (slice !== undefined) {
@@ -1151,7 +1152,11 @@ export async function getCardsByDeck(
   const placeholders = cardIds.map(() => '?').join(',');
 
   // Fetch translations for both destination and origin
-  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, destLangName, origLangName);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+    cardIds,
+    destLangName,
+    origLangName
+  );
 
   // Fetch user card records for these card IDs
   const userCards = await userDb.getAllAsync<{
@@ -1355,12 +1360,20 @@ export async function getDueCards(
       const origLangName = resolveLanguageName(oLang);
       const groupCardIds = Array.from(new Set(cardsInGroup.map((c) => c.card_id)));
 
-      const { destMap, origMap, defMap } = await loadCardTranslationsForPair(groupCardIds, destLangName, origLangName);
+      const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+        groupCardIds,
+        destLangName,
+        origLangName
+      );
 
       const destCandidateList = getCandidateLanguageNames(tLang);
       const origCandidateList = getCandidateLanguageNames(oLang);
-      const isDestEnglish = destCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
-      const isOrigEnglish = origCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+      const isDestEnglish = destCandidateList.some(
+        (c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en'
+      );
+      const isOrigEnglish = origCandidateList.some(
+        (c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en'
+      );
 
       for (const uc of cardsInGroup) {
         const sCard = staticMap.get(uc.card_id);
@@ -1477,7 +1490,11 @@ export async function getDueCards(
     cardIds
   );
 
-  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, langName, origLangName);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+    cardIds,
+    langName,
+    origLangName
+  );
   const staticMap = new Map<number, (typeof staticRows)[0]>();
   staticRows.forEach((r) => staticMap.set(r.card_id, r));
 
@@ -1497,8 +1514,12 @@ export async function getDueCards(
     const cefr = difficultyToCefr(sCard.difficulty);
     const destCandidateList = getCandidateLanguageNames(targetLang);
     const origCandidateList = getCandidateLanguageNames(effectiveOrigin);
-    const isDestEnglish = destCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
-    const isOrigEnglish = origCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+    const isDestEnglish = destCandidateList.some(
+      (c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en'
+    );
+    const isOrigEnglish = origCandidateList.some(
+      (c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en'
+    );
 
     const frontTerm = destMap.get(sCard.card_id);
     const backTerm = origMap.get(sCard.card_id);
@@ -1616,7 +1637,11 @@ export async function getDeckCardsForReview(
   staticRows.forEach((r) => staticMap.set(r.card_id, r));
 
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+    cardIds,
+    targetLang,
+    effectiveOrigin
+  );
 
   const result: CardWithDetails[] = [];
 
@@ -1627,8 +1652,12 @@ export async function getDeckCardsForReview(
     const cefr = difficultyToCefr(sCard.difficulty);
     const destCandidateList = getCandidateLanguageNames(targetLang);
     const origCandidateList = getCandidateLanguageNames(effectiveOrigin);
-    const isDestEnglish = destCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
-    const isOrigEnglish = origCandidateList.some((c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en');
+    const isDestEnglish = destCandidateList.some(
+      (c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en'
+    );
+    const isOrigEnglish = origCandidateList.some(
+      (c) => c.toLowerCase() === 'english' || c.toLowerCase() === 'en'
+    );
 
     const frontTerm = destMap.get(sCard.card_id);
     const backTerm = origMap.get(sCard.card_id);
@@ -1738,7 +1767,11 @@ export async function getWordsByDifficulty(
   userCards.forEach((uc) => ucMap.set(uc.card_id, uc));
 
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+    cardIds,
+    targetLang,
+    effectiveOrigin
+  );
 
   const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
   const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
@@ -1784,9 +1817,7 @@ export async function getWordsByDifficulty(
 /**
  * Returns CEFR tier statistics (total, queued, mastered, available).
  */
-export async function getDifficultyStats(
-  targetLang = 'es'
-): Promise<DifficultyStat[]> {
+export async function getDifficultyStats(targetLang = 'es'): Promise<DifficultyStat[]> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
@@ -1885,9 +1916,7 @@ export async function addWordsByDifficultyToQueue(
 /**
  * Returns overview summary of cards by SRS mastery stage.
  */
-export async function getMasterySummary(
-  targetLang = 'es'
-): Promise<MasterySummary> {
+export async function getMasterySummary(targetLang = 'es'): Promise<MasterySummary> {
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
@@ -1905,7 +1934,10 @@ export async function getMasterySummary(
     reps: number;
     lapses: number;
     due_date: string;
-  }>('SELECT card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);', [langName, targetLang]);
+  }>(
+    'SELECT card_id, state, stability, reps, lapses, due_date FROM User_Cards WHERE (target_lang = ? OR target_lang = ?);',
+    [langName, targetLang]
+  );
 
   let slipping = 0;
   let learning = 0;
@@ -2000,7 +2032,11 @@ export async function getMasteryWords(
     if (availableCards.length === 0) return [];
 
     const cardIds = availableCards.map((c) => c.card_id);
-    const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+    const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+      cardIds,
+      targetLang,
+      effectiveOrigin
+    );
     const allDeckIds = Array.from(new Set(availableCards.map((c) => c.deck_id)));
     const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
@@ -2043,7 +2079,8 @@ export async function getMasteryWords(
   } else if (stage === 'mastered') {
     stageCondition = 'AND (stability >= 21 OR reps >= 3)';
   } else if (stage === 'learning') {
-    stageCondition = 'AND NOT (reps = 0 OR state = 0) AND NOT (stability >= 21 OR reps >= 3) AND NOT (lapses > 0 AND due_date < ?)';
+    stageCondition =
+      'AND NOT (reps = 0 OR state = 0) AND NOT (stability >= 21 OR reps >= 3) AND NOT (lapses > 0 AND due_date < ?)';
     userParams.push(now);
   }
 
@@ -2101,7 +2138,11 @@ export async function getMasteryWords(
   const metaMap = new Map<number, (typeof cardMeta)[0]>();
   cardMeta.forEach((m) => metaMap.set(m.card_id, m));
 
-  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+    cardIds,
+    targetLang,
+    effectiveOrigin
+  );
   const allDeckIds = Array.from(new Set(cardMeta.map((c) => c.deck_id)));
   const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
@@ -2112,8 +2153,10 @@ export async function getMasteryWords(
     const backTerm = origMap.get(uc.card_id) || primaryTerm;
     const definition = defMap.get(uc.card_id) || '';
     const dt = meta ? deckTransMap.get(meta.deck_id) : undefined;
-    const deckName = dt?.subcategory_translation || (meta ? capitalizeTitle(meta.subcategory) : undefined);
-    const themeName = dt?.category_translation || (meta ? capitalizeTitle(meta.category) : undefined);
+    const deckName =
+      dt?.subcategory_translation || (meta ? capitalizeTitle(meta.subcategory) : undefined);
+    const themeName =
+      dt?.category_translation || (meta ? capitalizeTitle(meta.category) : undefined);
 
     return {
       concept_id: meta?.cili_id || `c_${uc.card_id}`,
@@ -2144,10 +2187,7 @@ export async function getMasteryWords(
 /**
  * Adds available (unqueued) words into User_Cards up to a limit.
  */
-export async function addAvailableWordsToQueue(
-  limit = 10,
-  targetLang = 'es'
-): Promise<number> {
+export async function addAvailableWordsToQueue(limit = 10, targetLang = 'es'): Promise<number> {
   const available = await getMasteryWords('available', targetLang, undefined, limit, 0);
   if (available.length === 0) return 0;
 
@@ -2231,7 +2271,11 @@ export async function getRandomUnlearnedWords(
   if (randomCards.length === 0) return [];
 
   const cardIds = randomCards.map((c) => c.card_id);
-  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
+  const { destMap, origMap, defMap } = await loadCardTranslationsForPair(
+    cardIds,
+    targetLang,
+    effectiveOrigin
+  );
   const allDeckIds = Array.from(new Set(randomCards.map((c) => c.deck_id)));
   const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
 
@@ -2484,7 +2528,9 @@ export async function getDomainsHierarchy(
     subcategory: string;
     difficulty: number;
     description: string;
-  }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
+  }>(
+    'SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;'
+  );
 
   const allDeckIds = rows.map((r) => r.deck_id);
   const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
@@ -2529,10 +2575,7 @@ export async function getDomainsHierarchy(
 /**
  * Returns lexemes by domain for DomainBrowser.
  */
-export async function getLexemesByDomain(
-  domainId: string,
-  cefrFilter?: string
-): Promise<Lexeme[]> {
+export async function getLexemesByDomain(domainId: string, cefrFilter?: string): Promise<Lexeme[]> {
   const staticDb = await getStaticDb();
   let deckId: number | null = null;
   let categoryFilter: string | null = null;
@@ -2605,10 +2648,7 @@ export async function addCardToQueue(
 /**
  * Logs a review attempt in Review_Logs for activity heatmap & streaks.
  */
-export async function logReviewEvent(
-  cardId: string | number,
-  rating: number
-): Promise<void> {
+export async function logReviewEvent(cardId: string | number, rating: number): Promise<void> {
   try {
     const userDb = await getUserDb();
     let numericId = 1;
@@ -2686,9 +2726,7 @@ export async function seedSampleReviewLogs(db: SQLite.SQLiteDatabase): Promise<v
 /**
  * Returns progress overview data for ProgressScreen.
  */
-export async function getProgressOverview(
-  weeksCount = 18
-): Promise<ProgressOverview> {
+export async function getProgressOverview(weeksCount = 18): Promise<ProgressOverview> {
   const userDb = await getUserDb();
   const staticDb = await getStaticDb();
 
@@ -2981,4 +3019,3 @@ export async function getDeckTitleLanguagePreference(): Promise<DeckTitleLanguag
 export async function setDeckTitleLanguagePreference(mode: DeckTitleLanguageMode): Promise<void> {
   await setSetting('deck_title_language', mode);
 }
-

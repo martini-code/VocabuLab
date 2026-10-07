@@ -30,7 +30,8 @@ import { getRandomUnlearnedWords, addWordToQueue } from '../../db/vault';
 import { tokenWallet } from '../../services/tokenWallet';
 import { MasteryWordItem } from '../../types';
 
-const SCREEN_WIDTH = typeof Dimensions?.get === 'function' ? Dimensions.get('window')?.width || 375 : 375;
+const SCREEN_WIDTH =
+  typeof Dimensions?.get === 'function' ? Dimensions.get('window')?.width || 375 : 375;
 const CARD_WIDTH = Math.min(SCREEN_WIDTH - 48, 380);
 
 export interface RandomDiscoveryViewProps {
@@ -158,9 +159,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           {/* Target Word & Pronounce (strictly icon only) */}
           <View style={styles.termBox}>
             <Text style={styles.termText}>{item.front_term}</Text>
-            {item.front_pos && (
-              <Text style={styles.posText}>[{item.front_pos}]</Text>
-            )}
+            {item.front_pos && <Text style={styles.posText}>[{item.front_pos}]</Text>}
 
             <TouchableOpacity
               style={styles.ttsButton}
@@ -203,11 +202,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
               }
               subtitle={isLearned ? undefined : '+1 Token'}
               icon={
-                isLearned ? (
-                  <Check size={18} color="#FFFFFF" />
-                ) : (
-                  <Plus size={18} color="#FFFFFF" />
-                )
+                isLearned ? <Check size={18} color="#FFFFFF" /> : <Plus size={18} color="#FFFFFF" />
               }
               color={isLearned ? 'green' : 'amber'}
               disabled={isLearned}
@@ -281,8 +276,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           </Text>
           <Text style={styles.emptyDesc}>
             {t('random_discovery.empty_desc', {
-              defaultValue:
-                'You have learned all available vocabulary in the library!',
+              defaultValue: 'You have learned all available vocabulary in the library!',
             })}
           </Text>
           <ChunkyButton
@@ -318,34 +312,20 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
           {/* Quick Navigation Steppers */}
           <View style={styles.navigationRow}>
             <TouchableOpacity
-              style={[
-                styles.navBtn,
-                currentIndex === 0 && styles.navBtnDisabled,
-              ]}
+              style={[styles.navBtn, currentIndex === 0 && styles.navBtnDisabled]}
               disabled={currentIndex === 0}
               onPress={() => navigateTo(currentIndex - 1)}
               testID="prev-card-btn"
               accessibilityLabel="Previous Word"
             >
-              <ChevronLeft
-                size={18}
-                color={currentIndex === 0 ? '#CBD5E1' : '#78350F'}
-              />
-              <Text
-                style={[
-                  styles.navBtnText,
-                  currentIndex === 0 && styles.navBtnTextDisabled,
-                ]}
-              >
+              <ChevronLeft size={18} color={currentIndex === 0 ? '#CBD5E1' : '#78350F'} />
+              <Text style={[styles.navBtnText, currentIndex === 0 && styles.navBtnTextDisabled]}>
                 Previous
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.navBtn,
-                currentIndex === cards.length - 1 && styles.navBtnDisabled,
-              ]}
+              style={[styles.navBtn, currentIndex === cards.length - 1 && styles.navBtnDisabled]}
               disabled={currentIndex === cards.length - 1}
               onPress={() => navigateTo(currentIndex + 1)}
               testID="next-card-btn"
@@ -361,9 +341,7 @@ export const RandomDiscoveryView: React.FC<RandomDiscoveryViewProps> = ({
               </Text>
               <ChevronRight
                 size={18}
-                color={
-                  currentIndex === cards.length - 1 ? '#CBD5E1' : '#78350F'
-                }
+                color={currentIndex === cards.length - 1 ? '#CBD5E1' : '#78350F'}
               />
             </TouchableOpacity>
           </View>

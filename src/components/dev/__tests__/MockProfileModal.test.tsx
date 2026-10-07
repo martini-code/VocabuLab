@@ -66,17 +66,13 @@ describe('MockProfileModal UI', () => {
   });
 
   it('renders Testing Profiles title when visible is true', async () => {
-    const { getByText } = await render(
-      <MockProfileModal visible={true} onClose={jest.fn()} />
-    );
+    const { getByText } = await render(<MockProfileModal visible={true} onClose={jest.fn()} />);
     expect(getByText('Testing Profiles')).toBeTruthy();
     expect(getByText('Select a mock user profile to seed realistic test data')).toBeTruthy();
   });
 
   it('renders all four profile cards with clean professional naming', async () => {
-    const { getByText } = await render(
-      <MockProfileModal visible={true} onClose={jest.fn()} />
-    );
+    const { getByText } = await render(<MockProfileModal visible={true} onClose={jest.fn()} />);
     expect(getByText('Beginner Profile')).toBeTruthy();
     expect(getByText('Intermediate Profile')).toBeTruthy();
     expect(getByText('Advanced Profile')).toBeTruthy();
@@ -91,9 +87,7 @@ describe('MockProfileModal UI', () => {
 
   it('calls onClose when close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByTestId } = await render(
-      <MockProfileModal visible={true} onClose={onClose} />
-    );
+    const { getByTestId } = await render(<MockProfileModal visible={true} onClose={onClose} />);
 
     const closeBtn = getByTestId('modal-close-btn');
     await fireEvent.press(closeBtn);
@@ -137,11 +131,7 @@ describe('MockProfileModal UI', () => {
     const onClose = jest.fn();
 
     const { getByTestId } = await render(
-      <MockProfileModal
-        visible={true}
-        onClose={onClose}
-        onProfileApplied={onProfileApplied}
-      />
+      <MockProfileModal visible={true} onClose={onClose} onProfileApplied={onProfileApplied} />
     );
 
     const cleanCard = getByTestId('profile-card-clean');

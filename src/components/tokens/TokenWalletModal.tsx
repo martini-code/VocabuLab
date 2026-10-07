@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import {
   Coins,
   TestTube,
@@ -70,7 +62,8 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
           Alert.alert(
             t('tokens.ad_error_title', { defaultValue: 'Ad Unavailable' }),
             t('tokens.ad_error_msg', {
-              defaultValue: 'Unable to load ad right now. Please check your network connection and try again.',
+              defaultValue:
+                'Unable to load ad right now. Please check your network connection and try again.',
             })
           );
         }
@@ -233,12 +226,12 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
                         defaultValue: `${adsRemaining} of ${wallet.maxDailyAds} rewarded ads left today`,
                       })
                     : wallet.tokens >= TOKEN_CONFIG.MAX_TOKENS_HELD
-                    ? t('tokens.wallet_full', {
-                        defaultValue: `Token capacity full (${TOKEN_CONFIG.MAX_TOKENS_HELD}/${TOKEN_CONFIG.MAX_TOKENS_HELD} max)`,
-                      })
-                    : t('tokens.ads_limit_reached', {
-                        defaultValue: 'Daily ad limit reached (3/3 completed)',
-                      })}
+                      ? t('tokens.wallet_full', {
+                          defaultValue: `Token capacity full (${TOKEN_CONFIG.MAX_TOKENS_HELD}/${TOKEN_CONFIG.MAX_TOKENS_HELD} max)`,
+                        })
+                      : t('tokens.ads_limit_reached', {
+                          defaultValue: 'Daily ad limit reached (3/3 completed)',
+                        })}
                 </Text>
               </View>
 
@@ -275,9 +268,16 @@ export const TokenWalletModal: React.FC<TokenWalletModalProps> = ({
 
             {/* AdMob Safe Mode Status & Live Toggle */}
             <View style={styles.adModeContainer}>
-              <View style={[styles.adModeBadge, isTestMode ? styles.adModeBadgeSafe : styles.adModeBadgeLive]}>
+              <View
+                style={[
+                  styles.adModeBadge,
+                  isTestMode ? styles.adModeBadgeSafe : styles.adModeBadgeLive,
+                ]}
+              >
                 <ShieldCheck size={14} color={isTestMode ? '#16A34A' : '#EA580C'} />
-                <Text style={[styles.adModeBadgeText, { color: isTestMode ? '#16A34A' : '#EA580C' }]}>
+                <Text
+                  style={[styles.adModeBadgeText, { color: isTestMode ? '#16A34A' : '#EA580C' }]}
+                >
                   {isTestMode ? 'Safe Mode: Test Ads (No Ban Risk)' : 'Live Production Ads Active'}
                 </Text>
               </View>

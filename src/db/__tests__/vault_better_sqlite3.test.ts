@@ -136,7 +136,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const now = new Date().toISOString();
 
       userDb
-        .prepare("INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('language_pair', ?, ?);")
+        .prepare(
+          "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('language_pair', ?, ?);"
+        )
         .run(JSON.stringify(pair), now);
 
       const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'language_pair';").get();
@@ -145,7 +147,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     });
 
     it('updates existing settings atomically using INSERT OR REPLACE without duplication', () => {
-      const stmt = userDb.prepare("INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);");
+      const stmt = userDb.prepare(
+        'INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'
+      );
 
       stmt.run('active_algorithm', 'fsrs_v5', '2026-01-01T00:00:00Z');
       stmt.run('active_algorithm', 'sm2', '2026-01-02T00:00:00Z');
@@ -172,7 +176,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       insert.run('de', 'German', '2026-09-03T00:00:00Z', 1400, 30000);
 
       const rows = userDb
-        .prepare('SELECT code, lang_name, downloaded_at, card_count, size_bytes FROM Downloaded_Languages ORDER BY lang_name ASC;')
+        .prepare(
+          'SELECT code, lang_name, downloaded_at, card_count, size_bytes FROM Downloaded_Languages ORDER BY lang_name ASC;'
+        )
         .all();
 
       expect(rows).toHaveLength(3);
@@ -182,12 +188,18 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     });
 
     it('checks whether language is downloaded by exact code or language name', () => {
-      userDb.prepare(`
+      userDb
+        .prepare(
+          `
         INSERT INTO Downloaded_Languages (code, lang_name, downloaded_at, card_count, size_bytes)
         VALUES ('pt-br', 'Portuguese (Brazil)', '2026-09-01T00:00:00Z', 1200, 25000);
-      `).run();
+      `
+        )
+        .run();
 
-      const query = userDb.prepare('SELECT code FROM Downloaded_Languages WHERE lang_name = ? OR code = ?;');
+      const query = userDb.prepare(
+        'SELECT code FROM Downloaded_Languages WHERE lang_name = ? OR code = ?;'
+      );
 
       expect(query.get('Portuguese (Brazil)', 'xyz')).toBeDefined();
       expect(query.get('Portuguese', 'pt-br')).toBeDefined();
@@ -195,16 +207,22 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     });
 
     it('deletes language record on pack deletion', () => {
-      userDb.prepare(`
+      userDb
+        .prepare(
+          `
         INSERT INTO Downloaded_Languages (code, lang_name, downloaded_at, card_count, size_bytes)
         VALUES ('ja', 'Japanese', '2026-09-01T00:00:00Z', 800, 20000);
-      `).run();
+      `
+        )
+        .run();
 
       const del = userDb.prepare('DELETE FROM Downloaded_Languages WHERE code = ?;');
       const info = del.run('ja');
       expect(info.changes).toBe(1);
 
-      const check = userDb.prepare('SELECT code FROM Downloaded_Languages WHERE code = ?;').get('ja');
+      const check = userDb
+        .prepare('SELECT code FROM Downloaded_Languages WHERE code = ?;')
+        .get('ja');
       expect(check).toBeUndefined();
     });
   });
@@ -246,10 +264,12 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const cardPlaceholders = cardIds.map(() => '?').join(',');
 
       const rows = userDb
-        .prepare(`
+        .prepare(
+          `
           SELECT card_id, lang_name, translation FROM Downloaded_Card_Translations 
           WHERE lang_name IN (${langPlaceholders}) AND card_id IN (${cardPlaceholders});
-        `)
+        `
+        )
         .all(...candidates, ...cardIds);
 
       expect(rows.length).toBeGreaterThanOrEqual(2);
@@ -262,10 +282,12 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const cardIds = [1, 2];
 
       const rows = userDb
-        .prepare(`
+        .prepare(
+          `
           SELECT card_id, lang_name, definition FROM Downloaded_Card_Definitions 
           WHERE lang_name IN (?) AND card_id IN (?, ?);
-        `)
+        `
+        )
         .all('Spanish', 1, 2);
 
       expect(rows).toHaveLength(2);
@@ -275,11 +297,13 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
 
     it('loads deck and category translations from Downloaded_Deck_Translations', () => {
       const rows = userDb
-        .prepare(`
+        .prepare(
+          `
           SELECT deck_id, lang_name, category_translation, subcategory_translation 
           FROM Downloaded_Deck_Translations 
           WHERE lang_name IN (?) AND deck_id IN (?, ?);
-        `)
+        `
+        )
         .all('Spanish', 1, 2);
 
       expect(rows).toHaveLength(2);
@@ -295,12 +319,14 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
   describe('User_Cards FSRS Scheduling & Queue Queries', () => {
     const insertCard = (card: any) => {
       userDb
-        .prepare(`
+        .prepare(
+          `
           INSERT INTO User_Cards (
             id, card_id, target_lang, origin_lang, due_date, state,
             stability, difficulty, elapsed_days, scheduled_days, reps, lapses, updated_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        `)
+        `
+        )
         .run(
           card.id,
           card.card_id,
@@ -368,19 +394,21 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const nextDue = '2026-09-20T12:00:00Z';
       const info = updateStmt.run(
         nextDue,
-        2,    // Review state
-        4.5,  // Stability
-        3.8,  // Difficulty
-        1,    // Elapsed days
-        3,    // Scheduled days
-        1,    // Reps
-        0,    // Lapses
+        2, // Review state
+        4.5, // Stability
+        3.8, // Difficulty
+        1, // Elapsed days
+        3, // Scheduled days
+        1, // Reps
+        0, // Lapses
         '2026-09-17T13:00:00Z',
         'card_1_Spanish'
       );
 
       expect(info.changes).toBe(1);
-      const updated = userDb.prepare('SELECT * FROM User_Cards WHERE id = ?;').get('card_1_Spanish');
+      const updated = userDb
+        .prepare('SELECT * FROM User_Cards WHERE id = ?;')
+        .get('card_1_Spanish');
       expect(updated.state).toBe(2);
       expect(updated.stability).toBeCloseTo(4.5);
       expect(updated.reps).toBe(1);
@@ -404,12 +432,16 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       });
 
       // Attempt update by wrong string ID -> 0 changes
-      const byId = userDb.prepare('UPDATE User_Cards SET state = 2 WHERE id = ?;').run('non_existent');
+      const byId = userDb
+        .prepare('UPDATE User_Cards SET state = 2 WHERE id = ?;')
+        .run('non_existent');
       expect(byId.changes).toBe(0);
 
       // Fallback: update by numeric card_id and target_lang
       const byCardId = userDb
-        .prepare('UPDATE User_Cards SET state = 2, reps = 1 WHERE card_id = ? AND (target_lang = ? OR target_lang = ?);')
+        .prepare(
+          'UPDATE User_Cards SET state = 2, reps = 1 WHERE card_id = ? AND (target_lang = ? OR target_lang = ?);'
+        )
         .run(55, 'Spanish', 'es');
       expect(byCardId.changes).toBe(1);
 
@@ -438,21 +470,64 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const info = del.run('card_1_Spanish', 1);
       expect(info.changes).toBe(1);
 
-      const count = userDb.prepare('SELECT count(*) as total FROM User_Cards WHERE id = ?;').get('card_1_Spanish');
+      const count = userDb
+        .prepare('SELECT count(*) as total FROM User_Cards WHERE id = ?;')
+        .get('card_1_Spanish');
       expect(count.total).toBe(0);
     });
 
     it('queries due cards ordered by due_date ASC up to a cutoff timestamp', () => {
       // Past due
-      insertCard({ id: 'c1', card_id: 1, target_lang: 'Spanish', due_date: '2026-09-15T00:00:00Z', state: 2, stability: 3, difficulty: 5, elapsed_days: 3, scheduled_days: 3, reps: 1, lapses: 0, updated_at: '2026-09-15T00:00:00Z' });
+      insertCard({
+        id: 'c1',
+        card_id: 1,
+        target_lang: 'Spanish',
+        due_date: '2026-09-15T00:00:00Z',
+        state: 2,
+        stability: 3,
+        difficulty: 5,
+        elapsed_days: 3,
+        scheduled_days: 3,
+        reps: 1,
+        lapses: 0,
+        updated_at: '2026-09-15T00:00:00Z',
+      });
       // Due today
-      insertCard({ id: 'c2', card_id: 2, target_lang: 'Spanish', due_date: '2026-09-17T08:00:00Z', state: 2, stability: 5, difficulty: 4, elapsed_days: 5, scheduled_days: 5, reps: 2, lapses: 0, updated_at: '2026-09-17T08:00:00Z' });
+      insertCard({
+        id: 'c2',
+        card_id: 2,
+        target_lang: 'Spanish',
+        due_date: '2026-09-17T08:00:00Z',
+        state: 2,
+        stability: 5,
+        difficulty: 4,
+        elapsed_days: 5,
+        scheduled_days: 5,
+        reps: 2,
+        lapses: 0,
+        updated_at: '2026-09-17T08:00:00Z',
+      });
       // Future (not due)
-      insertCard({ id: 'c3', card_id: 3, target_lang: 'Spanish', due_date: '2026-09-25T00:00:00Z', state: 2, stability: 12, difficulty: 3, elapsed_days: 0, scheduled_days: 8, reps: 3, lapses: 0, updated_at: '2026-09-17T00:00:00Z' });
+      insertCard({
+        id: 'c3',
+        card_id: 3,
+        target_lang: 'Spanish',
+        due_date: '2026-09-25T00:00:00Z',
+        state: 2,
+        stability: 12,
+        difficulty: 3,
+        elapsed_days: 0,
+        scheduled_days: 8,
+        reps: 3,
+        lapses: 0,
+        updated_at: '2026-09-17T00:00:00Z',
+      });
 
       const cutoff = '2026-09-17T12:00:00Z';
       const dueCards = userDb
-        .prepare('SELECT id, card_id, due_date FROM User_Cards WHERE target_lang IN (?, ?) AND due_date <= ? ORDER BY due_date ASC;')
+        .prepare(
+          'SELECT id, card_id, due_date FROM User_Cards WHERE target_lang IN (?, ?) AND due_date <= ? ORDER BY due_date ASC;'
+        )
         .all('Spanish', 'es', cutoff);
 
       expect(dueCards).toHaveLength(2);
@@ -462,16 +537,70 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
 
     it('computes mastery stage distributions (Learning, Young, Mature) correctly', () => {
       // Learning: state=1 OR (state=2 AND stability < 7)
-      insertCard({ id: 'l1', card_id: 10, target_lang: 'es', due_date: '2026-09-18T00:00:00Z', state: 1, stability: 1.5, difficulty: 5, elapsed_days: 0, scheduled_days: 1, reps: 1, lapses: 0, updated_at: '2026-09-17T00:00:00Z' });
-      insertCard({ id: 'l2', card_id: 11, target_lang: 'es', due_date: '2026-09-20T00:00:00Z', state: 2, stability: 4.0, difficulty: 5, elapsed_days: 0, scheduled_days: 3, reps: 2, lapses: 0, updated_at: '2026-09-17T00:00:00Z' });
+      insertCard({
+        id: 'l1',
+        card_id: 10,
+        target_lang: 'es',
+        due_date: '2026-09-18T00:00:00Z',
+        state: 1,
+        stability: 1.5,
+        difficulty: 5,
+        elapsed_days: 0,
+        scheduled_days: 1,
+        reps: 1,
+        lapses: 0,
+        updated_at: '2026-09-17T00:00:00Z',
+      });
+      insertCard({
+        id: 'l2',
+        card_id: 11,
+        target_lang: 'es',
+        due_date: '2026-09-20T00:00:00Z',
+        state: 2,
+        stability: 4.0,
+        difficulty: 5,
+        elapsed_days: 0,
+        scheduled_days: 3,
+        reps: 2,
+        lapses: 0,
+        updated_at: '2026-09-17T00:00:00Z',
+      });
 
       // Young: state=2 AND 7 <= stability < 21
-      insertCard({ id: 'y1', card_id: 20, target_lang: 'es', due_date: '2026-09-27T00:00:00Z', state: 2, stability: 14.0, difficulty: 4, elapsed_days: 0, scheduled_days: 10, reps: 3, lapses: 0, updated_at: '2026-09-17T00:00:00Z' });
+      insertCard({
+        id: 'y1',
+        card_id: 20,
+        target_lang: 'es',
+        due_date: '2026-09-27T00:00:00Z',
+        state: 2,
+        stability: 14.0,
+        difficulty: 4,
+        elapsed_days: 0,
+        scheduled_days: 10,
+        reps: 3,
+        lapses: 0,
+        updated_at: '2026-09-17T00:00:00Z',
+      });
 
       // Mature: state=2 AND stability >= 21
-      insertCard({ id: 'm1', card_id: 30, target_lang: 'es', due_date: '2026-10-30T00:00:00Z', state: 2, stability: 35.0, difficulty: 3, elapsed_days: 0, scheduled_days: 30, reps: 5, lapses: 0, updated_at: '2026-09-17T00:00:00Z' });
+      insertCard({
+        id: 'm1',
+        card_id: 30,
+        target_lang: 'es',
+        due_date: '2026-10-30T00:00:00Z',
+        state: 2,
+        stability: 35.0,
+        difficulty: 3,
+        elapsed_days: 0,
+        scheduled_days: 30,
+        reps: 5,
+        lapses: 0,
+        updated_at: '2026-09-17T00:00:00Z',
+      });
 
-      const all = userDb.prepare('SELECT card_id, state, stability FROM User_Cards WHERE target_lang IN (?, ?);').all('es', 'Spanish');
+      const all = userDb
+        .prepare('SELECT card_id, state, stability FROM User_Cards WHERE target_lang IN (?, ?);')
+        .all('es', 'Spanish');
 
       let learning = 0;
       let young = 0;
@@ -498,7 +627,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
   // ───────────────────────────────────────────────────────────────────────────
   describe('Review_Logs History & Streak Queries', () => {
     it('inserts individual review logs and verifies auto-increment primary key', () => {
-      const insert = userDb.prepare('INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);');
+      const insert = userDb.prepare(
+        'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);'
+      );
 
       const r1 = insert.run(101, 3, '2026-09-17T10:00:00Z');
       const r2 = insert.run(101, 4, '2026-09-17T10:05:00Z');
@@ -513,7 +644,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     });
 
     it('aggregates daily activity counts for streak and contribution graphs', () => {
-      const insert = userDb.prepare('INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);');
+      const insert = userDb.prepare(
+        'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);'
+      );
 
       // 3 on day 1
       insert.run(1, 3, '2026-09-15T08:00:00Z');
@@ -530,12 +663,14 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       insert.run(4, 3, '2026-09-17T11:00:00Z');
 
       const daily = userDb
-        .prepare(`
+        .prepare(
+          `
           SELECT substr(reviewed_at, 1, 10) as review_date, count(*) as count
           FROM Review_Logs
           GROUP BY review_date
           ORDER BY review_date ASC;
-        `)
+        `
+        )
         .all();
 
       expect(daily).toHaveLength(3);
@@ -550,7 +685,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
   // ───────────────────────────────────────────────────────────────────────────
   describe('Deck Entitlements Queries', () => {
     it('manages deck unlocks and queries unlocked set', () => {
-      const unlock = userDb.prepare('INSERT OR REPLACE INTO Deck_Access (deck_id, is_unlocked, unlocked_at) VALUES (?, 1, ?);');
+      const unlock = userDb.prepare(
+        'INSERT OR REPLACE INTO Deck_Access (deck_id, is_unlocked, unlocked_at) VALUES (?, 1, ?);'
+      );
 
       unlock.run('1', '2026-09-01T00:00:00Z');
       unlock.run('3', '2026-09-02T00:00:00Z');
@@ -612,7 +749,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
 
     it('queries card count grouped by deck_id in static database', () => {
       const counts = staticDb
-        .prepare('SELECT deck_id, count(card_id) as card_count FROM cards GROUP BY deck_id ORDER BY deck_id ASC;')
+        .prepare(
+          'SELECT deck_id, count(card_id) as card_count FROM cards GROUP BY deck_id ORDER BY deck_id ASC;'
+        )
         .all();
 
       expect(counts).toHaveLength(3);
@@ -623,13 +762,15 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
 
     it('slices cards by (deck_id, difficulty) for progressive roadmaps', () => {
       const slices = staticDb
-        .prepare(`
+        .prepare(
+          `
           SELECT d.deck_id, d.category, d.subcategory, c.difficulty, COUNT(c.card_id) as card_count
           FROM decks d
           JOIN cards c ON c.deck_id = d.deck_id
           GROUP BY d.deck_id, c.difficulty
           ORDER BY c.difficulty ASC, d.deck_id ASC;
-        `)
+        `
+        )
         .all();
 
       expect(slices).toHaveLength(3);
@@ -648,7 +789,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       // 2. Query user progress for these cards from userDb
       const placeholders = cardIds.map(() => '?').join(',');
       const userProgress = userDb
-        .prepare(`SELECT card_id, state, stability, reps FROM User_Cards WHERE card_id IN (${placeholders});`)
+        .prepare(
+          `SELECT card_id, state, stability, reps FROM User_Cards WHERE card_id IN (${placeholders});`
+        )
         .all(...cardIds);
 
       expect(userProgress).toHaveLength(2); // 101 and 102 are queued, 103 is not
@@ -662,14 +805,18 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
 
     it('supports pagination (LIMIT and OFFSET) when querying cards in a deck', () => {
       const page1 = staticDb
-        .prepare('SELECT card_id, primary_term FROM cards WHERE deck_id = 1 ORDER BY card_id ASC LIMIT 2 OFFSET 0;')
+        .prepare(
+          'SELECT card_id, primary_term FROM cards WHERE deck_id = 1 ORDER BY card_id ASC LIMIT 2 OFFSET 0;'
+        )
         .all();
       expect(page1).toHaveLength(2);
       expect(page1[0].card_id).toBe(101);
       expect(page1[1].card_id).toBe(102);
 
       const page2 = staticDb
-        .prepare('SELECT card_id, primary_term FROM cards WHERE deck_id = 1 ORDER BY card_id ASC LIMIT 2 OFFSET 2;')
+        .prepare(
+          'SELECT card_id, primary_term FROM cards WHERE deck_id = 1 ORDER BY card_id ASC LIMIT 2 OFFSET 2;'
+        )
         .all();
       expect(page2).toHaveLength(1);
       expect(page2[0].card_id).toBe(103);
@@ -683,7 +830,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     it('rolls back batch inserts on transaction failure without leaving partial data', () => {
       userDb.exec('BEGIN TRANSACTION;');
 
-      const insert = userDb.prepare('INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);');
+      const insert = userDb.prepare(
+        'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);'
+      );
       insert.run(1, 3, '2026-09-17T00:00:00Z');
       insert.run(2, 4, '2026-09-17T00:01:00Z');
 
@@ -697,7 +846,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     it('commits atomic batch operations successfully', () => {
       userDb.exec('BEGIN TRANSACTION;');
 
-      const insert = userDb.prepare('INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);');
+      const insert = userDb.prepare(
+        'INSERT INTO Review_Logs (card_id, rating, reviewed_at) VALUES (?, ?, ?);'
+      );
       insert.run(1, 3, '2026-09-17T00:00:00Z');
       insert.run(2, 4, '2026-09-17T00:01:00Z');
 
@@ -715,7 +866,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     beforeEach(() => {
       // Insert deck
       staticDb
-        .prepare('INSERT INTO decks (deck_id, category, subcategory, difficulty, description) VALUES (?, ?, ?, ?, ?);')
+        .prepare(
+          'INSERT INTO decks (deck_id, category, subcategory, difficulty, description) VALUES (?, ?, ?, ?, ?);'
+        )
         .run(10, 'family', 'members', 1, 'Family vocabulary');
 
       // Insert translations for English (origin) and Spanish (target)
@@ -727,17 +880,23 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     });
 
     it('defaults deck title language preference to origin if not set in Settings', () => {
-      const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'deck_title_language';").get();
+      const row = userDb
+        .prepare("SELECT value FROM Settings WHERE key = 'deck_title_language';")
+        .get();
       const pref = row ? row.value : 'origin';
       expect(pref).toBe('origin');
     });
 
     it('persists target immersion preference when user opts in', () => {
       userDb
-        .prepare("INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('deck_title_language', 'target', datetime('now'));")
+        .prepare(
+          "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('deck_title_language', 'target', datetime('now'));"
+        )
         .run();
 
-      const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'deck_title_language';").get();
+      const row = userDb
+        .prepare("SELECT value FROM Settings WHERE key = 'deck_title_language';")
+        .get();
       expect(row.value).toBe('target');
     });
 
@@ -748,7 +907,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const translationLang = pref === 'target' ? targetLang : originLang;
 
       const trans = staticDb
-        .prepare('SELECT category_translation, subcategory_translation FROM deck_translations WHERE deck_id = ? AND lang_name = ?;')
+        .prepare(
+          'SELECT category_translation, subcategory_translation FROM deck_translations WHERE deck_id = ? AND lang_name = ?;'
+        )
         .get(10, translationLang);
 
       expect(trans).toBeDefined();
@@ -763,7 +924,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const translationLang = pref === 'target' ? targetLang : originLang;
 
       const trans = staticDb
-        .prepare('SELECT category_translation, subcategory_translation FROM deck_translations WHERE deck_id = ? AND lang_name = ?;')
+        .prepare(
+          'SELECT category_translation, subcategory_translation FROM deck_translations WHERE deck_id = ? AND lang_name = ?;'
+        )
         .get(10, translationLang);
 
       expect(trans).toBeDefined();
@@ -870,27 +1033,117 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       );
 
       // Add 3 Spanish cards (1 due, 1 mastered, 1 new)
-      insertUserCard.run('card_1_Spanish', 1, 'Spanish', 'English', '2026-01-01T00:00:00Z', 1, 5.0, 3.0, 1, 3, 2, 0, now);
-      insertUserCard.run('card_2_Spanish', 2, 'Spanish', 'English', '2026-12-31T00:00:00Z', 2, 25.0, 2.0, 30, 30, 5, 0, now);
-      insertUserCard.run('card_3_Spanish', 3, 'Spanish', 'English', '2026-01-01T00:00:00Z', 0, 0.0, 0.0, 0, 0, 0, 0, now);
+      insertUserCard.run(
+        'card_1_Spanish',
+        1,
+        'Spanish',
+        'English',
+        '2026-01-01T00:00:00Z',
+        1,
+        5.0,
+        3.0,
+        1,
+        3,
+        2,
+        0,
+        now
+      );
+      insertUserCard.run(
+        'card_2_Spanish',
+        2,
+        'Spanish',
+        'English',
+        '2026-12-31T00:00:00Z',
+        2,
+        25.0,
+        2.0,
+        30,
+        30,
+        5,
+        0,
+        now
+      );
+      insertUserCard.run(
+        'card_3_Spanish',
+        3,
+        'Spanish',
+        'English',
+        '2026-01-01T00:00:00Z',
+        0,
+        0.0,
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        now
+      );
 
       // Add 2 Mandarin cards (both due, none mastered)
-      insertUserCard.run('card_1_Mandarin', 1, 'Mandarin', 'English', '2026-01-02T00:00:00Z', 1, 2.0, 5.0, 1, 1, 1, 0, now);
-      insertUserCard.run('card_2_Mandarin', 2, 'Mandarin', 'English', '2026-01-03T00:00:00Z', 1, 3.0, 4.0, 2, 2, 2, 0, now);
+      insertUserCard.run(
+        'card_1_Mandarin',
+        1,
+        'Mandarin',
+        'English',
+        '2026-01-02T00:00:00Z',
+        1,
+        2.0,
+        5.0,
+        1,
+        1,
+        1,
+        0,
+        now
+      );
+      insertUserCard.run(
+        'card_2_Mandarin',
+        2,
+        'Mandarin',
+        'English',
+        '2026-01-03T00:00:00Z',
+        1,
+        3.0,
+        4.0,
+        2,
+        2,
+        2,
+        0,
+        now
+      );
 
       // Check Spanish stats
-      const esTotal = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish';").get().count;
-      const esDue = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish' AND due_date <= ?;").get(now).count;
-      const esMastered = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish' AND (stability >= 21 OR reps >= 3);").get().count;
+      const esTotal = userDb
+        .prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish';")
+        .get().count;
+      const esDue = userDb
+        .prepare(
+          "SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish' AND due_date <= ?;"
+        )
+        .get(now).count;
+      const esMastered = userDb
+        .prepare(
+          "SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Spanish' AND (stability >= 21 OR reps >= 3);"
+        )
+        .get().count;
 
       expect(esTotal).toBe(3);
       expect(esDue).toBe(2);
       expect(esMastered).toBe(1);
 
       // Check Mandarin stats
-      const zhTotal = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin';").get().count;
-      const zhDue = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin' AND due_date <= ?;").get(now).count;
-      const zhMastered = userDb.prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin' AND (stability >= 21 OR reps >= 3);").get().count;
+      const zhTotal = userDb
+        .prepare("SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin';")
+        .get().count;
+      const zhDue = userDb
+        .prepare(
+          "SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin' AND due_date <= ?;"
+        )
+        .get(now).count;
+      const zhMastered = userDb
+        .prepare(
+          "SELECT count(*) as count FROM User_Cards WHERE target_lang = 'Mandarin' AND (stability >= 21 OR reps >= 3);"
+        )
+        .get().count;
 
       expect(zhTotal).toBe(2);
       expect(zhDue).toBe(2);
@@ -907,15 +1160,59 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       );
 
       // Spanish due at 09:00
-      insertUserCard.run('card_10_Spanish', 10, 'Spanish', 'English', '2026-01-01T09:00:00Z', 1, 3.0, 3.0, 1, 1, 1, 0, now);
+      insertUserCard.run(
+        'card_10_Spanish',
+        10,
+        'Spanish',
+        'English',
+        '2026-01-01T09:00:00Z',
+        1,
+        3.0,
+        3.0,
+        1,
+        1,
+        1,
+        0,
+        now
+      );
       // Mandarin due at 08:00 (should come first)
-      insertUserCard.run('card_10_Mandarin', 10, 'Mandarin', 'English', '2026-01-01T08:00:00Z', 1, 2.0, 4.0, 1, 1, 1, 0, now);
+      insertUserCard.run(
+        'card_10_Mandarin',
+        10,
+        'Mandarin',
+        'English',
+        '2026-01-01T08:00:00Z',
+        1,
+        2.0,
+        4.0,
+        1,
+        1,
+        1,
+        0,
+        now
+      );
       // Spanish due at 10:00
-      insertUserCard.run('card_11_Spanish', 11, 'Spanish', 'English', '2026-01-01T10:00:00Z', 1, 4.0, 2.0, 2, 2, 2, 0, now);
+      insertUserCard.run(
+        'card_11_Spanish',
+        11,
+        'Spanish',
+        'English',
+        '2026-01-01T10:00:00Z',
+        1,
+        4.0,
+        2.0,
+        2,
+        2,
+        2,
+        0,
+        now
+      );
 
       // Combined multi-language query
       const dueRows = userDb
-        .prepare('SELECT id, card_id, target_lang, due_date FROM User_Cards WHERE due_date <= ? ORDER BY due_date ASC;')
+        .prepare(
+          'SELECT id, card_id, target_lang, due_date FROM User_Cards WHERE due_date <= ? ORDER BY due_date ASC;'
+        )
         .all(now);
 
       expect(dueRows).toHaveLength(3);
@@ -934,8 +1231,36 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       );
 
       // Same card_id (42) learned in both Spanish and Mandarin
-      insertUserCard.run('card_42_Spanish', 42, 'Spanish', 'English', '2026-01-01T00:00:00Z', 1, 4.0, 3.0, 1, 2, 2, 0, now);
-      insertUserCard.run('card_42_Mandarin', 42, 'Mandarin', 'English', '2026-01-01T00:00:00Z', 1, 1.5, 6.0, 1, 1, 1, 0, now);
+      insertUserCard.run(
+        'card_42_Spanish',
+        42,
+        'Spanish',
+        'English',
+        '2026-01-01T00:00:00Z',
+        1,
+        4.0,
+        3.0,
+        1,
+        2,
+        2,
+        0,
+        now
+      );
+      insertUserCard.run(
+        'card_42_Mandarin',
+        42,
+        'Mandarin',
+        'English',
+        '2026-01-01T00:00:00Z',
+        1,
+        1.5,
+        6.0,
+        1,
+        1,
+        1,
+        0,
+        now
+      );
 
       // Grade the Spanish card: advance stability to 12.0 and reps to 3
       const updateFSRS = userDb.prepare(
@@ -953,7 +1278,9 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       expect(esCard.due_date).toBe('2026-01-15T00:00:00Z');
 
       // Verify Mandarin card remained completely untouched
-      const zhCard = userDb.prepare("SELECT * FROM User_Cards WHERE id = 'card_42_Mandarin';").get();
+      const zhCard = userDb
+        .prepare("SELECT * FROM User_Cards WHERE id = 'card_42_Mandarin';")
+        .get();
       expect(zhCard.stability).toBe(1.5);
       expect(zhCard.reps).toBe(1);
       expect(zhCard.due_date).toBe('2026-01-01T00:00:00Z');
@@ -968,10 +1295,14 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
       const now = new Date().toISOString();
 
       userDb
-        .prepare("INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);")
+        .prepare(
+          "INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES ('saved_language_pairs', ?, ?);"
+        )
         .run(JSON.stringify(pairs), now);
 
-      const row = userDb.prepare("SELECT value FROM Settings WHERE key = 'saved_language_pairs';").get();
+      const row = userDb
+        .prepare("SELECT value FROM Settings WHERE key = 'saved_language_pairs';")
+        .get();
       expect(row).toBeDefined();
       const retrieved = JSON.parse(row.value);
       expect(retrieved).toHaveLength(3);
@@ -979,4 +1310,3 @@ describe('Comprehensive SQLite Vault Queries Unit Tests (better-sqlite3)', () =>
     });
   });
 });
-

@@ -142,9 +142,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
         <ProfessorOwlMascot size={75} />
         <View style={styles.headerTextBox}>
           <Text style={styles.title}>THE PROFESSOR&apos;S RESEARCH LIBRARY</Text>
-          <Text style={styles.subtitle}>
-            FTS5 Full-Text Search across lab cards
-          </Text>
+          <Text style={styles.subtitle}>FTS5 Full-Text Search across lab cards</Text>
         </View>
       </View>
 

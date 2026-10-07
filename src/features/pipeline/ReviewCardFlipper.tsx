@@ -46,10 +46,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
     'worklet';
     const rotateValue = interpolate(flipRotation.value, [0, 1], [0, 180]);
     return {
-      transform: [
-        { perspective: 1000 },
-        { rotateY: `${rotateValue}deg` },
-      ],
+      transform: [{ perspective: 1000 }, { rotateY: `${rotateValue}deg` }],
       opacity: interpolate(flipRotation.value, [0, 0.45, 0.5, 1], [1, 0.8, 0, 0]),
       zIndex: flipRotation.value < 0.5 ? 2 : 1,
     };
@@ -60,10 +57,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
     'worklet';
     const rotateValue = interpolate(flipRotation.value, [0, 1], [-180, 0]);
     return {
-      transform: [
-        { perspective: 1000 },
-        { rotateY: `${rotateValue}deg` },
-      ],
+      transform: [{ perspective: 1000 }, { rotateY: `${rotateValue}deg` }],
       opacity: interpolate(flipRotation.value, [0, 0.5, 0.55, 1], [0, 0, 0.8, 1]),
       zIndex: flipRotation.value >= 0.5 ? 2 : 1,
     };
@@ -97,9 +91,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
           {/* Front Word & Pronounce */}
           <View style={styles.termBox}>
             <Text style={styles.termText}>{card.front_term}</Text>
-            {card.front_pos && (
-              <Text style={styles.posText}>[{card.front_pos}]</Text>
-            )}
+            {card.front_pos && <Text style={styles.posText}>[{card.front_pos}]</Text>}
 
             <TouchableOpacity
               style={styles.ttsButton}
@@ -140,9 +132,7 @@ export const ReviewCardFlipper: React.FC<ReviewCardFlipperProps> = ({
           {/* Front Word (summary) */}
           <View style={styles.termBoxSmall}>
             <Text style={styles.termTextSmall}>{card.front_term}</Text>
-            {card.front_pos && (
-              <Text style={styles.posText}>[{card.front_pos}]</Text>
-            )}
+            {card.front_pos && <Text style={styles.posText}>[{card.front_pos}]</Text>}
           </View>
 
           {/* Translation */}

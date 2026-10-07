@@ -178,9 +178,7 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
             {item.due_date ? (
               <View style={styles.srsMetricBadge}>
                 <Text style={styles.srsMetricLabel}>Next Review:</Text>
-                <Text style={styles.srsMetricVal}>
-                  {formatNextReview(item.due_date)}
-                </Text>
+                <Text style={styles.srsMetricVal}>{formatNextReview(item.due_date)}</Text>
               </View>
             ) : item.stability !== undefined ? (
               <View style={styles.srsMetricBadge}>
@@ -198,12 +196,8 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
             )}
             {item.lapses !== undefined && item.lapses > 0 && (
               <View style={[styles.srsMetricBadge, { backgroundColor: '#FEE2E2' }]}>
-                <Text style={[styles.srsMetricLabel, { color: '#DC2626' }]}>
-                  Lapses:
-                </Text>
-                <Text style={[styles.srsMetricVal, { color: '#DC2626' }]}>
-                  {item.lapses}
-                </Text>
+                <Text style={[styles.srsMetricLabel, { color: '#DC2626' }]}>Lapses:</Text>
+                <Text style={[styles.srsMetricVal, { color: '#DC2626' }]}>{item.lapses}</Text>
               </View>
             )}
           </View>
@@ -223,18 +217,10 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
                   opacity: pressed ? 0.88 : 1,
                 },
               ]}
-              onPress={() =>
-                onAddWord(
-                  item.front_lexeme_id,
-                  item.back_lexeme_id,
-                  item.concept_id
-                )
-              }
+              onPress={() => onAddWord(item.front_lexeme_id, item.back_lexeme_id, item.concept_id)}
             >
               <Plus size={14} color="#FFFFFF" />
-              <Text style={styles.addQueueBtnText}>
-                {t('explore.add_to_queue')}
-              </Text>
+              <Text style={styles.addQueueBtnText}>{t('explore.add_to_queue')}</Text>
             </Pressable>
           ) : (
             <View style={styles.inQueueBadge}>
@@ -304,18 +290,10 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
                   opacity: pressed ? 0.88 : 1,
                 },
               ]}
-              onPress={() =>
-                onAddWord(
-                  item.front_lexeme_id,
-                  item.back_lexeme_id,
-                  item.concept_id
-                )
-              }
+              onPress={() => onAddWord(item.front_lexeme_id, item.back_lexeme_id, item.concept_id)}
             >
               <Plus size={14} color="#FFFFFF" />
-              <Text style={styles.addQueueBtnText}>
-                {t('explore.add_to_queue')}
-              </Text>
+              <Text style={styles.addQueueBtnText}>{t('explore.add_to_queue')}</Text>
             </Pressable>
           )}
         </View>
@@ -335,9 +313,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
   const queuedCount = deck.queued_count ?? 0;
   const isFullyQueued = deck.card_count > 0 && queuedCount >= deck.card_count;
   const queuePercent =
-    deck.card_count > 0
-      ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100))
-      : 0;
+    deck.card_count > 0 ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100)) : 0;
 
   return (
     <Pressable
@@ -351,9 +327,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
       onPress={() => onOpenDeck(deck)}
     >
       <View style={styles.deckCardMain}>
-        <View style={styles.deckIconBox}>
-          {renderDeckIcon(deck.icon_name, 20, '#B45309')}
-        </View>
+        <View style={styles.deckIconBox}>{renderDeckIcon(deck.icon_name, 20, '#B45309')}</View>
         <View style={{ flex: 1 }}>
           <View style={styles.deckTitleRow}>
             <Text style={styles.deckName}>{deck.name}</Text>
@@ -398,9 +372,7 @@ const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDec
     <View style={styles.themeGroup}>
       {/* Theme Header */}
       <View style={styles.themeHeader}>
-        <View style={styles.themeIconBox}>
-          {renderDeckIcon(theme.icon_name, 22, '#92400E')}
-        </View>
+        <View style={styles.themeIconBox}>{renderDeckIcon(theme.icon_name, 22, '#92400E')}</View>
         <View style={{ flex: 1 }}>
           <Text style={styles.themeTitle}>{theme.name}</Text>
         </View>
@@ -409,11 +381,7 @@ const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDec
       {/* Decks under Theme */}
       <View style={styles.decksList}>
         {theme.decks.map((deck) => (
-          <ThemeDeckCard
-            key={deck.id}
-            deck={deck}
-            onOpenDeck={onOpenDeck}
-          />
+          <ThemeDeckCard key={deck.id} deck={deck} onOpenDeck={onOpenDeck} />
         ))}
       </View>
     </View>
@@ -495,11 +463,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   }, [targetLang, originLang, deckTitleLanguage]);
 
   const loadAllData = async () => {
-    await Promise.all([
-      loadDecksData(),
-      loadDifficultyData(),
-      loadMasteryData(masteryStage),
-    ]);
+    await Promise.all([loadDecksData(), loadDifficultyData(), loadMasteryData(masteryStage)]);
   };
 
   const loadDecksData = async () => {
@@ -564,7 +528,16 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     } finally {
       setLoadingMoreMastery(false);
     }
-  }, [loadingMoreMastery, hasMoreMastery, loadingMastery, masteryPage, masteryStage, targetLang, originLang, deckTitleLanguage]);
+  }, [
+    loadingMoreMastery,
+    hasMoreMastery,
+    loadingMastery,
+    masteryPage,
+    masteryStage,
+    targetLang,
+    originLang,
+    deckTitleLanguage,
+  ]);
 
   // Open Deck Word Inspector
   const handleOpenDeck = useCallback(
@@ -585,11 +558,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   // Add single word to queue
   const handleAddWord = useCallback(
-    async (
-      frontLexemeId: number,
-      backLexemeId: number,
-      conceptId: string
-    ) => {
+    async (frontLexemeId: number, backLexemeId: number, conceptId: string) => {
       const canLearn = await tokenWallet.canLearnWords(1);
       if (!canLearn) {
         onInsufficientTokens?.(1);
@@ -629,8 +598,18 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
     setAddingAllDeck(true);
     try {
       await tokenWallet.consumeWordAllowance(unqueuedCards);
-      await addEntireDeckToQueue(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
-      const updatedCards = await getCardsByDeck(selectedDeck.id, targetLang, selectedDeck.difficulty_slice, originLang);
+      await addEntireDeckToQueue(
+        selectedDeck.id,
+        targetLang,
+        selectedDeck.difficulty_slice,
+        originLang
+      );
+      const updatedCards = await getCardsByDeck(
+        selectedDeck.id,
+        targetLang,
+        selectedDeck.difficulty_slice,
+        originLang
+      );
       setDeckCards(updatedCards);
       await loadDecksData();
       await loadDifficultyData();
@@ -670,8 +649,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   const renderMasteryWord = useCallback(
     ({ item }: { item: MasteryWordItem }) => {
-      const isQueued =
-        item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
+      const isQueued = item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
       return (
         <MasteryWordCard
           item={item}
@@ -691,8 +669,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   const renderDeckCardDetail = useCallback(
     ({ item }: { item: DeckCardDetail }) => {
-      const isQueued =
-        item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
+      const isQueued = item.is_queued || locallyQueuedWordIds.has(item.front_lexeme_id);
       return (
         <DeckCardDetailItem
           item={item}
@@ -712,10 +689,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
 
   const renderThemeGroup = useCallback(
     ({ item }: { item: ThemeGroup }) => (
-      <ThemeGroupSection
-        theme={item}
-        onOpenDeck={handleOpenDeck}
-      />
+      <ThemeGroupSection theme={item} onOpenDeck={handleOpenDeck} />
     ),
     [handleOpenDeck]
   );
@@ -832,8 +806,12 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           onWordLearned={(lexemeId) => {
             setLocallyQueuedWordIds((prev) => new Set(prev).add(lexemeId));
             getMasterySummary(targetLang).then(setMasterySummary);
-            getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage).then(setThemes);
-            getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage).then(setMapDecks);
+            getThemesWithProgressiveDecks(targetLang, originLang, deckTitleLanguage).then(
+              setThemes
+            );
+            getAllDecksOrderedByDifficulty(targetLang, originLang, deckTitleLanguage).then(
+              setMapDecks
+            );
           }}
         />
       ) : (
@@ -845,7 +823,9 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 <Search size={18} color="#78350F" style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder={t('search.placeholder', { defaultValue: 'Search lab vocabulary, keywords, or meanings...' })}
+                  placeholder={t('search.placeholder', {
+                    defaultValue: 'Search lab vocabulary, keywords, or meanings...',
+                  })}
                   placeholderTextColor="#78350F88"
                   value={searchQuery}
                   onChangeText={handleSearch}
@@ -876,8 +856,8 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
           )}
 
           {/* TAB 1: DECKS (THEMES) OR SEARCH RESULTS */}
-          {activeTab === 'decks' && (
-            searchQuery.trim().length > 0 ? (
+          {activeTab === 'decks' &&
+            (searchQuery.trim().length > 0 ? (
               <FlatList
                 data={searchResults}
                 keyExtractor={(item) => `search_${item.id}`}
@@ -885,7 +865,9 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   <SearchResultCard
                     item={item}
                     isQueued={locallyQueuedWordIds.has(item.id)}
-                    onLearn={() => handleAddWord(item.id, item.id, item.concept_id || `c_${item.id}`)}
+                    onLearn={() =>
+                      handleAddWord(item.id, item.id, item.concept_id || `c_${item.id}`)
+                    }
                     onSpeak={(term, lang) => speakWord(term, lang)}
                   />
                 )}
@@ -920,188 +902,184 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 windowSize={5}
                 removeClippedSubviews={true}
               />
-            )
-          )}
+            ))}
 
-      {/* TAB 2: DIFFICULTY (CEFR / TIERS) */}
-      {activeTab === 'difficulty' && (
-        <DifficultyProgressionMap
-          decks={mapDecks}
-          loading={loadingDifficulty}
-          onSelectDeck={(deck) => handleOpenDeck(deck)}
-        />
-      )}
-
-      {/* TAB 3: MASTERY (SRS STATUS) */}
-      {activeTab === 'mastery' && (
-        <View style={styles.tabContent}>
-          {/* Stage Selector Grid */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.stageSelectorScroll}
-          >
-            {/* Slipping Away */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.stageCard,
-                masteryStage === 'slipping' && styles.stageCardActiveSlipping,
-              ]}
-              onPress={() => {
-                setMasteryStage('slipping');
-                loadMasteryData('slipping');
-              }}
-            >
-              <View style={styles.stageCardTop}>
-                <AlertCircle
-                  size={16}
-                  color={masteryStage === 'slipping' ? '#DC2626' : '#EF4444'}
-                />
-                <View style={[styles.stageBadge, { backgroundColor: '#FEE2E2' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#B91C1C' }]}>
-                    {masterySummary?.slipping_count || 0}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.stageCardTitle}>{t('explore.stage_slipping')}</Text>
-              <Text style={styles.stageCardSubtitle}>{t('explore.stage_slipping_desc')}</Text>
-            </TouchableOpacity>
-
-            {/* Learning */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.stageCard,
-                masteryStage === 'learning' && styles.stageCardActiveLearning,
-              ]}
-              onPress={() => {
-                setMasteryStage('learning');
-                loadMasteryData('learning');
-              }}
-            >
-              <View style={styles.stageCardTop}>
-                <Clock
-                  size={16}
-                  color={masteryStage === 'learning' ? '#2563EB' : '#3B82F6'}
-                />
-                <View style={[styles.stageBadge, { backgroundColor: '#DBEAFE' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#1D4ED8' }]}>
-                    {masterySummary?.learning_count || 0}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.stageCardTitle}>{t('explore.stage_learning')}</Text>
-              <Text style={styles.stageCardSubtitle}>{t('explore.stage_learning_desc')}</Text>
-            </TouchableOpacity>
-
-            {/* Mastered */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.stageCard,
-                masteryStage === 'mastered' && styles.stageCardActiveMastered,
-              ]}
-              onPress={() => {
-                setMasteryStage('mastered');
-                loadMasteryData('mastered');
-              }}
-            >
-              <View style={styles.stageCardTop}>
-                <Sparkles
-                  size={16}
-                  color={masteryStage === 'mastered' ? '#059669' : '#10B981'}
-                />
-                <View style={[styles.stageBadge, { backgroundColor: '#D1FAE5' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#047857' }]}>
-                    {masterySummary?.mastered_count || 0}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.stageCardTitle}>{t('explore.stage_mastered')}</Text>
-              <Text style={styles.stageCardSubtitle}>{t('explore.stage_mastered_desc')}</Text>
-            </TouchableOpacity>
-
-            {/* New in Queue */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.stageCard,
-                masteryStage === 'new_in_queue' && styles.stageCardActiveNew,
-              ]}
-              onPress={() => {
-                setMasteryStage('new_in_queue');
-                loadMasteryData('new_in_queue');
-              }}
-            >
-              <View style={styles.stageCardTop}>
-                <Layers
-                  size={16}
-                  color={masteryStage === 'new_in_queue' ? '#7C3AED' : '#8B5CF6'}
-                />
-                <View style={[styles.stageBadge, { backgroundColor: '#EDE9FE' }]}>
-                  <Text style={[styles.stageBadgeText, { color: '#6D28D9' }]}>
-                    {masterySummary?.new_queue_count || 0}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.stageCardTitle}>{t('explore.stage_new')}</Text>
-              <Text style={styles.stageCardSubtitle}>{t('explore.stage_new_desc')}</Text>
-            </TouchableOpacity>
-          </ScrollView>
-
-          {masteryStage === 'slipping' && (masterySummary?.slipping_count || 0) > 0 && (
-            <View style={styles.masteryActionCard}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.reviewSlippingBtn}
-                onPress={() => onStartReview && onStartReview()}
-              >
-                <Play size={16} color="#FFFFFF" />
-                <Text style={styles.reviewSlippingBtnText}>
-                  Review Slipping Words Now ({masterySummary?.slipping_count})
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Word List for Mastery Stage */}
-          {loadingMastery ? (
-            <View style={styles.centerLoading}>
-              <ActivityIndicator size="large" color="#D97706" />
-            </View>
-          ) : (
-            <FlatList
-              data={masteryWords}
-              keyExtractor={masteryKeyExtractor}
-              renderItem={renderMasteryWord}
-              contentContainerStyle={{ paddingBottom: 100 }}
-              showsVerticalScrollIndicator={false}
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
-              updateCellsBatchingPeriod={50}
-              windowSize={5}
-              removeClippedSubviews={true}
-              onEndReached={handleLoadMoreMastery}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                loadingMoreMastery ? (
-                  <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-                    <ActivityIndicator size="small" color="#D97706" />
-                  </View>
-                ) : null
-              }
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>{t('explore.no_words_found')}</Text>
-                </View>
-              }
+          {/* TAB 2: DIFFICULTY (CEFR / TIERS) */}
+          {activeTab === 'difficulty' && (
+            <DifficultyProgressionMap
+              decks={mapDecks}
+              loading={loadingDifficulty}
+              onSelectDeck={(deck) => handleOpenDeck(deck)}
             />
           )}
-        </View>
+
+          {/* TAB 3: MASTERY (SRS STATUS) */}
+          {activeTab === 'mastery' && (
+            <View style={styles.tabContent}>
+              {/* Stage Selector Grid */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.stageSelectorScroll}
+              >
+                {/* Slipping Away */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[
+                    styles.stageCard,
+                    masteryStage === 'slipping' && styles.stageCardActiveSlipping,
+                  ]}
+                  onPress={() => {
+                    setMasteryStage('slipping');
+                    loadMasteryData('slipping');
+                  }}
+                >
+                  <View style={styles.stageCardTop}>
+                    <AlertCircle
+                      size={16}
+                      color={masteryStage === 'slipping' ? '#DC2626' : '#EF4444'}
+                    />
+                    <View style={[styles.stageBadge, { backgroundColor: '#FEE2E2' }]}>
+                      <Text style={[styles.stageBadgeText, { color: '#B91C1C' }]}>
+                        {masterySummary?.slipping_count || 0}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.stageCardTitle}>{t('explore.stage_slipping')}</Text>
+                  <Text style={styles.stageCardSubtitle}>{t('explore.stage_slipping_desc')}</Text>
+                </TouchableOpacity>
+
+                {/* Learning */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[
+                    styles.stageCard,
+                    masteryStage === 'learning' && styles.stageCardActiveLearning,
+                  ]}
+                  onPress={() => {
+                    setMasteryStage('learning');
+                    loadMasteryData('learning');
+                  }}
+                >
+                  <View style={styles.stageCardTop}>
+                    <Clock size={16} color={masteryStage === 'learning' ? '#2563EB' : '#3B82F6'} />
+                    <View style={[styles.stageBadge, { backgroundColor: '#DBEAFE' }]}>
+                      <Text style={[styles.stageBadgeText, { color: '#1D4ED8' }]}>
+                        {masterySummary?.learning_count || 0}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.stageCardTitle}>{t('explore.stage_learning')}</Text>
+                  <Text style={styles.stageCardSubtitle}>{t('explore.stage_learning_desc')}</Text>
+                </TouchableOpacity>
+
+                {/* Mastered */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[
+                    styles.stageCard,
+                    masteryStage === 'mastered' && styles.stageCardActiveMastered,
+                  ]}
+                  onPress={() => {
+                    setMasteryStage('mastered');
+                    loadMasteryData('mastered');
+                  }}
+                >
+                  <View style={styles.stageCardTop}>
+                    <Sparkles
+                      size={16}
+                      color={masteryStage === 'mastered' ? '#059669' : '#10B981'}
+                    />
+                    <View style={[styles.stageBadge, { backgroundColor: '#D1FAE5' }]}>
+                      <Text style={[styles.stageBadgeText, { color: '#047857' }]}>
+                        {masterySummary?.mastered_count || 0}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.stageCardTitle}>{t('explore.stage_mastered')}</Text>
+                  <Text style={styles.stageCardSubtitle}>{t('explore.stage_mastered_desc')}</Text>
+                </TouchableOpacity>
+
+                {/* New in Queue */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[
+                    styles.stageCard,
+                    masteryStage === 'new_in_queue' && styles.stageCardActiveNew,
+                  ]}
+                  onPress={() => {
+                    setMasteryStage('new_in_queue');
+                    loadMasteryData('new_in_queue');
+                  }}
+                >
+                  <View style={styles.stageCardTop}>
+                    <Layers
+                      size={16}
+                      color={masteryStage === 'new_in_queue' ? '#7C3AED' : '#8B5CF6'}
+                    />
+                    <View style={[styles.stageBadge, { backgroundColor: '#EDE9FE' }]}>
+                      <Text style={[styles.stageBadgeText, { color: '#6D28D9' }]}>
+                        {masterySummary?.new_queue_count || 0}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.stageCardTitle}>{t('explore.stage_new')}</Text>
+                  <Text style={styles.stageCardSubtitle}>{t('explore.stage_new_desc')}</Text>
+                </TouchableOpacity>
+              </ScrollView>
+
+              {masteryStage === 'slipping' && (masterySummary?.slipping_count || 0) > 0 && (
+                <View style={styles.masteryActionCard}>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    style={styles.reviewSlippingBtn}
+                    onPress={() => onStartReview && onStartReview()}
+                  >
+                    <Play size={16} color="#FFFFFF" />
+                    <Text style={styles.reviewSlippingBtnText}>
+                      Review Slipping Words Now ({masterySummary?.slipping_count})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Word List for Mastery Stage */}
+              {loadingMastery ? (
+                <View style={styles.centerLoading}>
+                  <ActivityIndicator size="large" color="#D97706" />
+                </View>
+              ) : (
+                <FlatList
+                  data={masteryWords}
+                  keyExtractor={masteryKeyExtractor}
+                  renderItem={renderMasteryWord}
+                  contentContainerStyle={{ paddingBottom: 100 }}
+                  showsVerticalScrollIndicator={false}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={10}
+                  updateCellsBatchingPeriod={50}
+                  windowSize={5}
+                  removeClippedSubviews={true}
+                  onEndReached={handleLoadMoreMastery}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={
+                    loadingMoreMastery ? (
+                      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                        <ActivityIndicator size="small" color="#D97706" />
+                      </View>
+                    ) : null
+                  }
+                  ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>{t('explore.no_words_found')}</Text>
+                    </View>
+                  }
+                />
+              )}
+            </View>
+          )}
+        </>
       )}
-    </>
-  )}
 
       {/* DECK WORD INSPECTOR MODAL */}
       <Modal
@@ -1121,10 +1099,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                   {deckCards.length} {t('common.all').toLowerCase()}
                 </Text>
               </View>
-              <TouchableOpacity
-                style={styles.closeModalBtn}
-                onPress={() => setSelectedDeck(null)}
-              >
+              <TouchableOpacity style={styles.closeModalBtn} onPress={() => setSelectedDeck(null)}>
                 <X size={20} color="#64748B" />
               </TouchableOpacity>
             </View>
@@ -1166,9 +1141,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 ) : (
                   <>
                     <PlusCircle size={16} color="#B45309" />
-                    <Text style={styles.modalAddAllText}>
-                      {t('explore.add_all_to_queue')}
-                    </Text>
+                    <Text style={styles.modalAddAllText}>{t('explore.add_all_to_queue')}</Text>
                   </>
                 )}
               </Pressable>
@@ -1909,4 +1882,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-

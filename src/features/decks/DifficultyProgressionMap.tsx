@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { ArrowDown } from 'lucide-react-native';
 import { DeckWithProgress } from '../../types';
 import { DeckCardNode } from './DeckCardNode';
@@ -52,9 +47,7 @@ const PathConnector: React.FC<{
             },
           ]}
         >
-          {idx === 1 && (
-            <ArrowDown size={10} color={isCompleted ? '#065F46' : '#64748B'} />
-          )}
+          {idx === 1 && <ArrowDown size={10} color={isCompleted ? '#065F46' : '#64748B'} />}
         </View>
       ))}
     </View>
@@ -72,8 +65,7 @@ interface TrailNodeItemProps {
 
 const TrailNodeItem = React.memo<TrailNodeItemProps>(
   ({ deck, index, align, nextAlign, isLast, onSelectDeck }) => {
-    const isDeckCompleted =
-      deck.card_count > 0 && deck.mastered_count >= deck.card_count;
+    const isDeckCompleted = deck.card_count > 0 && deck.mastered_count >= deck.card_count;
 
     return (
       <View style={styles.nodeWrapper}>
@@ -85,19 +77,11 @@ const TrailNodeItem = React.memo<TrailNodeItemProps>(
             align === 'right' && styles.nodeAlignRight,
           ]}
         >
-          <DeckCardNode
-            deck={deck}
-            index={index}
-            onPress={() => onSelectDeck(deck)}
-          />
+          <DeckCardNode deck={deck} index={index} onPress={() => onSelectDeck(deck)} />
         </View>
 
         {!isLast && (
-          <PathConnector
-            fromAlign={align}
-            toAlign={nextAlign}
-            isCompleted={isDeckCompleted}
-          />
+          <PathConnector fromAlign={align} toAlign={nextAlign} isCompleted={isDeckCompleted} />
         )}
       </View>
     );
@@ -118,9 +102,7 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
       const align = alignmentPattern[index % alignmentPattern.length];
       const nextIndex = index + 1;
       const nextAlign =
-        nextIndex < decks.length
-          ? alignmentPattern[nextIndex % alignmentPattern.length]
-          : 'center';
+        nextIndex < decks.length ? alignmentPattern[nextIndex % alignmentPattern.length] : 'center';
 
       return (
         <TrailNodeItem

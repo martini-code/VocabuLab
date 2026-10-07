@@ -222,12 +222,7 @@ describe('ReviewCardFlipper Integration Tests (Card Flip Interactions)', () => {
       };
 
       const { getAllByText } = await render(
-        <ReviewCardFlipper
-          card={c2Card}
-          isFlipped={false}
-          onFlip={jest.fn()}
-          onSpeak={jest.fn()}
-        />
+        <ReviewCardFlipper card={c2Card} isFlipped={false} onFlip={jest.fn()} onSpeak={jest.fn()} />
       );
 
       expect(getAllByText('C2').length).toBeGreaterThanOrEqual(1);

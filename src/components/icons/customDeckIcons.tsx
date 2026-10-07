@@ -143,7 +143,13 @@ export const CustomLucideIcon: React.FC<CustomLucideIconProps> = ({
 registerCustomDeckIcon('custom-potion', {
   name: 'custom-potion',
   render: ({ color, strokeWidth }) => (
-    <G stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <G
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    >
       <Path d="M9 2h6" />
       <Path d="M10 2v3" />
       <Path d="M14 2v3" />
@@ -158,7 +164,13 @@ registerCustomDeckIcon('custom-potion', {
 registerCustomDeckIcon('custom-quill', {
   name: 'custom-quill',
   render: ({ color, strokeWidth }) => (
-    <G stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <G
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    >
       <Path d="M19 3a4 4 0 0 0-4 4v2L4 20l-1 1 2-1 11-11h2a4 4 0 0 0 4-4c0-1-1-2-3-2z" />
       <Path d="M10 13l3-3" />
       <Path d="M3 21l2.5-1" />
@@ -170,7 +182,13 @@ registerCustomDeckIcon('custom-quill', {
 registerCustomDeckIcon('custom-scroll', {
   name: 'custom-scroll',
   render: ({ color, strokeWidth }) => (
-    <G stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <G
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    >
       <Path d="M19 17V5a2 2 0 0 0-2-2H4" />
       <Path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4" />
       <Path d="M9 8h6" />
@@ -183,7 +201,13 @@ registerCustomDeckIcon('custom-scroll', {
 registerCustomDeckIcon('custom-gem', {
   name: 'custom-gem',
   render: ({ color, strokeWidth }) => (
-    <G stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <G
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    >
       <Path d="M6 3h12l4 6-10 12L2 9z" />
       <Path d="M2 9h20" />
       <Path d="M12 21L8 9l4-6 4 6-4 12" />
@@ -195,7 +219,13 @@ registerCustomDeckIcon('custom-gem', {
 registerCustomDeckIcon('custom-runestone', {
   name: 'custom-runestone',
   render: ({ color, strokeWidth }) => (
-    <G stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <G
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    >
       <Path d="M7 21l2-16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2l2 16H7z" />
       <Path d="M12 7v10" />
       <Path d="M12 9l3-2" />
@@ -209,7 +239,13 @@ registerCustomDeckIcon('custom-runestone', {
 registerCustomDeckIcon('custom-shield-crest', {
   name: 'custom-shield-crest',
   render: ({ color, strokeWidth }) => (
-    <G stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <G
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    >
       <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <Path d="M12 2v20" />
       <Path d="M4 11h16" />

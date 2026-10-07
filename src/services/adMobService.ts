@@ -50,11 +50,7 @@ class AdMobService {
     const gma = this.getGmaModule();
     if (!gma) return null;
     const callable =
-      typeof gma.default === 'function'
-        ? gma.default
-        : typeof gma === 'function'
-        ? gma
-        : null;
+      typeof gma.default === 'function' ? gma.default : typeof gma === 'function' ? gma : null;
     return callable ? callable() : null;
   }
 
@@ -163,7 +159,9 @@ class AdMobService {
     this.isTestMode = enabled;
     this.isLoaded = false;
     this.nativeRewardedAd = null;
-    console.log(`[AdMobService] Test Mode toggled to: ${enabled ? 'SAFE TEST MODE' : 'PRODUCTION LIVE ADS'}`);
+    console.log(
+      `[AdMobService] Test Mode toggled to: ${enabled ? 'SAFE TEST MODE' : 'PRODUCTION LIVE ADS'}`
+    );
     await this.preload();
   }
 
@@ -203,7 +201,9 @@ class AdMobService {
    */
   async openAdInspector(): Promise<{ success: boolean; error?: string }> {
     if (!this.hasNativeAdMob) {
-      console.log('[AdMobMediation] Ad Inspector is only available in native builds with Google Mobile Ads SDK linked.');
+      console.log(
+        '[AdMobMediation] Ad Inspector is only available in native builds with Google Mobile Ads SDK linked.'
+      );
       return {
         success: false,
         error: 'Ad Inspector requires a native build with react-native-google-mobile-ads linked.',
@@ -274,7 +274,9 @@ class AdMobService {
       const adUnitId = this.getActiveAdUnitId();
 
       if (this.isTestMode || __DEV__) {
-        console.log(`[AdMobService] 🛡️ Safe Test Mode ACTIVE. Serving test ad: ${adUnitId} (No ban risk)`);
+        console.log(
+          `[AdMobService] 🛡️ Safe Test Mode ACTIVE. Serving test ad: ${adUnitId} (No ban risk)`
+        );
       } else {
         console.warn(`[AdMobService] ⚠️ Production Live Ads ACTIVE. Serving live ad: ${adUnitId}`);
       }
@@ -356,9 +358,15 @@ class AdMobService {
             let unsubError = () => {};
 
             const cleanup = () => {
-              try { unsubEarned(); } catch {}
-              try { unsubClosed(); } catch {}
-              try { unsubError(); } catch {}
+              try {
+                unsubEarned();
+              } catch {}
+              try {
+                unsubClosed();
+              } catch {}
+              try {
+                unsubError();
+              } catch {}
             };
 
             const finish = (result: RewardedAdResult) => {
@@ -379,16 +387,13 @@ class AdMobService {
               }
             );
 
-            unsubClosed = this.nativeRewardedAd.addAdEventListener(
-              AdEventType.CLOSED,
-              () => {
-                if (rewardEarned) {
-                  finish({ success: true, rewardGranted: true });
-                } else {
-                  finish({ success: false, reason: 'cancelled' });
-                }
+            unsubClosed = this.nativeRewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
+              if (rewardEarned) {
+                finish({ success: true, rewardGranted: true });
+              } else {
+                finish({ success: false, reason: 'cancelled' });
               }
-            );
+            });
 
             unsubError = this.nativeRewardedAd.addAdEventListener(
               AdEventType.ERROR,

@@ -27,9 +27,7 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
     const presets: UserProfilePreset[] = ['beginner', 'intermediate', 'advanced', 'clean'];
 
     it('contains all four required presets', () => {
-      expect(Object.keys(USER_PROFILES)).toEqual(
-        expect.arrayContaining(presets)
-      );
+      expect(Object.keys(USER_PROFILES)).toEqual(expect.arrayContaining(presets));
     });
 
     it('uses strictly non-thematic professional naming across all profiles', () => {
@@ -173,7 +171,10 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
 
   describe('seedMockUserProfile with better-sqlite3 database', () => {
     it('seeds the beginner profile into database tables', async () => {
-      const info = await seedMockUserProfile('beginner', db, { targetLang: 'es', originLang: 'en' });
+      const info = await seedMockUserProfile('beginner', db, {
+        targetLang: 'es',
+        originLang: 'en',
+      });
       expect(info.id).toBe('beginner');
 
       const cards = db.prepare('SELECT * FROM User_Cards;').all();
@@ -188,7 +189,10 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
     });
 
     it('seeds the intermediate profile into database tables', async () => {
-      const info = await seedMockUserProfile('intermediate', db, { targetLang: 'es', originLang: 'en' });
+      const info = await seedMockUserProfile('intermediate', db, {
+        targetLang: 'es',
+        originLang: 'en',
+      });
       expect(info.id).toBe('intermediate');
 
       const cards = db.prepare('SELECT * FROM User_Cards;').all();
@@ -205,7 +209,10 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
     });
 
     it('seeds the advanced profile into database tables', async () => {
-      const info = await seedMockUserProfile('advanced', db, { targetLang: 'es', originLang: 'en' });
+      const info = await seedMockUserProfile('advanced', db, {
+        targetLang: 'es',
+        originLang: 'en',
+      });
       expect(info.id).toBe('advanced');
 
       const cards = db.prepare('SELECT * FROM User_Cards;').all();
@@ -232,7 +239,9 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
 
       expect(db.prepare('SELECT COUNT(*) as count FROM User_Cards;').get().count).toBe(0);
       expect(db.prepare('SELECT COUNT(*) as count FROM Review_Logs;').get().count).toBe(0);
-      expect(db.prepare('SELECT COUNT(*) as count FROM Deck_Access WHERE is_unlocked = 1;').get().count).toBe(1);
+      expect(
+        db.prepare('SELECT COUNT(*) as count FROM Deck_Access WHERE is_unlocked = 1;').get().count
+      ).toBe(1);
     });
 
     it('atomically replaces prior data when switching between profiles', async () => {
@@ -246,11 +255,15 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
       // Verify no leftover cards or logs leaked from advanced
       expect(db.prepare('SELECT COUNT(*) as count FROM User_Cards;').get().count).toBe(15);
       expect(db.prepare('SELECT COUNT(*) as count FROM Review_Logs;').get().count).toBe(12);
-      expect(db.prepare('SELECT COUNT(*) as count FROM Deck_Access WHERE is_unlocked = 1;').get().count).toBe(1);
+      expect(
+        db.prepare('SELECT COUNT(*) as count FROM Deck_Access WHERE is_unlocked = 1;').get().count
+      ).toBe(1);
     });
 
     it('updates tokenWallet testing state when available', async () => {
-      const spy = jest.spyOn(tokenWallet, 'setWalletStateForTesting').mockResolvedValue(undefined as any);
+      const spy = jest
+        .spyOn(tokenWallet, 'setWalletStateForTesting')
+        .mockResolvedValue(undefined as any);
 
       await seedMockUserProfile('beginner', db);
       expect(spy).toHaveBeenCalledWith(USER_PROFILES.beginner.tokens);
@@ -273,7 +286,9 @@ describe('Mock User Profiles & Seed Engine (better-sqlite3)', () => {
         return originalPrepare(sql);
       });
 
-      await expect(seedMockUserProfile('intermediate', db)).rejects.toThrow('Disk I/O Error Simulation');
+      await expect(seedMockUserProfile('intermediate', db)).rejects.toThrow(
+        'Disk I/O Error Simulation'
+      );
 
       // Database should not be in half-written intermediate state
       expect(db.prepare('SELECT COUNT(*) as count FROM User_Cards;').get().count).toBe(15);

@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Sparkles, X, Check, Award, Compass } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -73,11 +66,7 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
           </View>
 
           {canDismiss ? (
-            <TouchableOpacity
-              style={styles.closeBtnActive}
-              onPress={onClose}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity style={styles.closeBtnActive} onPress={onClose} activeOpacity={0.8}>
               <Text style={styles.closeBtnText}>
                 {t('ad_free.interstitial_skip_ready', { defaultValue: 'RESUME EXPERIMENT' })}
               </Text>
@@ -86,7 +75,10 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
           ) : (
             <View style={styles.countdownPill}>
               <Text style={styles.countdownText}>
-                {t('ad_free.interstitial_skip_countdown', { count: countdown, defaultValue: `Skip in ${countdown}s` })}
+                {t('ad_free.interstitial_skip_countdown', {
+                  count: countdown,
+                  defaultValue: `Skip in ${countdown}s`,
+                })}
               </Text>
             </View>
           )}
@@ -107,7 +99,9 @@ export const FullScreenAdModal: React.FC<FullScreenAdModalProps> = ({
             </View>
 
             <Text style={styles.adHeadline}>
-              {t('ad_free.interstitial_subtitle', { defaultValue: 'Expand Your Field of Knowledge' })}
+              {t('ad_free.interstitial_subtitle', {
+                defaultValue: 'Expand Your Field of Knowledge',
+              })}
             </Text>
 
             <Text style={styles.adDescription}>

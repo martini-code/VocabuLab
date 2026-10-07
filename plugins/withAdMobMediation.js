@@ -69,10 +69,7 @@ function withMediationAndroidDependencies(config) {
 `;
 
     if (contents.includes('dependencies {')) {
-      contents = contents.replace(
-        'dependencies {',
-        `dependencies {${dependenciesBlock}`
-      );
+      contents = contents.replace('dependencies {', `dependencies {${dependenciesBlock}`);
     } else {
       contents += `\ndependencies {\n${dependenciesBlock}\n}\n`;
     }

@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Grade, Rating } from 'ts-fsrs';
 import {
   Sparkles,
@@ -71,15 +65,15 @@ function getRatingConfig(rating: Grade) {
 
 function getStabilityColor(days: number): string {
   if (days >= 10) return '#10B981'; // High stability (mastered)
-  if (days >= 4) return '#0D9488';  // Good stability
-  if (days >= 1) return '#F59E0B';  // Learning / short stability
-  return '#EF4444';                 // Low stability / needs review
+  if (days >= 4) return '#0D9488'; // Good stability
+  if (days >= 1) return '#F59E0B'; // Learning / short stability
+  return '#EF4444'; // Low stability / needs review
 }
 
 function getDifficultyColor(diff: number): string {
   if (diff <= 4.0) return '#10B981'; // Easy
   if (diff <= 6.5) return '#F59E0B'; // Medium
-  return '#EF4444';                  // Hard
+  return '#EF4444'; // Hard
 }
 
 export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
@@ -113,7 +107,9 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
         <Text style={styles.title}>SESSION COMPLETE!</Text>
         <Text style={styles.subtitle}>
           Outstanding work! You reviewed{' '}
-          <Text style={styles.subtitleBold}>{total} {total === 1 ? 'word' : 'words'}</Text>
+          <Text style={styles.subtitleBold}>
+            {total} {total === 1 ? 'word' : 'words'}
+          </Text>
           {deckName ? ` in "${deckName}"` : ''}.
         </Text>
 
@@ -133,7 +129,8 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                 styles.overallProgressBarFill,
                 {
                   width: `${Math.max(5, recallRate)}%`,
-                  backgroundColor: recallRate >= 80 ? '#10B981' : recallRate >= 60 ? '#F59E0B' : '#EF4444',
+                  backgroundColor:
+                    recallRate >= 80 ? '#10B981' : recallRate >= 60 ? '#F59E0B' : '#EF4444',
                 },
               ]}
             />
@@ -149,34 +146,22 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
           <View style={styles.stackedBarTrack}>
             {againCount > 0 && (
               <View
-                style={[
-                  styles.stackedBarSegment,
-                  { flex: againCount, backgroundColor: '#EF4444' },
-                ]}
+                style={[styles.stackedBarSegment, { flex: againCount, backgroundColor: '#EF4444' }]}
               />
             )}
             {hardCount > 0 && (
               <View
-                style={[
-                  styles.stackedBarSegment,
-                  { flex: hardCount, backgroundColor: '#F59E0B' },
-                ]}
+                style={[styles.stackedBarSegment, { flex: hardCount, backgroundColor: '#F59E0B' }]}
               />
             )}
             {goodCount > 0 && (
               <View
-                style={[
-                  styles.stackedBarSegment,
-                  { flex: goodCount, backgroundColor: '#10B981' },
-                ]}
+                style={[styles.stackedBarSegment, { flex: goodCount, backgroundColor: '#10B981' }]}
               />
             )}
             {easyCount > 0 && (
               <View
-                style={[
-                  styles.stackedBarSegment,
-                  { flex: easyCount, backgroundColor: '#3B82F6' },
-                ]}
+                style={[styles.stackedBarSegment, { flex: easyCount, backgroundColor: '#3B82F6' }]}
               />
             )}
           </View>
@@ -238,11 +223,17 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
           const ratingCfg = getRatingConfig(item.rating);
           const diffGain = item.newStability - item.prevStability;
           // Benchmark stability scale: 30 days = 100%
-          const stabilityPercent = Math.min(100, Math.max(5, Math.round((item.newStability / 30) * 100)));
+          const stabilityPercent = Math.min(
+            100,
+            Math.max(5, Math.round((item.newStability / 30) * 100))
+          );
           const stabilityColor = getStabilityColor(item.newStability);
 
           // FSRS difficulty scale: 1 to 10
-          const difficultyPercent = Math.min(100, Math.max(10, Math.round((item.newDifficulty / 10) * 100)));
+          const difficultyPercent = Math.min(
+            100,
+            Math.max(10, Math.round((item.newDifficulty / 10) * 100))
+          );
           const difficultyColor = getDifficultyColor(item.newDifficulty);
 
           return (
@@ -257,9 +248,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                         <Text style={styles.cefrText}>{item.frontCefr}</Text>
                       </View>
                     )}
-                    {item.pos && (
-                      <Text style={styles.posText}>({item.pos})</Text>
-                    )}
+                    {item.pos && <Text style={styles.posText}>({item.pos})</Text>}
                   </View>
                   <Text style={styles.backTermText}>{item.backTerm}</Text>
                 </View>
@@ -287,10 +276,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                     </Text>
                     {diffGain !== 0 && (
                       <Text
-                        style={[
-                          styles.gainBadge,
-                          { color: diffGain > 0 ? '#059669' : '#DC2626' },
-                        ]}
+                        style={[styles.gainBadge, { color: diffGain > 0 ? '#059669' : '#DC2626' }]}
                       >
                         {diffGain > 0 ? `(+${diffGain.toFixed(1)}d)` : `(${diffGain.toFixed(1)}d)`}
                       </Text>
@@ -336,13 +322,18 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                 <View style={styles.intervalBox}>
                   <Clock size={12} color="#78350F" />
                   <Text style={styles.intervalText}>
-                    Next review: <Text style={styles.intervalValue}>{formatInterval(item.scheduledDays)}</Text>
+                    Next review:{' '}
+                    <Text style={styles.intervalValue}>{formatInterval(item.scheduledDays)}</Text>
                   </Text>
                 </View>
 
                 <View style={styles.stageBox}>
                   <Text style={styles.stageText}>
-                    {item.newStability >= 10 ? 'Mastered' : item.state === 1 ? 'Learning' : 'Review'}
+                    {item.newStability >= 10
+                      ? 'Mastered'
+                      : item.state === 1
+                        ? 'Learning'
+                        : 'Review'}
                   </Text>
                 </View>
               </View>
@@ -372,11 +363,7 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
         )}
 
         {onTrainAgain && (
-          <TouchableOpacity
-            style={styles.trainAgainBtn}
-            onPress={onTrainAgain}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.trainAgainBtn} onPress={onTrainAgain} activeOpacity={0.8}>
             <RotateCcw size={16} color="#78350F" />
             <Text style={styles.trainAgainText}>REFRESH QUEUE</Text>
           </TouchableOpacity>

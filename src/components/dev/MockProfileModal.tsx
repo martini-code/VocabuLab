@@ -72,7 +72,9 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
               </View>
               <View>
                 <Text style={styles.title}>Testing Profiles</Text>
-                <Text style={styles.subtitle}>Select a mock user profile to seed realistic test data</Text>
+                <Text style={styles.subtitle}>
+                  Select a mock user profile to seed realistic test data
+                </Text>
               </View>
             </View>
             <TouchableOpacity
@@ -86,7 +88,10 @@ export const MockProfileModal: React.FC<MockProfileModalProps> = ({
           </View>
 
           {/* Profile Cards List */}
-          <ScrollView contentContainerStyle={styles.scrollList} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.scrollList}
+            showsVerticalScrollIndicator={false}
+          >
             {presets.map((preset) => {
               const profile = USER_PROFILES[preset];
               const isLoading = loadingPreset === preset;

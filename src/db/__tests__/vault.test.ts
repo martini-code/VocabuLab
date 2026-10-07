@@ -43,22 +43,27 @@ jest.mock('../../locales/languages', () => {
   return {
     ...actual,
     SUPPORTED_LANGUAGES: [
-      { code: 'en',    name: 'English',                  nativeName: 'English', flag: '🇬🇧' },
-      { code: 'es',    name: 'Spanish',                  nativeName: 'Español', flag: '🇪🇸' },
-      { code: 'pt-BR', name: 'Portuguese (Brazil)',       nativeName: 'Português (Brasil)', flag: '🇧🇷' },
-      { code: 'zh',    name: 'Chinese (Simplified)',      nativeName: '中文 (简体)', flag: '🇨🇳' },
-      { code: 'fr',    name: 'French',                   nativeName: 'Français', flag: '🇫🇷' },
-      { code: 'fr-CA', name: 'French (Canada)',           nativeName: 'Français (Canada)', flag: '🇨🇦' },
-      { code: 'no',    name: 'Norwegian (Bokmål)',        nativeName: 'Norsk (Bokmål)', flag: '🇳🇴' },
-      { code: 'ku',    name: 'Kurdish (Kurmanji)',        nativeName: 'Kurmancî', flag: '🇮🇶' },
-      { code: 'ckb',   name: 'Kurdish (Sorani)',          nativeName: 'کوردی سۆرانی', flag: '🇮🇶' },
-      { code: 'ar',    name: 'Arabic',                   nativeName: 'العربية', flag: '🇸🇦' },
-      { code: 'de',    name: 'German',                   nativeName: 'Deutsch', flag: '🇩🇪' },
-      { code: 'it',    name: 'Italian',                  nativeName: 'Italiano', flag: '🇮🇹' },
-      { code: 'ja',    name: 'Japanese',                 nativeName: '日本語', flag: '🇯🇵' },
-      { code: 'ko',    name: 'Korean',                   nativeName: '한국어', flag: '🇰🇷' },
-      { code: 'pt-PT', name: 'Portuguese (Portugal)',     nativeName: 'Português (Portugal)', flag: '🇵🇹' },
-      { code: 'zh-TW', name: 'Chinese (Traditional)',    nativeName: '中文 (繁體)', flag: '🇹🇼' },
+      { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+      { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+      { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
+      { code: 'zh', name: 'Chinese (Simplified)', nativeName: '中文 (简体)', flag: '🇨🇳' },
+      { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+      { code: 'fr-CA', name: 'French (Canada)', nativeName: 'Français (Canada)', flag: '🇨🇦' },
+      { code: 'no', name: 'Norwegian (Bokmål)', nativeName: 'Norsk (Bokmål)', flag: '🇳🇴' },
+      { code: 'ku', name: 'Kurdish (Kurmanji)', nativeName: 'Kurmancî', flag: '🇮🇶' },
+      { code: 'ckb', name: 'Kurdish (Sorani)', nativeName: 'کوردی سۆرانی', flag: '🇮🇶' },
+      { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+      { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+      { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
+      { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
+      { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
+      {
+        code: 'pt-PT',
+        name: 'Portuguese (Portugal)',
+        nativeName: 'Português (Portugal)',
+        flag: '🇵🇹',
+      },
+      { code: 'zh-TW', name: 'Chinese (Traditional)', nativeName: '中文 (繁體)', flag: '🇹🇼' },
     ],
   };
 });
@@ -438,9 +443,7 @@ describe('getDownloadedLanguages', () => {
   it('calls getAllAsync querying Downloaded_Languages', async () => {
     mockGetAllAsync.mockResolvedValueOnce([]);
     await getDownloadedLanguages();
-    expect(mockGetAllAsync).toHaveBeenCalledWith(
-      expect.stringContaining('Downloaded_Languages')
-    );
+    expect(mockGetAllAsync).toHaveBeenCalledWith(expect.stringContaining('Downloaded_Languages'));
   });
 
   it('returns an empty array when no languages are downloaded', async () => {
@@ -466,9 +469,27 @@ describe('getDownloadedLanguages', () => {
 
   it('returns multiple downloaded languages', async () => {
     const langs = [
-      { code: 'de', lang_name: 'German',  downloaded_at: '2024-02-01T00:00:00.000Z', card_count: 200, size_bytes: 50000 },
-      { code: 'es', lang_name: 'Spanish', downloaded_at: '2024-01-01T00:00:00.000Z', card_count: 100, size_bytes: 25000 },
-      { code: 'fr', lang_name: 'French',  downloaded_at: '2024-03-01T00:00:00.000Z', card_count: 150, size_bytes: 37500 },
+      {
+        code: 'de',
+        lang_name: 'German',
+        downloaded_at: '2024-02-01T00:00:00.000Z',
+        card_count: 200,
+        size_bytes: 50000,
+      },
+      {
+        code: 'es',
+        lang_name: 'Spanish',
+        downloaded_at: '2024-01-01T00:00:00.000Z',
+        card_count: 100,
+        size_bytes: 25000,
+      },
+      {
+        code: 'fr',
+        lang_name: 'French',
+        downloaded_at: '2024-03-01T00:00:00.000Z',
+        card_count: 150,
+        size_bytes: 37500,
+      },
     ];
     mockGetAllAsync.mockResolvedValueOnce(langs);
     const result = await getDownloadedLanguages();
@@ -657,7 +678,9 @@ describe('getDeckTitleLanguagePreference and setDeckTitleLanguagePreference', ()
 
     await setDeckTitleLanguagePreference('target');
     expect(mockRunAsync).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'),
+      expect.stringContaining(
+        'INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'
+      ),
       expect.arrayContaining(['deck_title_language', 'target'])
     );
   });
@@ -667,9 +690,10 @@ describe('getDeckTitleLanguagePreference and setDeckTitleLanguagePreference', ()
 
     await setDeckTitleLanguagePreference('origin');
     expect(mockRunAsync).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'),
+      expect.stringContaining(
+        'INSERT OR REPLACE INTO Settings (key, value, updated_at) VALUES (?, ?, ?);'
+      ),
       expect.arrayContaining(['deck_title_language', 'origin'])
     );
   });
 });
-

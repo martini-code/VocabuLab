@@ -26,12 +26,12 @@ export async function syncDatabaseFromR2(): Promise<void> {
  * Extracts a language pack directly from the static lexicon database into user_vault.sqlite.
  * Keeps user data completely isolated in separate tables without intermediate files or JSONs.
  */
-export async function downloadLanguagePack(
-  codeOrName: string
-): Promise<LanguageDownloadResult> {
+export async function downloadLanguagePack(codeOrName: string): Promise<LanguageDownloadResult> {
   const langName = resolveLanguageName(codeOrName);
   const langOpt = SUPPORTED_LANGUAGES.find(
-    (l) => l.name.toLowerCase() === langName.toLowerCase() || l.code.toLowerCase() === codeOrName.toLowerCase()
+    (l) =>
+      l.name.toLowerCase() === langName.toLowerCase() ||
+      l.code.toLowerCase() === codeOrName.toLowerCase()
   );
   const code = langOpt ? langOpt.code : codeOrName.toLowerCase();
 
@@ -132,17 +132,31 @@ export async function downloadLanguagePack(
 
     await userDb.withTransactionAsync(async () => {
       for (const dt of deckTranslations) {
-        approxBytes += ((dt.category_translation || '').length + (dt.subcategory_translation || '').length) * 2 + 32;
+        approxBytes +=
+          ((dt.category_translation || '').length + (dt.subcategory_translation || '').length) * 2 +
+          32;
         await userDb.runAsync(
           `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
            VALUES (?, ?, ?, ?, ?);`,
-          [dt.deck_id, langName, dt.category_translation, dt.subcategory_translation, dt.source || null]
+          [
+            dt.deck_id,
+            langName,
+            dt.category_translation,
+            dt.subcategory_translation,
+            dt.source || null,
+          ]
         );
         if (dt.lang_name.toLowerCase() !== langName.toLowerCase()) {
           await userDb.runAsync(
             `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
              VALUES (?, ?, ?, ?, ?);`,
-            [dt.deck_id, dt.lang_name, dt.category_translation, dt.subcategory_translation, dt.source || null]
+            [
+              dt.deck_id,
+              dt.lang_name,
+              dt.category_translation,
+              dt.subcategory_translation,
+              dt.source || null,
+            ]
           );
         }
       }
@@ -184,10 +198,17 @@ export async function deleteLanguagePack(codeOrName: string): Promise<void> {
   const langName = resolveLanguageName(codeOrName);
   const userDb = await getUserDb();
 
-  await userDb.runAsync('DELETE FROM Downloaded_Card_Translations WHERE lang_name = ?;', [langName]);
+  await userDb.runAsync('DELETE FROM Downloaded_Card_Translations WHERE lang_name = ?;', [
+    langName,
+  ]);
   await userDb.runAsync('DELETE FROM Downloaded_Card_Definitions WHERE lang_name = ?;', [langName]);
-  await userDb.runAsync('DELETE FROM Downloaded_Deck_Translations WHERE lang_name = ?;', [langName]);
-  await userDb.runAsync('DELETE FROM Downloaded_Languages WHERE lang_name = ? OR code = ?;', [langName, codeOrName]);
+  await userDb.runAsync('DELETE FROM Downloaded_Deck_Translations WHERE lang_name = ?;', [
+    langName,
+  ]);
+  await userDb.runAsync('DELETE FROM Downloaded_Languages WHERE lang_name = ? OR code = ?;', [
+    langName,
+    codeOrName,
+  ]);
 
   // Reclaim disk space
   try {
@@ -216,7 +237,10 @@ export async function ensureDefaultLanguagePairInstalled(
     try {
       pair = JSON.parse(settingRow.value);
     } catch {
-      pair = { origin_lang: deviceLangCode, destination_lang: deviceLangCode === 'en' ? 'es' : 'en' };
+      pair = {
+        origin_lang: deviceLangCode,
+        destination_lang: deviceLangCode === 'en' ? 'es' : 'en',
+      };
     }
   } else {
     const origin = deviceLangCode.toLowerCase();

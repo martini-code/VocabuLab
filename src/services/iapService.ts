@@ -10,9 +10,7 @@ import { isAdFreeUser, setAdFreeUser } from '../db/vault';
 import { IAP_SKUS } from '../config/secrets';
 export { IAP_SKUS };
 
-export const ALL_AD_FREE_SKUS = [
-  IAP_SKUS.AD_FREE_MONTHLY,
-];
+export const ALL_AD_FREE_SKUS = [IAP_SKUS.AD_FREE_MONTHLY];
 
 export interface AdFreeProductItem {
   id: string;
@@ -127,14 +125,18 @@ class IAPService {
 
     // Web platform does not support native StoreKit or Google Play Billing
     if (Platform.OS === 'web') {
-      console.log('[IAP] Running on Web: Native StoreKit/PlayBilling disabled. Local SQLite fallback active.');
+      console.log(
+        '[IAP] Running on Web: Native StoreKit/PlayBilling disabled. Local SQLite fallback active.'
+      );
       return true;
     }
 
     // 2. Initialize native store connection if available
     const RNIap = getRNIap();
     if (!RNIap) {
-      console.log('[IAP] Native StoreKit/Google Play billing unavailable in this runtime (Expo Go or unlinked build). Local SQLite fallback active.');
+      console.log(
+        '[IAP] Native StoreKit/Google Play billing unavailable in this runtime (Expo Go or unlinked build). Local SQLite fallback active.'
+      );
       this.isConnected = false;
       return false;
     }

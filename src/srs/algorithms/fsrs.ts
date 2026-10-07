@@ -19,7 +19,8 @@ function toFSRSCard(card: UserCard): FSRSCard {
   return {
     due: parseDateSafe(card.due_date),
     stability: typeof card.stability === 'number' && !isNaN(card.stability) ? card.stability : 0,
-    difficulty: typeof card.difficulty === 'number' && !isNaN(card.difficulty) ? card.difficulty : 0,
+    difficulty:
+      typeof card.difficulty === 'number' && !isNaN(card.difficulty) ? card.difficulty : 0,
     elapsed_days: card.elapsed_days || 0,
     scheduled_days: card.scheduled_days || 0,
     learning_steps: 0,

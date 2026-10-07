@@ -61,7 +61,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [isVaultReady, setIsVaultReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Powering up the lab...');
-  const [languageModalMode, setLanguageModalMode] = useState<'origin' | 'destination'>('destination');
+  const [languageModalMode, setLanguageModalMode] = useState<'origin' | 'destination'>(
+    'destination'
+  );
   const [languagePair, setLanguagePair] = useState<LanguagePairSettings>(() => {
     const dev = getDeviceLanguage();
     return {
@@ -182,397 +184,404 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FEFCE8" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FEFCE8" />
 
-      {/* Top Lab Stats Header (Vector Icons - Strictly No Emojis) */}
-      {!isReviewInProgress && (
-        <View style={styles.topStatsBar}>
-          {/* Streak Flame */}
-          <View style={styles.statPill}>
-            <Flame size={16} color="#DC2626" />
-            <Text style={styles.statValue}>{stats.streakDays}</Text>
-          </View>
-
-          {/* Due Cards Test Tube */}
-          <View style={styles.statPill}>
-            <TestTube size={16} color="#0D9488" />
-            <Text style={styles.statValue}>{stats.dueCards} {t('stats.due')}</Text>
-          </View>
-
-          {/* Token Allowance Pill (Isolated component, granularly subscribed to wallet updates) */}
-          <TokenPill onPress={() => setTokenWalletModalOpen(true)} />
-
-          {/* Destination Language Selector Pill (Displays flag and uppercase language code, without language name) */}
-          <TouchableOpacity
-            style={styles.statPill}
-            testID="top-language-pill"
-            onPress={() => {
-              setLanguageModalMode('destination');
-              setLanguageModalOpen(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.flagEmoji}>
-              {getLanguageFlag(languagePair.destination_lang)}
-            </Text>
-            <Text style={styles.statValue}>
-              {formatLanguageCode(languagePair.destination_lang)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Main View Area */}
-      <View style={styles.contentArea}>
-        {activeTab === 'pipeline' && (
-          <ReviewSession
-            onSessionComplete={() => {
-              setIsReviewInProgress(false);
-              refreshStats();
-            }}
-            onExploreArchives={() => {
-              setIsReviewInProgress(false);
-              setActiveTab('archives');
-            }}
-            deckFilter={deckFilter}
-            onClearDeckFilter={() => setDeckFilter(null)}
-            targetLang={languagePair.destination_lang}
-            originLang={languagePair.origin_lang}
-            onInsufficientTokens={handleInsufficientTokens}
-            onReviewActiveChange={setIsReviewInProgress}
-          />
-        )}
-        {activeTab === 'archives' && (
-          <DecksRoadmap
-            onStudyDeck={(deckId, deckName) => {
-              setDeckFilter({ id: deckId, name: deckName });
-              refreshStats();
-              setIsReviewInProgress(false);
-              setActiveTab('pipeline');
-            }}
-            onStartReview={() => {
-              setDeckFilter(null);
-              refreshStats();
-              setIsReviewInProgress(false);
-              setActiveTab('pipeline');
-            }}
-            targetLang={languagePair.destination_lang}
-            originLang={languagePair.origin_lang}
-            deckTitleLanguage={deckTitleLanguage}
-            onInsufficientTokens={handleInsufficientTokens}
-          />
-        )}
-        {activeTab === 'chronicles' && <ProgressScreen />}
-        {activeTab === 'treasury' && (
-          <ScrollView
-            style={styles.treasuryScrollView}
-            contentContainerStyle={styles.treasuryTabContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            <LabMascot mood="victorious" size={120} />
-            <Text style={styles.treasuryTitle}>{t('treasury.title', { defaultValue: 'THE LAB CONSOLE' })}</Text>
-            <Text style={styles.treasurySub}>{t('treasury.subtitle', { defaultValue: 'Zero Cloud Overhead • 100% Local Lab' })}</Text>
-
-            <View style={styles.statsCard}>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>{t('treasury.total_cards', { defaultValue: 'Total Learned Cards:' })}</Text>
-                <Text style={styles.statNumber}>{stats.totalCards}</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Pending Reviews (Due):</Text>
-                <Text style={styles.statNumber}>{stats.dueCards}</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Mastered Cards (S≥10):</Text>
-                <Text style={styles.statNumber}>{stats.masteredCards}</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Database Engine:</Text>
-                <Text style={styles.statHighlight}>SQLite WAL + FTS5</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Spaced Repetition Algorithm:</Text>
-                <Text style={styles.statHighlight}>{srsManager.getActiveAlgorithm().meta.shortName}</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Cloud Infrastructure Cost:</Text>
-                <Text style={styles.statFree}>$0.00 / mo</Text>
-              </View>
+        {/* Top Lab Stats Header (Vector Icons - Strictly No Emojis) */}
+        {!isReviewInProgress && (
+          <View style={styles.topStatsBar}>
+            {/* Streak Flame */}
+            <View style={styles.statPill}>
+              <Flame size={16} color="#DC2626" />
+              <Text style={styles.statValue}>{stats.streakDays}</Text>
             </View>
 
-            {/* SRS Engine Card in Lab Console (FSRS v5 Exclusively) */}
-            <View style={styles.treasuryAlgoBtn}>
-              <Zap size={20} color="#B45309" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.treasuryAlgoTitle}>
-                  SRS ENGINE: FSRS v5
-                </Text>
-                <Text style={styles.treasuryAlgoSub} numberOfLines={1}>
-                  State-of-the-Art Machine Learning (Highest Efficiency)
-                </Text>
-              </View>
-              <View style={styles.treasuryAlgoActiveBadge}>
-                <Check size={12} color="#065F46" />
-                <Text style={styles.treasuryAlgoActiveText}>ACTIVE</Text>
-              </View>
-            </View>
-
-            {/* Ad-Free Status in Lab Console */}
-            {isAdFree ? (
-              <View style={styles.treasuryAdFreeCard}>
-                <ShieldCheck size={22} color="#047857" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.treasuryAdFreeTitle}>
-                    {t('ad_free.purchased_badge')}
-                  </Text>
-                  <Text style={styles.treasuryAdFreeSub}>
-                    {t('ad_free.benefit_1_sub')}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <TouchableOpacity
-                style={styles.treasuryUpgradeBtn}
-                onPress={() => setAdFreeModalOpen(true)}
-                activeOpacity={0.85}
-              >
-                <Sparkles size={18} color="#FFFFFF" />
-                <Text style={styles.treasuryUpgradeText}>
-                  {t('ad_free.modal_title')} • {t('ad_free.go_ad_free')}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-              <TouchableOpacity
-                style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0, backgroundColor: '#EFF6FF', borderColor: '#93C5FD' }]}
-                onPress={() => {
-                  setLanguageModalMode('origin');
-                  setLanguageModalOpen(true);
-                }}
-              >
-                <Text style={[styles.treasuryActionText, { color: '#1D4ED8' }]}>
-                  App Origin: {formatLanguageCode(languagePair.origin_lang)}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0 }]}
-                onPress={() => {
-                  setLanguageModalMode('destination');
-                  setLanguageModalOpen(true);
-                }}
-              >
-                <Text style={styles.treasuryActionText}>
-                  Study Target: {formatLanguageCode(languagePair.destination_lang)}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Deck & Subdeck Title Language Preference Setting */}
-            <View style={styles.deckTitlePrefCard}>
-              <View style={styles.deckTitlePrefHeader}>
-                <Languages size={18} color="#92400E" />
-                <Text style={styles.deckTitlePrefTitle}>Deck & Topic Titles</Text>
-              </View>
-              <Text style={styles.deckTitlePrefSubtitle}>
-                Choose the display language for categories, decks, and subdecks.
-              </Text>
-              <View style={styles.deckTitleToggleRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.deckTitleToggleBtn,
-                    deckTitleLanguage === 'origin' && styles.deckTitleToggleBtnActive,
-                  ]}
-                  onPress={async () => {
-                    await setDeckTitleLanguagePreference('origin');
-                    setDeckTitleLanguage('origin');
-                  }}
-                  activeOpacity={0.8}
-                >
-                  {deckTitleLanguage === 'origin' && <Check size={14} color="#B45309" />}
-                  <Text
-                    style={[
-                      styles.deckTitleToggleText,
-                      deckTitleLanguage === 'origin' && styles.deckTitleToggleTextActive,
-                    ]}
-                  >
-                    Native ({formatLanguageCode(languagePair.origin_lang)})
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.deckTitleToggleBtn,
-                    deckTitleLanguage === 'target' && styles.deckTitleToggleBtnActive,
-                  ]}
-                  onPress={async () => {
-                    await setDeckTitleLanguagePreference('target');
-                    setDeckTitleLanguage('target');
-                  }}
-                  activeOpacity={0.8}
-                >
-                  {deckTitleLanguage === 'target' && <Check size={14} color="#B45309" />}
-                  <Text
-                    style={[
-                      styles.deckTitleToggleText,
-                      deckTitleLanguage === 'target' && styles.deckTitleToggleTextActive,
-                    ]}
-                  >
-                    Immersion ({formatLanguageCode(languagePair.destination_lang)})
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.deckTitlePrefNote}>
-                {deckTitleLanguage === 'origin'
-                  ? '✓ Recommended: Beginner friendly, titles shown in your native language.'
-                  : '⚡ Advanced: Full immersion, titles shown in the language you are learning.'}
+            {/* Due Cards Test Tube */}
+            <View style={styles.statPill}>
+              <TestTube size={16} color="#0D9488" />
+              <Text style={styles.statValue}>
+                {stats.dueCards} {t('stats.due')}
               </Text>
             </View>
 
+            {/* Token Allowance Pill (Isolated component, granularly subscribed to wallet updates) */}
+            <TokenPill onPress={() => setTokenWalletModalOpen(true)} />
+
+            {/* Destination Language Selector Pill (Displays flag and uppercase language code, without language name) */}
             <TouchableOpacity
-              style={[styles.treasuryActionBtn, { marginTop: 12, backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}
-              onPress={() => setMockProfileModalOpen(true)}
+              style={styles.statPill}
+              testID="top-language-pill"
+              onPress={() => {
+                setLanguageModalMode('destination');
+                setLanguageModalOpen(true);
+              }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.treasuryActionText, { color: '#334155' }]}>
-                SWITCH TESTING PROFILE
+              <Text style={styles.flagEmoji}>{getLanguageFlag(languagePair.destination_lang)}</Text>
+              <Text style={styles.statValue}>
+                {formatLanguageCode(languagePair.destination_lang)}
               </Text>
             </TouchableOpacity>
-          </ScrollView>
+          </View>
         )}
-      </View>
 
-      {/* Lab Cartoon Bottom Tab Bar */}
-      {!isReviewInProgress && (
-        <View style={styles.bottomNav}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              refreshStats();
-              setActiveTab('pipeline');
-            }}
-            style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
-          >
-            <FlaskConical size={20} color={activeTab === 'pipeline' ? '#B45309' : '#64748B'} />
-            <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
-              {t('nav.training')}
-            </Text>
-          </TouchableOpacity>
+        {/* Main View Area */}
+        <View style={styles.contentArea}>
+          {activeTab === 'pipeline' && (
+            <ReviewSession
+              onSessionComplete={() => {
+                setIsReviewInProgress(false);
+                refreshStats();
+              }}
+              onExploreArchives={() => {
+                setIsReviewInProgress(false);
+                setActiveTab('archives');
+              }}
+              deckFilter={deckFilter}
+              onClearDeckFilter={() => setDeckFilter(null)}
+              targetLang={languagePair.destination_lang}
+              originLang={languagePair.origin_lang}
+              onInsufficientTokens={handleInsufficientTokens}
+              onReviewActiveChange={setIsReviewInProgress}
+            />
+          )}
+          {activeTab === 'archives' && (
+            <DecksRoadmap
+              onStudyDeck={(deckId, deckName) => {
+                setDeckFilter({ id: deckId, name: deckName });
+                refreshStats();
+                setIsReviewInProgress(false);
+                setActiveTab('pipeline');
+              }}
+              onStartReview={() => {
+                setDeckFilter(null);
+                refreshStats();
+                setIsReviewInProgress(false);
+                setActiveTab('pipeline');
+              }}
+              targetLang={languagePair.destination_lang}
+              originLang={languagePair.origin_lang}
+              deckTitleLanguage={deckTitleLanguage}
+              onInsufficientTokens={handleInsufficientTokens}
+            />
+          )}
+          {activeTab === 'chronicles' && <ProgressScreen />}
+          {activeTab === 'treasury' && (
+            <ScrollView
+              style={styles.treasuryScrollView}
+              contentContainerStyle={styles.treasuryTabContainer}
+              showsVerticalScrollIndicator={false}
+            >
+              <LabMascot mood="victorious" size={120} />
+              <Text style={styles.treasuryTitle}>
+                {t('treasury.title', { defaultValue: 'THE LAB CONSOLE' })}
+              </Text>
+              <Text style={styles.treasurySub}>
+                {t('treasury.subtitle', { defaultValue: 'Zero Cloud Overhead • 100% Local Lab' })}
+              </Text>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              refreshStats();
-              setActiveTab('archives');
-            }}
-            style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
-          >
-            <Library size={20} color={activeTab === 'archives' ? '#B45309' : '#64748B'} />
-            <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
-              {t('nav.decks')}
-            </Text>
-          </TouchableOpacity>
+              <View style={styles.statsCard}>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>
+                    {t('treasury.total_cards', { defaultValue: 'Total Learned Cards:' })}
+                  </Text>
+                  <Text style={styles.statNumber}>{stats.totalCards}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Pending Reviews (Due):</Text>
+                  <Text style={styles.statNumber}>{stats.dueCards}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Mastered Cards (S≥10):</Text>
+                  <Text style={styles.statNumber}>{stats.masteredCards}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Database Engine:</Text>
+                  <Text style={styles.statHighlight}>SQLite WAL + FTS5</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Spaced Repetition Algorithm:</Text>
+                  <Text style={styles.statHighlight}>
+                    {srsManager.getActiveAlgorithm().meta.shortName}
+                  </Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Cloud Infrastructure Cost:</Text>
+                  <Text style={styles.statFree}>$0.00 / mo</Text>
+                </View>
+              </View>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              refreshStats();
-              setActiveTab('chronicles');
-            }}
-            style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
-          >
-            <Activity size={20} color={activeTab === 'chronicles' ? '#B45309' : '#64748B'} />
-            <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
-              {t('nav.chronicles')}
-            </Text>
-          </TouchableOpacity>
+              {/* SRS Engine Card in Lab Console (FSRS v5 Exclusively) */}
+              <View style={styles.treasuryAlgoBtn}>
+                <Zap size={20} color="#B45309" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.treasuryAlgoTitle}>SRS ENGINE: FSRS v5</Text>
+                  <Text style={styles.treasuryAlgoSub} numberOfLines={1}>
+                    State-of-the-Art Machine Learning (Highest Efficiency)
+                  </Text>
+                </View>
+                <View style={styles.treasuryAlgoActiveBadge}>
+                  <Check size={12} color="#065F46" />
+                  <Text style={styles.treasuryAlgoActiveText}>ACTIVE</Text>
+                </View>
+              </View>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              refreshStats();
-              setActiveTab('treasury');
-            }}
-            style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
-          >
-            <Coins size={20} color={activeTab === 'treasury' ? '#B45309' : '#64748B'} />
-            <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
-              {t('nav.treasury')}
-            </Text>
-          </TouchableOpacity>
+              {/* Ad-Free Status in Lab Console */}
+              {isAdFree ? (
+                <View style={styles.treasuryAdFreeCard}>
+                  <ShieldCheck size={22} color="#047857" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.treasuryAdFreeTitle}>{t('ad_free.purchased_badge')}</Text>
+                    <Text style={styles.treasuryAdFreeSub}>{t('ad_free.benefit_1_sub')}</Text>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.treasuryUpgradeBtn}
+                  onPress={() => setAdFreeModalOpen(true)}
+                  activeOpacity={0.85}
+                >
+                  <Sparkles size={18} color="#FFFFFF" />
+                  <Text style={styles.treasuryUpgradeText}>
+                    {t('ad_free.modal_title')} • {t('ad_free.go_ad_free')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.treasuryActionBtn,
+                    { flex: 1, marginTop: 0, backgroundColor: '#EFF6FF', borderColor: '#93C5FD' },
+                  ]}
+                  onPress={() => {
+                    setLanguageModalMode('origin');
+                    setLanguageModalOpen(true);
+                  }}
+                >
+                  <Text style={[styles.treasuryActionText, { color: '#1D4ED8' }]}>
+                    App Origin: {formatLanguageCode(languagePair.origin_lang)}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.treasuryActionBtn, { flex: 1, marginTop: 0 }]}
+                  onPress={() => {
+                    setLanguageModalMode('destination');
+                    setLanguageModalOpen(true);
+                  }}
+                >
+                  <Text style={styles.treasuryActionText}>
+                    Study Target: {formatLanguageCode(languagePair.destination_lang)}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Deck & Subdeck Title Language Preference Setting */}
+              <View style={styles.deckTitlePrefCard}>
+                <View style={styles.deckTitlePrefHeader}>
+                  <Languages size={18} color="#92400E" />
+                  <Text style={styles.deckTitlePrefTitle}>Deck & Topic Titles</Text>
+                </View>
+                <Text style={styles.deckTitlePrefSubtitle}>
+                  Choose the display language for categories, decks, and subdecks.
+                </Text>
+                <View style={styles.deckTitleToggleRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.deckTitleToggleBtn,
+                      deckTitleLanguage === 'origin' && styles.deckTitleToggleBtnActive,
+                    ]}
+                    onPress={async () => {
+                      await setDeckTitleLanguagePreference('origin');
+                      setDeckTitleLanguage('origin');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    {deckTitleLanguage === 'origin' && <Check size={14} color="#B45309" />}
+                    <Text
+                      style={[
+                        styles.deckTitleToggleText,
+                        deckTitleLanguage === 'origin' && styles.deckTitleToggleTextActive,
+                      ]}
+                    >
+                      Native ({formatLanguageCode(languagePair.origin_lang)})
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.deckTitleToggleBtn,
+                      deckTitleLanguage === 'target' && styles.deckTitleToggleBtnActive,
+                    ]}
+                    onPress={async () => {
+                      await setDeckTitleLanguagePreference('target');
+                      setDeckTitleLanguage('target');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    {deckTitleLanguage === 'target' && <Check size={14} color="#B45309" />}
+                    <Text
+                      style={[
+                        styles.deckTitleToggleText,
+                        deckTitleLanguage === 'target' && styles.deckTitleToggleTextActive,
+                      ]}
+                    >
+                      Immersion ({formatLanguageCode(languagePair.destination_lang)})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.deckTitlePrefNote}>
+                  {deckTitleLanguage === 'origin'
+                    ? '✓ Recommended: Beginner friendly, titles shown in your native language.'
+                    : '⚡ Advanced: Full immersion, titles shown in the language you are learning.'}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.treasuryActionBtn,
+                  { marginTop: 12, backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                ]}
+                onPress={() => setMockProfileModalOpen(true)}
+              >
+                <Text style={[styles.treasuryActionText, { color: '#334155' }]}>
+                  SWITCH TESTING PROFILE
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          )}
         </View>
-      )}
 
-      {/* Language Selector Modal (123 Languages & Offline Packs) */}
-      <LanguageSelectorModal
-        visible={languageModalOpen}
-        onClose={() => setLanguageModalOpen(false)}
-        initialMode={languageModalMode}
-        onPairChanged={async (newPair) => {
-          setLanguagePair(newPair);
-          setDeckFilter(null);
-          await refreshStats(newPair.destination_lang);
-        }}
-      />
+        {/* Lab Cartoon Bottom Tab Bar */}
+        {!isReviewInProgress && (
+          <View style={styles.bottomNav}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                refreshStats();
+                setActiveTab('pipeline');
+              }}
+              style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
+            >
+              <FlaskConical size={20} color={activeTab === 'pipeline' ? '#B45309' : '#64748B'} />
+              <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
+                {t('nav.training')}
+              </Text>
+            </TouchableOpacity>
 
-      {/* Ad-Free Upgrade Modal (In-App Purchases) */}
-      <AdFreeModal
-        visible={adFreeModalOpen}
-        onClose={() => setAdFreeModalOpen(false)}
-        isAdFree={isAdFree}
-        onStatusChanged={(status) => setIsAdFree(status)}
-      />
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                refreshStats();
+                setActiveTab('archives');
+              }}
+              style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
+            >
+              <Library size={20} color={activeTab === 'archives' ? '#B45309' : '#64748B'} />
+              <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
+                {t('nav.decks')}
+              </Text>
+            </TouchableOpacity>
 
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                refreshStats();
+                setActiveTab('chronicles');
+              }}
+              style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
+            >
+              <Activity size={20} color={activeTab === 'chronicles' ? '#B45309' : '#64748B'} />
+              <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
+                {t('nav.chronicles')}
+              </Text>
+            </TouchableOpacity>
 
-      {/* Lab Token Wallet Modal */}
-      <TokenWalletModal
-        visible={tokenWalletModalOpen}
-        onClose={() => setTokenWalletModalOpen(false)}
-        onOpenPlusModal={() => setAdFreeModalOpen(true)}
-      />
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                refreshStats();
+                setActiveTab('treasury');
+              }}
+              style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
+            >
+              <Coins size={20} color={activeTab === 'treasury' ? '#B45309' : '#64748B'} />
+              <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
+                {t('nav.treasury')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {/* Insufficient Tokens Warning / Ad CTA Modal */}
-      <InsufficientTokensModal
-        visible={insufficientModalOpen}
-        onClose={() => setInsufficientModalOpen(false)}
-        onOpenPlusModal={() => setAdFreeModalOpen(true)}
-        requiredWords={insufficientRequiredWords}
-        onSuccessLearn={() => {
-          refreshStats();
-        }}
-      />
+        {/* Language Selector Modal (123 Languages & Offline Packs) */}
+        <LanguageSelectorModal
+          visible={languageModalOpen}
+          onClose={() => setLanguageModalOpen(false)}
+          initialMode={languageModalMode}
+          onPairChanged={async (newPair) => {
+            setLanguagePair(newPair);
+            setDeckFilter(null);
+            await refreshStats(newPair.destination_lang);
+          }}
+        />
 
-      {/* Rewarded Ad Modal (Fallback & Dev/Web Simulation) */}
-      <RewardedAdModal
-        visible={rewardedAdModalOpen}
-        onClose={() => {
-          setRewardedAdModalOpen(false);
-          if (rewardedAdOnClose) {
-            rewardedAdOnClose();
-            setRewardedAdOnClose(null);
-          }
-        }}
-        onReward={() => {
-          if (rewardedAdOnComplete) {
-            rewardedAdOnComplete();
-            setRewardedAdOnComplete(null);
-          }
-        }}
-      />
+        {/* Ad-Free Upgrade Modal (In-App Purchases) */}
+        <AdFreeModal
+          visible={adFreeModalOpen}
+          onClose={() => setAdFreeModalOpen(false)}
+          isAdFree={isAdFree}
+          onStatusChanged={(status) => setIsAdFree(status)}
+        />
 
-      {/* Testing Profiles Switcher Modal */}
-      <MockProfileModal
-        visible={mockProfileModalOpen}
-        onClose={() => setMockProfileModalOpen(false)}
-        targetLang={languagePair.destination_lang}
-        originLang={languagePair.origin_lang}
-        onProfileApplied={async () => {
-          await refreshStats();
-        }}
-      />
-    </SafeAreaView>
-  </SafeAreaProvider>
-);
+        {/* Lab Token Wallet Modal */}
+        <TokenWalletModal
+          visible={tokenWalletModalOpen}
+          onClose={() => setTokenWalletModalOpen(false)}
+          onOpenPlusModal={() => setAdFreeModalOpen(true)}
+        />
+
+        {/* Insufficient Tokens Warning / Ad CTA Modal */}
+        <InsufficientTokensModal
+          visible={insufficientModalOpen}
+          onClose={() => setInsufficientModalOpen(false)}
+          onOpenPlusModal={() => setAdFreeModalOpen(true)}
+          requiredWords={insufficientRequiredWords}
+          onSuccessLearn={() => {
+            refreshStats();
+          }}
+        />
+
+        {/* Rewarded Ad Modal (Fallback & Dev/Web Simulation) */}
+        <RewardedAdModal
+          visible={rewardedAdModalOpen}
+          onClose={() => {
+            setRewardedAdModalOpen(false);
+            if (rewardedAdOnClose) {
+              rewardedAdOnClose();
+              setRewardedAdOnClose(null);
+            }
+          }}
+          onReward={() => {
+            if (rewardedAdOnComplete) {
+              rewardedAdOnComplete();
+              setRewardedAdOnComplete(null);
+            }
+          }}
+        />
+
+        {/* Testing Profiles Switcher Modal */}
+        <MockProfileModal
+          visible={mockProfileModalOpen}
+          onClose={() => setMockProfileModalOpen(false)}
+          targetLang={languagePair.destination_lang}
+          originLang={languagePair.origin_lang}
+          onProfileApplied={async () => {
+            await refreshStats();
+          }}
+        />
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
 }
 
 const styles = StyleSheet.create({

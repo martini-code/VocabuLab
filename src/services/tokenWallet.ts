@@ -201,8 +201,10 @@ export class TokenWalletService {
     const dailyPassWords = this.parseNumber(rawDailyWords, TOKEN_CONFIG.DAILY_PASS_WORDS);
     const adsWatchedToday = this.parseNumber(rawAds, 0);
 
-    const totalWordsAllowance = dailyPassWords + tokenWordCredits + tokens * TOKEN_CONFIG.WORDS_PER_TOKEN;
-    const canWatchAd = adsWatchedToday < TOKEN_CONFIG.MAX_DAILY_ADS && tokens < TOKEN_CONFIG.MAX_TOKENS_HELD;
+    const totalWordsAllowance =
+      dailyPassWords + tokenWordCredits + tokens * TOKEN_CONFIG.WORDS_PER_TOKEN;
+    const canWatchAd =
+      adsWatchedToday < TOKEN_CONFIG.MAX_DAILY_ADS && tokens < TOKEN_CONFIG.MAX_TOKENS_HELD;
 
     return {
       tokens,

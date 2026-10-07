@@ -9,7 +9,12 @@ import {
 } from 'react-native';
 import { Rating, Grade } from 'ts-fsrs';
 import { CardWithDetails, MascotMood, EnrolledLanguagePair } from '../../types';
-import { getDueCards, getDeckCardsForReview, recordCardReview, getEnrolledLanguagePairs } from '../../db/vault';
+import {
+  getDueCards,
+  getDeckCardsForReview,
+  recordCardReview,
+  getEnrolledLanguagePairs,
+} from '../../db/vault';
 import { getReviewOptions, gradeCardFSRS } from '../../services/fsrsService';
 import { speakWord } from '../../utils/tts';
 import { LabMascot } from '../../components/mascot/Mascots';
@@ -53,7 +58,9 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
   const [loading, setLoading] = useState(true);
   const [randomDiscoveryActive, setRandomDiscoveryActive] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
-  const [mascotQuote, setMascotQuote] = useState("Train hard, scientist! Every review is a data point for your memory.");
+  const [mascotQuote, setMascotQuote] = useState(
+    'Train hard, scientist! Every review is a data point for your memory.'
+  );
   const [sessionHistory, setSessionHistory] = useState<ReviewSessionWordSummary[]>([]);
 
   const activeAlgorithm = srsManager.getActiveAlgorithm();
@@ -105,7 +112,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       const next = !prev;
       if (next) {
         setMascotMood('thinking');
-        setMascotQuote("Examine the meaning and grade your memory!");
+        setMascotQuote('Examine the meaning and grade your memory!');
       }
       return next;
     });
@@ -117,16 +124,16 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     // 1. Immediate visual mascot reaction
     if (rating === Rating.Again) {
       setMascotMood('confused');
-      setMascotQuote("A minor stumble! We shall reinforce this card soon.");
+      setMascotQuote('A minor stumble! We shall reinforce this card soon.');
     } else if (rating === Rating.Hard) {
       setMascotMood('idle');
-      setMascotQuote("Grit and steel! It is holding in memory.");
+      setMascotQuote('Grit and steel! It is holding in memory.');
     } else if (rating === Rating.Good) {
       setMascotMood('happy');
-      setMascotQuote("Solid result, scientist!");
+      setMascotQuote('Solid result, scientist!');
     } else if (rating === Rating.Easy) {
       setMascotMood('cheering');
-      setMascotQuote("Eureka! Pure mastery!");
+      setMascotQuote('Eureka! Pure mastery!');
     }
 
     // 2. Persist FSRS state & review logs asynchronously in SQLite within a single transaction
@@ -170,7 +177,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
       const next = prev + 1;
       if (next >= cards.length) {
         setMascotMood('victorious');
-        setMascotQuote("All cards in review completed! Well done!");
+        setMascotQuote('All cards in review completed! Well done!');
       }
       return next;
     });
@@ -243,10 +250,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             >
               <TouchableOpacity
                 testID="scope-pill-all-empty"
-                style={[
-                  styles.scopePill,
-                  reviewScope === 'all' && styles.scopePillActive,
-                ]}
+                style={[styles.scopePill, reviewScope === 'all' && styles.scopePillActive]}
                 onPress={() => setReviewScope('all')}
               >
                 <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
@@ -266,19 +270,12 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                   <TouchableOpacity
                     key={p.id}
                     testID={`scope-pill-${p.destination_lang}-empty`}
-                    style={[
-                      styles.scopePill,
-                      isSelected && styles.scopePillActive,
-                    ]}
+                    style={[styles.scopePill, isSelected && styles.scopePillActive]}
                     onPress={() => setReviewScope(p.destination_lang)}
                   >
-                    <Text
-                      style={[
-                        styles.scopePillText,
-                        isSelected && styles.scopePillTextActive,
-                      ]}
-                    >
-                      {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)} ({p.progress.dueCards})
+                    <Text style={[styles.scopePillText, isSelected && styles.scopePillTextActive]}>
+                      {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)}{' '}
+                      ({p.progress.dueCards})
                     </Text>
                   </TouchableOpacity>
                 );
@@ -295,7 +292,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           <Text style={styles.victorySubtitle}>
             {deckFilter
               ? `You've reviewed all cards in "${deckFilter.name}". The results are in: your memory is holding strong!`
-              : 'You\'ve reviewed all scheduled cards for today. The results are in: your memory is holding strong!'}
+              : "You've reviewed all scheduled cards for today. The results are in: your memory is holding strong!"}
           </Text>
 
           {deckFilter && onClearDeckFilter && (
@@ -352,7 +349,10 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
     }
 
     return (
-      <ScrollView contentContainerStyle={styles.stagingContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.stagingContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Deck Focus Banner if filtered */}
         {deckFilter && (
           <View style={styles.deckFilterBanner}>
@@ -363,10 +363,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               </Text>
             </View>
             {onClearDeckFilter && (
-              <TouchableOpacity
-                style={styles.clearFilterBtn}
-                onPress={onClearDeckFilter}
-              >
+              <TouchableOpacity style={styles.clearFilterBtn} onPress={onClearDeckFilter}>
                 <X size={14} color="#78350F" />
                 <Text style={styles.clearFilterText}>All Decks</Text>
               </TouchableOpacity>
@@ -384,10 +381,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
             >
               <TouchableOpacity
                 testID="scope-pill-all"
-                style={[
-                  styles.scopePill,
-                  reviewScope === 'all' && styles.scopePillActive,
-                ]}
+                style={[styles.scopePill, reviewScope === 'all' && styles.scopePillActive]}
                 onPress={() => setReviewScope('all')}
               >
                 <Globe size={13} color={reviewScope === 'all' ? '#FFFFFF' : '#78350F'} />
@@ -407,19 +401,12 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
                   <TouchableOpacity
                     key={p.id}
                     testID={`scope-pill-${p.destination_lang}`}
-                    style={[
-                      styles.scopePill,
-                      isSelected && styles.scopePillActive,
-                    ]}
+                    style={[styles.scopePill, isSelected && styles.scopePillActive]}
                     onPress={() => setReviewScope(p.destination_lang)}
                   >
-                    <Text
-                      style={[
-                        styles.scopePillText,
-                        isSelected && styles.scopePillTextActive,
-                      ]}
-                    >
-                      {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)} ({p.progress.dueCards})
+                    <Text style={[styles.scopePillText, isSelected && styles.scopePillTextActive]}>
+                      {getLanguageFlag(p.destination_lang)} {formatLanguageCode(p.destination_lang)}{' '}
+                      ({p.progress.dueCards})
                     </Text>
                   </TouchableOpacity>
                 );
@@ -431,9 +418,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         {/* Staging Information Card */}
         <View style={styles.stagingCard}>
           <LabMascot mood={mascotMood} size={105} />
-          <Text style={styles.stagingTitle}>
-            {deckFilter ? 'DECK REVIEW' : 'DAILY REVIEW'}
-          </Text>
+          <Text style={styles.stagingTitle}>{deckFilter ? 'DECK REVIEW' : 'DAILY REVIEW'}</Text>
           <Text style={styles.stagingSubtitle}>
             {deckFilter
               ? `Prepare your memory to master cards in "${deckFilter.name}".`
