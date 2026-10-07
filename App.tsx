@@ -488,11 +488,9 @@ export default function App() {
               setActiveTab('pipeline');
             }}
             style={[styles.navItem, activeTab === 'pipeline' && styles.navItemActive]}
+            accessibilityLabel={t('nav.training')}
           >
-            <FlaskConical size={20} color={activeTab === 'pipeline' ? colors.primary[700] : colors.neutral[500]} />
-            <Text style={[styles.navLabel, activeTab === 'pipeline' && styles.navLabelActive]}>
-              {t('nav.training')}
-            </Text>
+            <FlaskConical size={25} color={activeTab === 'pipeline' ? colors.primary[700] : colors.neutral[500]} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -502,11 +500,9 @@ export default function App() {
               setActiveTab('archives');
             }}
             style={[styles.navItem, activeTab === 'archives' && styles.navItemActive]}
+            accessibilityLabel={t('nav.decks')}
           >
-            <Library size={20} color={activeTab === 'archives' ? colors.primary[700] : colors.neutral[500]} />
-            <Text style={[styles.navLabel, activeTab === 'archives' && styles.navLabelActive]}>
-              {t('nav.decks')}
-            </Text>
+            <Library size={25} color={activeTab === 'archives' ? colors.primary[700] : colors.neutral[500]} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -516,11 +512,9 @@ export default function App() {
               setActiveTab('chronicles');
             }}
             style={[styles.navItem, activeTab === 'chronicles' && styles.navItemActive]}
+            accessibilityLabel={t('nav.chronicles')}
           >
-            <Activity size={20} color={activeTab === 'chronicles' ? colors.primary[700] : colors.neutral[500]} />
-            <Text style={[styles.navLabel, activeTab === 'chronicles' && styles.navLabelActive]}>
-              {t('nav.chronicles')}
-            </Text>
+            <Activity size={25} color={activeTab === 'chronicles' ? colors.primary[700] : colors.neutral[500]} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -530,11 +524,9 @@ export default function App() {
               setActiveTab('treasury');
             }}
             style={[styles.navItem, activeTab === 'treasury' && styles.navItemActive]}
+            accessibilityLabel={t('nav.treasury')}
           >
-            <Coins size={20} color={activeTab === 'treasury' ? colors.primary[700] : colors.neutral[500]} />
-            <Text style={[styles.navLabel, activeTab === 'treasury' && styles.navLabelActive]}>
-              {t('nav.treasury')}
-            </Text>
+            <Coins size={25} color={activeTab === 'treasury' ? colors.primary[700] : colors.neutral[500]} />
           </TouchableOpacity>
         </View>
       )}
@@ -707,18 +699,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral[0],
     borderTopWidth: 2,
     borderColor: colors.neutral[200],
-    paddingBottom: 8,
-    paddingTop: 6,
+    paddingBottom: 6,
+    paddingTop: 0,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 6,
+    justifyContent: 'center',
+    paddingVertical: 12,
   },
   navItemActive: {
     borderTopWidth: 3,
     borderTopColor: colors.primary[500],
-    marginTop: -3,
+    marginTop: -2,
   },
   navEmoji: {
     fontSize: 22,
