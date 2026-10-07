@@ -12,6 +12,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
   initVault,
   getVaultStats,
+  shouldShowOnboarding,
   getLanguagePairSettings,
   getDeckTitleLanguagePreference,
   setDeckTitleLanguagePreference,
@@ -23,6 +24,7 @@ import { ReviewSession } from './src/features/pipeline/ReviewSession';
 import { DecksRoadmap } from './src/features/decks/DecksRoadmap';
 import { ProgressScreen } from './src/features/progress/ProgressScreen';
 import { LexMascot } from './src/components/mascot/Mascots';
+import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
@@ -92,6 +94,7 @@ export default function App() {
   const [mockProfileModalOpen, setMockProfileModalOpen] = useState(false);
   const [deckTitleLanguage, setDeckTitleLanguage] = useState<DeckTitleLanguageMode>('origin');
   const [isReviewInProgress, setIsReviewInProgress] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     bootstrapApp();
@@ -146,6 +149,7 @@ export default function App() {
       const currentStats = await getVaultStats(currentPair.destination_lang);
       setStats(currentStats);
 
+      setShowOnboarding(await shouldShowOnboarding());
       setIsVaultReady(true);
     } catch (error) {
       console.error('[VocabuLab] Bootstrap error:', error);
@@ -162,6 +166,15 @@ export default function App() {
     }
   };
 
+  const handleOnboardingComplete = async (pair: LanguagePairSettings) => {
+    setLanguagePair(pair);
+    setDeckFilter(null);
+    setActiveTab('pipeline');
+    setShowOnboarding(false);
+    await changeAppLanguage(pair.origin_lang);
+    refreshStats(pair.destination_lang);
+  };
+
   const handleInsufficientTokens = (requiredWords: number) => {
     setInsufficientRequiredWords(requiredWords);
     setInsufficientModalOpen(true);
@@ -176,6 +189,17 @@ export default function App() {
           <Text style={styles.splashTagline}>The Language Lab of Spaced Memory</Text>
           <ActivityIndicator size="large" color={colors.primary[500]} style={{ marginTop: 24 }} />
           <Text style={styles.splashStatus}>{statusMessage}</Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.safeArea}>
+          <StatusBar barStyle="dark-content" backgroundColor={colors.primary[50]} />
+          <OnboardingScreen initialOrigin={languagePair.origin_lang} onComplete={handleOnboardingComplete} />
         </SafeAreaView>
       </SafeAreaProvider>
     );
@@ -370,6 +394,16 @@ export default function App() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              style={[styles.treasuryActionBtn, { backgroundColor: colors.primary[50], borderColor: colors.primary[300] }]}
+              onPress={() => setShowOnboarding(true)}
+              testID="replay-onboarding"
+            >
+              <Text style={[styles.treasuryActionText, { color: colors.primary[800] }]}>
+                {t('onboarding.replay', { defaultValue: 'Replay welcome tour & grading guide' })}
+              </Text>
+            </TouchableOpacity>
 
             {/* Deck & Subdeck Title Language Preference Setting */}
             <View style={styles.deckTitlePrefCard}>

@@ -187,7 +187,7 @@ export const FastSearch: React.FC<FastSearchProps> = ({ onInsufficientTokens }) 
             </Text>
             <Text style={styles.emptySubtitle}>
               {query
-                ? 'Try inquiring with another word stem or CEFR term.'
+                ? 'Try inquiring with another word stem or level.'
                 : 'Search any word across supported languages.'}
             </Text>
           </View>

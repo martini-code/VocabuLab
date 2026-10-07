@@ -1,23 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FlaskConical } from 'lucide-react-native';
-import { cefrColors } from '../../theme';
+import { levelColorsFor, levelLabel } from '../../theme';
 
 interface LevelBadgeProps {
-  level: string;
+  /** The CEFR code stored in the database (A1–C2) or a difficulty number (1–6). */
+  level: string | number;
   size?: 'sm' | 'md' | 'lg';
 }
 
-const CEFR_COLORS: Record<string, { bg: string; border: string; text: string }> = Object.fromEntries(
-  Object.entries(cefrColors).map(([level, c]) => [
-    level,
-    { bg: c.solid, border: c.solidBorder, text: c.onSolid },
-  ])
-);
-
+/** Shows a word's or deck's difficulty as "Level 1"–"Level 6" on the easy-to-hard color ramp. */
 export const LevelBadge: React.FC<LevelBadgeProps> = ({ level, size = 'md' }) => {
-  const normalized = level?.toUpperCase() || 'A1';
-  const theme = CEFR_COLORS[normalized] || CEFR_COLORS.A1;
+  const c = levelColorsFor(level);
+  const theme = { bg: c.solid, border: c.solidBorder, text: c.onSolid };
 
   const isSmall = size === 'sm';
   const isLarge = size === 'lg';
@@ -46,7 +41,7 @@ export const LevelBadge: React.FC<LevelBadgeProps> = ({ level, size = 'md' }) =>
           },
         ]}
       >
-        {normalized}
+        {levelLabel(level)}
       </Text>
     </View>
   );

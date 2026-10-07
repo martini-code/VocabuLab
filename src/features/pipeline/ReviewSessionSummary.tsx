@@ -20,7 +20,7 @@ import {
 } from 'lucide-react-native';
 import { ChunkyButton } from '../../components/ui/ChunkyButton';
 
-import { colors } from '../../theme';
+import { colors, levelColorsFor, levelLabel } from '../../theme';
 
 export interface ReviewSessionWordSummary {
   cardId: string;
@@ -255,8 +255,18 @@ export const ReviewSessionSummary: React.FC<ReviewSessionSummaryProps> = ({
                   <View style={styles.termRow}>
                     <Text style={styles.frontTermText}>{item.frontTerm}</Text>
                     {item.frontCefr && (
-                      <View style={styles.cefrBadge}>
-                        <Text style={styles.cefrText}>{item.frontCefr}</Text>
+                      <View
+                        style={[
+                          styles.cefrBadge,
+                          {
+                            backgroundColor: levelColorsFor(item.frontCefr).soft,
+                            borderColor: levelColorsFor(item.frontCefr).softBorder,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.cefrText, { color: levelColorsFor(item.frontCefr).onSoft }]}>
+                          {levelLabel(item.frontCefr)}
+                        </Text>
                       </View>
                     )}
                     {item.pos && (

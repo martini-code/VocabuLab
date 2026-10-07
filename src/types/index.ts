@@ -30,6 +30,34 @@ export interface DeckWithProgress {
   is_locked?: boolean;
   difficulty_slice?: number;
   real_deck_id?: number;
+  /** Lexicon hierarchy: Theme › (Subtheme) › Deck › Subdeck. Each DeckWithProgress is one subdeck. */
+  subtheme_name?: string;
+  /** Stable key of the parent deck (theme|subtheme|deck). */
+  deck_key?: string;
+  deck_name?: string;
+  deck_icon_name?: string;
+  subdeck_name?: string;
+  /** True when the parent deck is split into several subdecks. */
+  has_subdecks?: boolean;
+  /** True for the subdeck named after its deck (listed first). */
+  is_main_subdeck?: boolean;
+  /** Name outside the hierarchy, e.g. "Insects › Beetles". */
+  full_name?: string;
+  /** Extra line for an unsplit deck whose only subdeck has its own name. */
+  subtitle?: string;
+}
+
+/** A deck within a theme, made of one or more subdecks. */
+export interface DeckGroup {
+  id: string;
+  name: string;
+  subtheme_name?: string;
+  icon_name: string;
+  subdecks: DeckWithProgress[];
+  card_count: number;
+  queued_count: number;
+  mastered_count: number;
+  is_locked: boolean;
 }
 
 export interface ThemeGroup {
@@ -38,7 +66,10 @@ export interface ThemeGroup {
   description: string;
   icon_name: string;
   is_pro: boolean;
+  /** Every subdeck in the theme, flat. */
   decks: DeckWithProgress[];
+  /** Decks with their subdecks, in display order. */
+  deck_groups: DeckGroup[];
 }
 
 export interface DeckCardDetail {

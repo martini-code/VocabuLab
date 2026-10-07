@@ -101,6 +101,7 @@ jest.mock('../../../services/tokenWallet', () => ({
 // Mock Vault functions
 jest.mock('../../../db/vault', () => ({
   getRandomUnlearnedWords: jest.fn(),
+  getPairLevel: jest.fn().mockResolvedValue('B1'),
   addWordToQueue: jest.fn().mockResolvedValue('card_100_es'),
 }));
 
@@ -140,7 +141,7 @@ describe('RandomDiscoveryView', () => {
       />
     );
 
-    expect(vaultModule.getRandomUnlearnedWords).toHaveBeenCalledWith(10, 'es', 'en');
+    expect(vaultModule.getRandomUnlearnedWords).toHaveBeenCalledWith(10, 'es', 'en', undefined, 'B1');
     expect(result.getByText('Random Discovery')).toBeTruthy();
     expect(result.getByText('Palabra_1')).toBeTruthy();
     expect(result.getByText('Word_1')).toBeTruthy();

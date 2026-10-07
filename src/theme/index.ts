@@ -1,6 +1,9 @@
 import { colors } from './colors';
 
-export { colors, palette, mascotColors, cefrColors, withAlpha } from './colors';
+export { colors, palette, mascotColors, cefrColors, levelColors, withAlpha } from './colors';
+export type { LevelColorSet } from './colors';
+export { toLevel, levelLabel, levelColorsFor } from './levels';
+export type { LevelNumber } from './levels';
 
 /** 4-pt spacing scale. */
 export const spacing = {
