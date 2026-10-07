@@ -122,28 +122,49 @@ export async function downloadLanguagePack(
     const deckTranslations = await staticDb.getAllAsync<{
       deck_id: number;
       lang_name: string;
-      category_translation: string;
-      subcategory_translation: string;
+      theme_translation: string;
+      subtheme_translation: string;
+      deck_translation: string;
+      subdeck_translation: string;
       source: string;
     }>(
-      `SELECT deck_id, lang_name, category_translation, subcategory_translation, source FROM deck_translations WHERE lang_name IN (${placeholders});`,
+      `SELECT deck_id, lang_name, theme_translation, subtheme_translation, deck_translation, subdeck_translation, source
+       FROM deck_translations WHERE lang_name IN (${placeholders});`,
       candidates
     );
 
+    // category/subcategory are the legacy names of theme/deck, kept filled for older readers.
+    const insertDeckTranslation = (dt: (typeof deckTranslations)[number], lang: string) =>
+      userDb.runAsync(
+        `INSERT OR REPLACE INTO Downloaded_Deck_Translations
+           (deck_id, lang_name, category_translation, subcategory_translation,
+            theme_translation, subtheme_translation, deck_translation, subdeck_translation, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        [
+          dt.deck_id,
+          lang,
+          dt.theme_translation || '',
+          dt.deck_translation || '',
+          dt.theme_translation || '',
+          dt.subtheme_translation || '',
+          dt.deck_translation || '',
+          dt.subdeck_translation || '',
+          dt.source || null,
+        ]
+      );
+
     await userDb.withTransactionAsync(async () => {
       for (const dt of deckTranslations) {
-        approxBytes += ((dt.category_translation || '').length + (dt.subcategory_translation || '').length) * 2 + 32;
-        await userDb.runAsync(
-          `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
-           VALUES (?, ?, ?, ?, ?);`,
-          [dt.deck_id, langName, dt.category_translation, dt.subcategory_translation, dt.source || null]
-        );
+        approxBytes +=
+          ((dt.theme_translation || '').length +
+            (dt.subtheme_translation || '').length +
+            (dt.deck_translation || '').length +
+            (dt.subdeck_translation || '').length) *
+            2 +
+          32;
+        await insertDeckTranslation(dt, langName);
         if (dt.lang_name.toLowerCase() !== langName.toLowerCase()) {
-          await userDb.runAsync(
-            `INSERT OR REPLACE INTO Downloaded_Deck_Translations (deck_id, lang_name, category_translation, subcategory_translation, source)
-             VALUES (?, ?, ?, ?, ?);`,
-            [dt.deck_id, dt.lang_name, dt.category_translation, dt.subcategory_translation, dt.source || null]
-          );
+          await insertDeckTranslation(dt, dt.lang_name);
         }
       }
     });

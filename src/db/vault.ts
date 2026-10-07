@@ -2,6 +2,15 @@ import * as SQLite from 'expo-sqlite';
 import { importDatabaseFromAssetAsync } from 'expo-sqlite';
 import { USER_SCHEMA_SQL } from './schema';
 import {
+  DeckLabels,
+  DeckRow,
+  DeckTitleTranslation,
+  buildDeckLabels,
+  capitalizeTitle,
+  groupDecksIntoThemes,
+  resolveDeckIcon,
+} from './deckHierarchy';
+import {
   Domain,
   CardWithDetails,
   Lexeme,
@@ -251,6 +260,15 @@ export async function initVault(): Promise<void> {
     await userDb.runAsync("ALTER TABLE User_Cards ADD COLUMN origin_lang TEXT DEFAULT 'en';");
   } catch {
     // Column already exists
+  }
+
+  // Safe migration: theme/deck/subdeck titles for language packs downloaded before subdecks existed
+  for (const column of ['theme_translation', 'subtheme_translation', 'deck_translation', 'subdeck_translation']) {
+    try {
+      await userDb.runAsync(`ALTER TABLE Downloaded_Deck_Translations ADD COLUMN ${column} TEXT DEFAULT '';`);
+    } catch {
+      // Column already exists
+    }
   }
 
   // Initialize static DB connection
@@ -635,47 +653,64 @@ export async function loadCardTranslationsForPair(
   return { destMap, origMap, defMap };
 }
 
+export { CATEGORY_ICONS, SUBCATEGORY_ICONS, resolveDeckIcon, capitalizeTitle } from './deckHierarchy';
+
+type DeckTranslationRow = {
+  deck_id: number;
+  theme_translation?: string | null;
+  subtheme_translation?: string | null;
+  deck_translation?: string | null;
+  subdeck_translation?: string | null;
+  category_translation?: string | null;
+  subcategory_translation?: string | null;
+};
+
+/** Older rows only carry category/subcategory, which map to theme/deck. */
+function toDeckTitles(row: DeckTranslationRow): DeckTitleTranslation {
+  return {
+    theme: row.theme_translation || row.category_translation || '',
+    subtheme: row.subtheme_translation || '',
+    deck: row.deck_translation || row.subcategory_translation || '',
+    subdeck: row.subdeck_translation || '',
+  };
+}
+
 /**
- * Loads translated deck and category names for a list of deck IDs.
+ * Loads translated theme, deck and subdeck titles for a list of deck IDs.
  * Checks Downloaded_Deck_Translations in user_vault.sqlite, then falls back to staticDb.
+ * English uses the lexicon's own (English) names, so it returns no translations.
  */
 export async function loadDeckTranslationsForDecks(
   deckIds: number[],
   langParam: string
-): Promise<Map<number, { category_translation: string; subcategory_translation: string }>> {
-  const result = new Map<number, { category_translation: string; subcategory_translation: string }>();
+): Promise<Map<number, DeckTitleTranslation>> {
+  const result = new Map<number, DeckTitleTranslation>();
   if (deckIds.length === 0) return result;
+
+  const candidates = getCandidateLanguageNames(langParam);
+  if (candidates.includes('English')) return result;
 
   const userDb = await getUserDb();
   const staticDb = await getStaticDb();
-
-  const candidates = getCandidateLanguageNames(langParam);
   const candPlaceholders = candidates.map(() => '?').join(',');
   const deckPlaceholders = deckIds.map(() => '?').join(',');
 
-  // 1. Query Downloaded_Deck_Translations in userDb
+  // 1. Query Downloaded_Deck_Translations in userDb (rows saved before subdecks existed lack subdeck titles)
   try {
-    const downloaded = await userDb.getAllAsync<{
-      deck_id: number;
-      lang_name: string;
-      category_translation: string;
-      subcategory_translation: string;
-    }>(
-      `SELECT deck_id, lang_name, category_translation, subcategory_translation 
-       FROM Downloaded_Deck_Translations 
+    const downloaded = await userDb.getAllAsync<DeckTranslationRow>(
+      `SELECT deck_id, theme_translation, subtheme_translation, deck_translation, subdeck_translation,
+              category_translation, subcategory_translation
+       FROM Downloaded_Deck_Translations
        WHERE lang_name IN (${candPlaceholders}) AND deck_id IN (${deckPlaceholders});`,
       [...candidates, ...deckIds]
     );
     for (const row of downloaded) {
-      if (!result.has(row.deck_id)) {
-        result.set(row.deck_id, {
-          category_translation: capitalizeTitle(row.category_translation),
-          subcategory_translation: capitalizeTitle(row.subcategory_translation),
-        });
+      if (!result.has(row.deck_id) && row.subdeck_translation) {
+        result.set(row.deck_id, toDeckTitles(row));
       }
     }
   } catch (e) {
-    // Downloaded_Deck_Translations may be empty initially
+    // Downloaded_Deck_Translations may be empty or not yet migrated
   }
 
   // 2. Query staticDb deck_translations for any missing decks
@@ -683,23 +718,15 @@ export async function loadDeckTranslationsForDecks(
   if (missingDecks.length > 0) {
     const missingPlaceholders = missingDecks.map(() => '?').join(',');
     try {
-      const staticRows = await staticDb.getAllAsync<{
-        deck_id: number;
-        lang_name: string;
-        category_translation: string;
-        subcategory_translation: string;
-      }>(
-        `SELECT deck_id, lang_name, category_translation, subcategory_translation 
-         FROM deck_translations 
+      const staticRows = await staticDb.getAllAsync<DeckTranslationRow>(
+        `SELECT deck_id, theme_translation, subtheme_translation, deck_translation, subdeck_translation
+         FROM deck_translations
          WHERE lang_name IN (${candPlaceholders}) AND deck_id IN (${missingPlaceholders});`,
         [...candidates, ...missingDecks]
       );
       for (const row of staticRows) {
         if (!result.has(row.deck_id)) {
-          result.set(row.deck_id, {
-            category_translation: capitalizeTitle(row.category_translation),
-            subcategory_translation: capitalizeTitle(row.subcategory_translation),
-          });
+          result.set(row.deck_id, toDeckTitles(row));
         }
       }
     } catch (e) {
@@ -710,79 +737,42 @@ export async function loadDeckTranslationsForDecks(
   return result;
 }
 
-export const CATEGORY_ICONS: Record<string, string> = {
-  greetings: 'handshake',
-  basics: 'message-circle',
-  family: 'users',
-  numbers: 'coins',
-  animals: 'paw-print',
-  vehicles: 'car',
-  math: 'calculator',
-  electronics: 'cpu',
-  biology: 'dna',
-  home: 'home',
-  construction: 'hammer',
-  food: 'apple',
-  sports: 'trophy',
-  travel: 'luggage',
-  dining: 'utensils',
-  health: 'stethoscope',
-  art: 'palette',
-};
+let deckCatalogCache: DeckRow[] | null = null;
 
-export const SUBCATEGORY_ICONS: Record<string, string> = {
-  'domestic animals': 'dog',
-  insects: 'bug',
-  'farm animals': 'paw-print',
-  'air vehicles': 'plane',
-  'land vehicles': 'car',
-  'water vehicles': 'ship',
-  furniture: 'armchair',
-  'home spaces': 'home',
-  'hand tools': 'hammer',
-  'power tools': 'wrench',
-  fruits: 'apple',
-  spices: 'flame',
-  'basic groceries': 'shopping-bag',
-  'core team sports': 'trophy',
-  'individual sports': 'activity',
-  'sport venues': 'landmark',
-  'cell cycle': 'microscope',
-  'basic math operations': 'divide',
-  'number properties': 'percent',
-  'electronic components': 'cpu',
-  'house appliances': 'tv',
-  'formal greetings': 'handshake',
-  'casual greetings': 'message-square',
-  'formal farewells': 'handshake',
-  'casual farewells': 'message-circle',
-};
-
-export function resolveDeckIcon(category?: string, subcategory?: string): string {
-  const subLower = (subcategory || '').trim().toLowerCase();
-  if (subLower && SUBCATEGORY_ICONS[subLower]) {
-    return SUBCATEGORY_ICONS[subLower];
+/** All rows of the static decks table (one per subdeck), cached for the session. */
+export async function getDeckCatalog(): Promise<DeckRow[]> {
+  if (!deckCatalogCache) {
+    const staticDb = await getStaticDb();
+    deckCatalogCache = await staticDb.getAllAsync<DeckRow>(
+      'SELECT deck_id, theme, subtheme, deck, subdeck, difficulty FROM decks ORDER BY deck_id ASC;'
+    );
   }
-  const catLower = (category || '').trim().toLowerCase();
-  return CATEGORY_ICONS[catLower] || 'book-open';
+  return deckCatalogCache;
 }
 
-export function capitalizeTitle(text: string): string {
-  if (!text) return '';
-  return text
-    .split(' ')
-    .map((word) => {
-      if (word.startsWith('(')) {
-        return '(' + word.charAt(1).toUpperCase() + word.slice(2);
-      }
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(' ');
+/** Theme, deck and subdeck labels for every deck_id, in the requested title language. */
+export async function getDeckLabels(translationLang: string): Promise<Map<number, DeckLabels>> {
+  const catalog = await getDeckCatalog();
+  const translations = await loadDeckTranslationsForDecks(
+    catalog.map((d) => d.deck_id),
+    translationLang
+  );
+  return buildDeckLabels(catalog, translations);
+}
+
+async function resolveTitleLanguage(
+  targetLang: string,
+  originLang?: string,
+  titleLangPreference?: DeckTitleLanguageMode
+): Promise<string> {
+  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
+  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
+  return pref === 'target' ? targetLang : effectiveOrigin;
 }
 
 /**
  * Tab 1: Themes & Thematic Decks.
- * Returns the real thematic decks from lexicon_v1.0.0.db grouped by category.
+ * Returns the lexicon's decks as Theme › Deck › Subdeck, with per-subdeck progress.
  */
 export async function getThemesWithProgressiveDecks(
   targetLang = 'es',
@@ -793,166 +783,90 @@ export async function getThemesWithProgressiveDecks(
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
 
-  // 1. Fetch all decks
-  const decksRows = await staticDb.getAllAsync<{
-    deck_id: number;
-    category: string;
-    subcategory: string;
-    difficulty: number;
-    description: string;
-  }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
+  const decksRows = await getDeckCatalog();
 
-  // 2. Fetch card counts per deck
-  const countRows = await staticDb.getAllAsync<{
-    deck_id: number;
-    card_count: number;
-  }>('SELECT deck_id, count(card_id) as card_count FROM cards GROUP BY deck_id;');
-  const cardCountMap = new Map<number, number>();
-  countRows.forEach((r) => cardCountMap.set(r.deck_id, r.card_count));
-
-  // 3. Fetch user queue & mastery progress from user_vault.sqlite
-  const userProgressRows = await userDb.getAllAsync<{
-    card_id: number;
-    state: number;
-    stability: number;
-    reps: number;
-  }>('SELECT card_id, state, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);', [langName, targetLang]);
-
-  const userProgressMap = new Map<
-    number,
-    { state: number; stability: number; reps: number }
-  >();
-  userProgressRows.forEach((r) => {
-    userProgressMap.set(r.card_id, {
-      state: r.state,
-      stability: r.stability,
-      reps: r.reps,
-    });
-  });
-
-  // Map each card_id to its deck_id
+  // Card counts and card → deck mapping
   const cardDeckRows = await staticDb.getAllAsync<{
     card_id: number;
     deck_id: number;
   }>('SELECT card_id, deck_id FROM cards;');
+  const cardCountMap = new Map<number, number>();
   const cardToDeckMap = new Map<number, number>();
-  cardDeckRows.forEach((r) => cardToDeckMap.set(r.card_id, r.deck_id));
+  cardDeckRows.forEach((r) => {
+    cardToDeckMap.set(r.card_id, r.deck_id);
+    cardCountMap.set(r.deck_id, (cardCountMap.get(r.deck_id) || 0) + 1);
+  });
 
-  // Tally user progress per deck
+  // Tally user queue & mastery progress per subdeck
+  const userProgressRows = await userDb.getAllAsync<{
+    card_id: number;
+    stability: number;
+    reps: number;
+  }>('SELECT card_id, stability, reps FROM User_Cards WHERE target_lang IN (?, ?);', [langName, targetLang]);
+
   const deckQueuedCount = new Map<number, number>();
   const deckMasteredCount = new Map<number, number>();
-
-  for (const [cardId, uCard] of userProgressMap.entries()) {
-    const deckId = cardToDeckMap.get(cardId);
-    if (deckId !== undefined) {
-      deckQueuedCount.set(deckId, (deckQueuedCount.get(deckId) || 0) + 1);
-      if (uCard.stability >= 21 || uCard.reps >= 3) {
-        deckMasteredCount.set(deckId, (deckMasteredCount.get(deckId) || 0) + 1);
-      }
+  const seenCards = new Set<number>();
+  for (const uCard of userProgressRows) {
+    if (seenCards.has(uCard.card_id)) continue;
+    seenCards.add(uCard.card_id);
+    const deckId = cardToDeckMap.get(uCard.card_id);
+    if (deckId === undefined) continue;
+    deckQueuedCount.set(deckId, (deckQueuedCount.get(deckId) || 0) + 1);
+    if (uCard.stability >= 21 || uCard.reps >= 3) {
+      deckMasteredCount.set(deckId, (deckMasteredCount.get(deckId) || 0) + 1);
     }
   }
 
-  // Fetch unlock states
+  // Unlock states (by subdeck id or whole theme)
   const unlockedRows = await userDb.getAllAsync<{ deck_id: string }>(
     'SELECT deck_id FROM Deck_Access WHERE is_unlocked = 1;'
   );
   const unlockedSet = new Set(unlockedRows.map((r) => r.deck_id));
 
-  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
-  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
+  const translationLang = await resolveTitleLanguage(targetLang, originLang, titleLangPreference);
+  const labels = await getDeckLabels(translationLang);
 
-  const allDeckIds = decksRows.map((d) => d.deck_id);
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
-
-  // Group decks by category
-  const categoriesMap = new Map<string, DeckWithProgress[]>();
-
+  const leaves: DeckWithProgress[] = [];
   for (const d of decksRows) {
-    const totalCards = cardCountMap.get(d.deck_id) || 0;
-    const queued = deckQueuedCount.get(d.deck_id) || 0;
-    const mastered = deckMasteredCount.get(d.deck_id) || 0;
+    const l = labels.get(d.deck_id);
+    if (!l) continue;
     const cefr = difficultyToCefr(d.difficulty);
-
     const isUnlocked =
-      d.deck_id === 1 || // First deck always unlocked
+      d.deck_id === 1 || // First decks always unlocked
       d.deck_id === 2 ||
       unlockedSet.has(String(d.deck_id)) ||
-      unlockedSet.has(d.category);
+      unlockedSet.has(d.theme);
 
-    const dt = deckTransMap.get(d.deck_id);
-    const themeName = dt?.category_translation || capitalizeTitle(d.category);
-    const deckName = dt?.subcategory_translation || capitalizeTitle(d.subcategory);
-
-    const deckObj: DeckWithProgress = {
+    leaves.push({
       id: String(d.deck_id),
       real_deck_id: d.deck_id,
-      theme_id: d.category,
-      theme_name: themeName,
-      name: deckName,
+      theme_id: l.themeKey,
+      theme_name: l.themeName,
+      subtheme_name: l.subthemeName || undefined,
+      deck_key: l.deckKey,
+      deck_name: l.deckName,
+      deck_icon_name: resolveDeckIcon(d.theme, d.deck),
+      subdeck_name: l.subdeckName,
+      has_subdecks: l.hasSubdecks,
+      is_main_subdeck: !d.subdeck || d.subdeck.trim().toLowerCase() === d.deck.trim().toLowerCase(),
+      name: l.displayName,
+      full_name: l.fullName,
+      subtitle: l.subtitle,
       description: '',
       difficulty_level: d.difficulty,
       difficulty_label: cefr,
       cefr_level: cefr,
-      icon_name: resolveDeckIcon(d.category, d.subcategory),
-      card_count: totalCards,
-      queued_count: queued,
-      mastered_count: mastered,
+      icon_name: resolveDeckIcon(d.theme, d.deck, d.subdeck),
+      card_count: cardCountMap.get(d.deck_id) || 0,
+      queued_count: deckQueuedCount.get(d.deck_id) || 0,
+      mastered_count: deckMasteredCount.get(d.deck_id) || 0,
       is_pro: false,
       is_locked: !isUnlocked,
-    };
-
-    if (!categoriesMap.has(d.category)) {
-      categoriesMap.set(d.category, []);
-    }
-    categoriesMap.get(d.category)!.push(deckObj);
-  }
-
-  // Build ThemeGroups array in consistent category ordering
-  const categoryOrder = [
-    'greetings',
-    'family',
-    'numbers',
-    'animals',
-    'vehicles',
-    'math',
-    'electronics',
-    'biology',
-  ];
-
-  const themeGroups: ThemeGroup[] = [];
-  for (const catKey of categoryOrder) {
-    const decks = categoriesMap.get(catKey);
-    if (!decks || decks.length === 0) continue;
-
-    const themeName = decks[0]?.theme_name || capitalizeTitle(catKey);
-
-    themeGroups.push({
-      id: `theme_${catKey}`,
-      name: themeName,
-      description: '',
-      icon_name: resolveDeckIcon(catKey),
-      is_pro: false,
-      decks,
     });
   }
 
-  // Include any extra categories not in categoryOrder
-  for (const [catKey, decks] of categoriesMap.entries()) {
-    if (!categoryOrder.includes(catKey)) {
-      const themeName = decks[0]?.theme_name || capitalizeTitle(catKey);
-      themeGroups.push({
-        id: `theme_${catKey}`,
-        name: themeName,
-        description: '',
-        icon_name: resolveDeckIcon(catKey),
-        is_pro: false,
-        decks,
-      });
-    }
-  }
-
-  return themeGroups;
+  return groupDecksIntoThemes(leaves);
 }
 
 /**
@@ -969,22 +883,22 @@ export async function getAllDecksOrderedByDifficulty(
   const staticDb = await getStaticDb();
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
-  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
-  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
+  const translationLang = await resolveTitleLanguage(targetLang, originLang, titleLangPreference);
 
   // Group cards by (deck_id, difficulty)
   const sliceRows = await staticDb.getAllAsync<{
     deck_id: number;
-    category: string;
-    subcategory: string;
+    theme: string;
+    deck: string;
+    subdeck: string | null;
     difficulty: number;
     card_count: number;
   }>(`
     SELECT 
       d.deck_id,
-      d.category,
-      d.subcategory,
+      d.theme,
+      d.deck,
+      d.subdeck,
       c.difficulty,
       COUNT(c.card_id) as card_count
     FROM decks d
@@ -993,8 +907,7 @@ export async function getAllDecksOrderedByDifficulty(
     ORDER BY c.difficulty ASC, d.deck_id ASC;
   `);
 
-  const allDeckIds = Array.from(new Set(sliceRows.map((s) => s.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
+  const labels = await getDeckLabels(translationLang);
 
   // Fetch all user cards for this language
   const userCards = await userDb.getAllAsync<{
@@ -1045,20 +958,26 @@ export async function getAllDecksOrderedByDifficulty(
   for (const s of sliceRows) {
     const sliceKey = `${s.deck_id}_${s.difficulty}`;
     const cefr = difficultyToCefr(s.difficulty);
-    const iconName = resolveDeckIcon(s.category, s.subcategory);
+    const iconName = resolveDeckIcon(s.theme, s.deck, s.subdeck);
     const queued = sliceQueuedCount.get(sliceKey) || 0;
     const mastered = sliceMasteredCount.get(sliceKey) || 0;
 
-    const dt = deckTransMap.get(s.deck_id);
-    const themeName = dt?.category_translation || capitalizeTitle(s.category);
-    const name = dt?.subcategory_translation || capitalizeTitle(s.subcategory);
+    const l = labels.get(s.deck_id);
+    const themeName = l?.themeName || capitalizeTitle(s.theme);
+    // Outside the theme list each subdeck is named with its parent deck.
+    const name = l?.fullName || capitalizeTitle(s.subdeck || s.deck);
 
     result.push({
       id: `diff_${s.deck_id}_${s.difficulty}`,
       real_deck_id: s.deck_id,
       difficulty_slice: s.difficulty,
-      theme_id: s.category,
+      theme_id: l?.themeKey || s.theme,
       theme_name: themeName,
+      deck_key: l?.deckKey,
+      deck_name: l?.deckName,
+      subdeck_name: l?.subdeckName,
+      has_subdecks: l?.hasSubdecks,
+      full_name: name,
       name,
       description: '',
       difficulty_level: s.difficulty,
@@ -1693,8 +1612,8 @@ export async function getWordsByDifficulty(
       c.pos,
       c.cili_id,
       c.difficulty,
-      d.category,
-      d.subcategory
+      d.theme,
+      d.deck
     FROM cards c
     JOIN decks d ON d.deck_id = c.deck_id
   `;
@@ -1715,8 +1634,8 @@ export async function getWordsByDifficulty(
     pos: string;
     cili_id: string;
     difficulty: number;
-    category: string;
-    subcategory: string;
+    theme: string;
+    deck: string;
   }>(query, params);
 
   const cardIds = rows.map((r) => r.card_id);
@@ -1740,10 +1659,8 @@ export async function getWordsByDifficulty(
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
 
-  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
-  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
-  const allDeckIds = Array.from(new Set(rows.map((r) => r.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
+  const translationLang = await resolveTitleLanguage(targetLang, effectiveOrigin, titleLangPreference);
+  const deckLabels = await getDeckLabels(translationLang);
 
   return rows.map((r) => {
     const uc = ucMap.get(r.card_id);
@@ -1752,9 +1669,9 @@ export async function getWordsByDifficulty(
     const backTerm = origMap.get(r.card_id) || r.primary_term;
     const definition = defMap.get(r.card_id) || '';
 
-    const dt = deckTransMap.get(r.deck_id);
-    const deckName = dt?.subcategory_translation || capitalizeTitle(r.subcategory);
-    const themeName = dt?.category_translation || capitalizeTitle(r.category);
+    const labels = deckLabels.get(r.deck_id);
+    const deckName = labels?.fullName || capitalizeTitle(r.deck);
+    const themeName = labels?.themeName || capitalizeTitle(r.theme);
 
     return {
       concept_id: r.cili_id || `c_${r.card_id}`,
@@ -1953,8 +1870,7 @@ export async function getMasteryWords(
   const langName = resolveLanguageName(targetLang);
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
   const now = new Date().toISOString();
-  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
-  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
+  const translationLang = await resolveTitleLanguage(targetLang, effectiveOrigin, titleLangPreference);
 
   if (stage === 'available') {
     // 1. Get all card IDs already queued for this language
@@ -1972,8 +1888,8 @@ export async function getMasteryWords(
         c.pos,
         c.cili_id,
         c.difficulty,
-        d.category,
-        d.subcategory
+        d.theme,
+        d.deck
       FROM cards c
       JOIN decks d ON d.deck_id = c.deck_id
     `;
@@ -1993,24 +1909,23 @@ export async function getMasteryWords(
       pos: string;
       cili_id: string;
       difficulty: number;
-      category: string;
-      subcategory: string;
+      theme: string;
+      deck: string;
     }>(query, params);
 
     if (availableCards.length === 0) return [];
 
     const cardIds = availableCards.map((c) => c.card_id);
     const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
-    const allDeckIds = Array.from(new Set(availableCards.map((c) => c.deck_id)));
-    const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
+    const deckLabels = await getDeckLabels(translationLang);
 
     return availableCards.map((c) => {
       const frontTerm = destMap.get(c.card_id) || c.primary_term;
       const backTerm = origMap.get(c.card_id) || c.primary_term;
       const definition = defMap.get(c.card_id) || '';
-      const dt = deckTransMap.get(c.deck_id);
-      const deckName = dt?.subcategory_translation || capitalizeTitle(c.subcategory);
-      const themeName = dt?.category_translation || capitalizeTitle(c.category);
+      const labels = deckLabels.get(c.deck_id);
+      const deckName = labels?.fullName || capitalizeTitle(c.deck);
+      const themeName = labels?.themeName || capitalizeTitle(c.theme);
 
       return {
         concept_id: c.cili_id || `c_${c.card_id}`,
@@ -2080,8 +1995,8 @@ export async function getMasteryWords(
     pos: string;
     cili_id: string;
     difficulty: number;
-    category: string;
-    subcategory: string;
+    theme: string;
+    deck: string;
   }>(
     `SELECT 
       c.card_id,
@@ -2090,8 +2005,8 @@ export async function getMasteryWords(
       c.pos,
       c.cili_id,
       c.difficulty,
-      d.category,
-      d.subcategory
+      d.theme,
+      d.deck
     FROM cards c
     JOIN decks d ON d.deck_id = c.deck_id
     WHERE c.card_id IN (${placeholders});`,
@@ -2102,8 +2017,7 @@ export async function getMasteryWords(
   cardMeta.forEach((m) => metaMap.set(m.card_id, m));
 
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
-  const allDeckIds = Array.from(new Set(cardMeta.map((c) => c.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
+  const deckLabels = await getDeckLabels(translationLang);
 
   return userCards.map((uc) => {
     const meta = metaMap.get(uc.card_id);
@@ -2111,9 +2025,9 @@ export async function getMasteryWords(
     const frontTerm = destMap.get(uc.card_id) || primaryTerm;
     const backTerm = origMap.get(uc.card_id) || primaryTerm;
     const definition = defMap.get(uc.card_id) || '';
-    const dt = meta ? deckTransMap.get(meta.deck_id) : undefined;
-    const deckName = dt?.subcategory_translation || (meta ? capitalizeTitle(meta.subcategory) : undefined);
-    const themeName = dt?.category_translation || (meta ? capitalizeTitle(meta.category) : undefined);
+    const labels = meta ? deckLabels.get(meta.deck_id) : undefined;
+    const deckName = labels?.fullName || (meta ? capitalizeTitle(meta.deck) : undefined);
+    const themeName = labels?.themeName || (meta ? capitalizeTitle(meta.theme) : undefined);
 
     return {
       concept_id: meta?.cili_id || `c_${uc.card_id}`,
@@ -2185,8 +2099,7 @@ export async function getRandomUnlearnedWords(
   const userDb = await getUserDb();
   const langName = resolveLanguageName(targetLang);
   const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
-  const translationLang = pref === 'target' ? targetLang : effectiveOrigin;
+  const translationLang = await resolveTitleLanguage(targetLang, effectiveOrigin, titleLangPreference);
 
   // 1. Get all card IDs already queued/learned for this language
   const queuedRows = await userDb.getAllAsync<{ card_id: number }>(
@@ -2203,8 +2116,8 @@ export async function getRandomUnlearnedWords(
       c.pos,
       c.cili_id,
       c.difficulty,
-      d.category,
-      d.subcategory
+      d.theme,
+      d.deck
     FROM cards c
     JOIN decks d ON d.deck_id = c.deck_id
   `;
@@ -2224,24 +2137,23 @@ export async function getRandomUnlearnedWords(
     pos: string;
     cili_id: string;
     difficulty: number;
-    category: string;
-    subcategory: string;
+    theme: string;
+    deck: string;
   }>(query, params);
 
   if (randomCards.length === 0) return [];
 
   const cardIds = randomCards.map((c) => c.card_id);
   const { destMap, origMap, defMap } = await loadCardTranslationsForPair(cardIds, targetLang, effectiveOrigin);
-  const allDeckIds = Array.from(new Set(randomCards.map((c) => c.deck_id)));
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
+  const deckLabels = await getDeckLabels(translationLang);
 
   return randomCards.map((c) => {
     const frontTerm = destMap.get(c.card_id) || c.primary_term;
     const backTerm = origMap.get(c.card_id) || c.primary_term;
     const definition = defMap.get(c.card_id) || '';
-    const dt = deckTransMap.get(c.deck_id);
-    const deckName = dt?.subcategory_translation || capitalizeTitle(c.subcategory);
-    const themeName = dt?.category_translation || capitalizeTitle(c.category);
+    const labels = deckLabels.get(c.deck_id);
+    const deckName = labels?.fullName || capitalizeTitle(c.deck);
+    const themeName = labels?.themeName || capitalizeTitle(c.theme);
 
     return {
       concept_id: c.cili_id || `c_${c.card_id}`,
@@ -2472,53 +2384,36 @@ export async function getDomainsHierarchy(
   originLang?: string,
   titleLangPreference?: DeckTitleLanguageMode
 ): Promise<Domain[]> {
-  const staticDb = await getStaticDb();
   const effectiveTarget = targetLang || (await getLanguagePairSettings()).destination_lang;
-  const effectiveOrigin = originLang || (await getLanguagePairSettings()).origin_lang;
-  const pref = titleLangPreference || (await getDeckTitleLanguagePreference());
-  const translationLang = pref === 'target' ? effectiveTarget : effectiveOrigin;
+  const translationLang = await resolveTitleLanguage(effectiveTarget, originLang, titleLangPreference);
+  const rows = await getDeckCatalog();
+  const labels = await getDeckLabels(translationLang);
 
-  const rows = await staticDb.getAllAsync<{
-    deck_id: number;
-    category: string;
-    subcategory: string;
-    difficulty: number;
-    description: string;
-  }>('SELECT deck_id, category, subcategory, difficulty, description FROM decks ORDER BY deck_id ASC;');
-
-  const allDeckIds = rows.map((r) => r.deck_id);
-  const deckTransMap = await loadDeckTranslationsForDecks(allDeckIds, translationLang);
-
-  const categories = Array.from(new Set(rows.map((r) => r.category)));
   const domains: Domain[] = [];
-
-  for (const cat of categories) {
-    const firstDeck = rows.find((r) => r.category === cat);
-    const dt = firstDeck ? deckTransMap.get(firstDeck.deck_id) : undefined;
-    const catName = dt?.category_translation || capitalizeTitle(cat);
-
+  const seenThemes = new Set<string>();
+  for (const r of rows) {
+    const l = labels.get(r.deck_id);
+    if (!l || seenThemes.has(r.theme)) continue;
+    seenThemes.add(r.theme);
     domains.push({
-      id: `domain_${cat}`,
+      id: `domain_${r.theme}`,
       parent_id: null,
-      name: catName,
+      name: l.themeName,
       description: '',
       difficulty_level: 1,
-      icon_name: resolveDeckIcon(cat),
+      icon_name: resolveDeckIcon(r.theme),
       is_introductory: false,
     });
   }
 
   for (const r of rows) {
-    const dt = deckTransMap.get(r.deck_id);
-    const subName = dt?.subcategory_translation || capitalizeTitle(r.subcategory);
-
     domains.push({
       id: `sub_${r.deck_id}`,
-      parent_id: `domain_${r.category}`,
-      name: subName,
+      parent_id: `domain_${r.theme}`,
+      name: labels.get(r.deck_id)?.fullName || capitalizeTitle(r.subdeck || r.deck),
       description: '',
       difficulty_level: r.difficulty,
-      icon_name: resolveDeckIcon(r.category, r.subcategory),
+      icon_name: resolveDeckIcon(r.theme, r.deck, r.subdeck),
       is_introductory: r.difficulty === 1,
     });
   }
@@ -2559,7 +2454,7 @@ export async function getLexemesByDomain(
     whereClauses.push('c.deck_id = ?');
     params.push(deckId);
   } else if (categoryFilter !== null) {
-    whereClauses.push('d.category = ?');
+    whereClauses.push('d.theme = ?');
     params.push(categoryFilter);
   }
 

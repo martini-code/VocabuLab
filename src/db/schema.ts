@@ -70,12 +70,17 @@ CREATE TABLE IF NOT EXISTS Downloaded_Card_Definitions (
     PRIMARY KEY (card_id, lang_name)
 );
 
--- Downloaded Deck Translations (Deck and Category Names per Language)
+-- Downloaded Deck Translations (Theme, Deck and Subdeck Names per Language)
+-- category/subcategory are the legacy names of theme/deck.
 CREATE TABLE IF NOT EXISTS Downloaded_Deck_Translations (
     deck_id INTEGER NOT NULL,
     lang_name TEXT NOT NULL,
     category_translation TEXT NOT NULL,
     subcategory_translation TEXT NOT NULL,
+    theme_translation TEXT DEFAULT '',
+    subtheme_translation TEXT DEFAULT '',
+    deck_translation TEXT DEFAULT '',
+    subdeck_translation TEXT DEFAULT '',
     source TEXT,
     PRIMARY KEY (deck_id, lang_name)
 );

@@ -27,6 +27,7 @@ import {
   X,
   Play,
   ChevronRight,
+  ChevronDown,
   BookOpen,
   TreePine,
   Coins,
@@ -45,6 +46,7 @@ import {
 } from 'lucide-react-native';
 import {
   ThemeGroup,
+  DeckGroup,
   DeckWithProgress,
   DeckCardDetail,
   DifficultyWordItem,
@@ -314,20 +316,40 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
   }
 );
 
+interface DeckProgressBarProps {
+  queued: number;
+  total: number;
+}
+
+const DeckProgressBar: React.FC<DeckProgressBarProps> = ({ queued, total }) => {
+  const { t } = useTranslation();
+  const isFullyQueued = total > 0 && queued >= total;
+  const percent = total > 0 ? Math.min(100, Math.round((queued / total) * 100)) : 0;
+  return (
+    <View style={styles.deckProgressRow}>
+      <View style={styles.progressBarBg}>
+        <View
+          style={[
+            styles.progressBarFill,
+            { width: `${percent}%` },
+            isFullyQueued && { backgroundColor: colors.success[500] },
+          ]}
+        />
+      </View>
+      <Text style={styles.deckProgressText}>
+        {queued}/{total} {t('common.all').toLowerCase()}
+      </Text>
+    </View>
+  );
+};
+
 interface ThemeDeckCardProps {
   deck: DeckWithProgress;
   onOpenDeck: (deck: DeckWithProgress) => void;
 }
 
+/** A deck that is not split into subdecks: opens straight into its words. */
 const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
-  const { t } = useTranslation();
-  const queuedCount = deck.queued_count ?? 0;
-  const isFullyQueued = deck.card_count > 0 && queuedCount >= deck.card_count;
-  const queuePercent =
-    deck.card_count > 0
-      ? Math.min(100, Math.round((queuedCount / deck.card_count) * 100))
-      : 0;
-
   return (
     <Pressable
       style={({ pressed }) => [
@@ -338,6 +360,8 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
         },
       ]}
       onPress={() => onOpenDeck(deck)}
+      accessibilityRole="button"
+      accessibilityLabel={deck.full_name || deck.name}
     >
       <View style={styles.deckCardMain}>
         <View style={styles.deckIconBox}>
@@ -352,26 +376,99 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
               </Text>
             </View>
           </View>
+          {Boolean(deck.subtitle) && <Text style={styles.deckSubtitle}>{deck.subtitle}</Text>}
         </View>
         <ChevronRight size={18} color={colors.neutral[400]} />
       </View>
 
-      {/* Progress Bar & Word Counts */}
-      <View style={styles.deckProgressRow}>
-        <View style={styles.progressBarBg}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${queuePercent}%` },
-              isFullyQueued && { backgroundColor: colors.success[500] },
-            ]}
-          />
-        </View>
-        <Text style={styles.deckProgressText}>
-          {queuedCount}/{deck.card_count} {t('common.all').toLowerCase()}
-        </Text>
-      </View>
+      <DeckProgressBar queued={deck.queued_count ?? 0} total={deck.card_count} />
     </Pressable>
+  );
+});
+
+interface SubdeckRowProps {
+  subdeck: DeckWithProgress;
+  onOpenDeck: (deck: DeckWithProgress) => void;
+}
+
+const SubdeckRow = React.memo<SubdeckRowProps>(({ subdeck, onOpenDeck }) => {
+  const queued = subdeck.queued_count ?? 0;
+  const isFullyQueued = subdeck.card_count > 0 && queued >= subdeck.card_count;
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.subdeckRow, pressed && styles.subdeckRowPressed]}
+      onPress={() => onOpenDeck(subdeck)}
+      accessibilityRole="button"
+      accessibilityLabel={subdeck.full_name || subdeck.name}
+    >
+      <View style={styles.subdeckIconBox}>
+        {renderDeckIcon(subdeck.icon_name, 16, colors.primary[700])}
+      </View>
+      <Text style={styles.subdeckName} numberOfLines={2}>
+        {subdeck.name}
+      </Text>
+      <Text style={[styles.subdeckCount, isFullyQueued && styles.subdeckCountDone]}>
+        {queued}/{subdeck.card_count}
+      </Text>
+      <ChevronRight size={16} color={colors.neutral[400]} />
+    </Pressable>
+  );
+});
+
+interface DeckGroupCardProps {
+  group: DeckGroup;
+  onOpenDeck: (deck: DeckWithProgress) => void;
+}
+
+/** A deck split into subdecks: expands to list them; each subdeck opens on its own. */
+const DeckGroupCard = React.memo<DeckGroupCardProps>(({ group, onOpenDeck }) => {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const count = group.subdecks.length;
+
+  return (
+    <View style={[styles.deckCard, expanded && styles.deckCardExpanded]}>
+      <Pressable
+        onPress={() => setExpanded((v) => !v)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={group.name}
+      >
+        <View style={styles.deckCardMain}>
+          <View style={styles.deckIconBox}>
+            {renderDeckIcon(group.icon_name, 20, colors.primary[700])}
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.deckTitleRow}>
+              <Text style={styles.deckName}>{group.name}</Text>
+              <View style={styles.subdeckCountPill}>
+                <Layers size={11} color={colors.primary[700]} />
+                <Text style={styles.subdeckCountPillText}>
+                  {t('explore.subdeck_count', {
+                    count,
+                    defaultValue: count === 1 ? '{{count}} subdeck' : '{{count}} subdecks',
+                  })}
+                </Text>
+              </View>
+            </View>
+          </View>
+          {expanded ? (
+            <ChevronDown size={18} color={colors.primary[700]} />
+          ) : (
+            <ChevronRight size={18} color={colors.neutral[400]} />
+          )}
+        </View>
+        <DeckProgressBar queued={group.queued_count} total={group.card_count} />
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.subdeckList}>
+          {group.subdecks.map((sub) => (
+            <SubdeckRow key={sub.id} subdeck={sub} onOpenDeck={onOpenDeck} />
+          ))}
+        </View>
+      )}
+    </View>
   );
 });
 
@@ -381,7 +478,6 @@ interface ThemeGroupSectionProps {
 }
 
 const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDeck }) => {
-  const { t } = useTranslation();
   return (
     <View style={styles.themeGroup}>
       {/* Theme Header */}
@@ -394,15 +490,23 @@ const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDec
         </View>
       </View>
 
-      {/* Decks under Theme */}
+      {/* Decks under Theme, labelled by subtheme where the lexicon defines one */}
       <View style={styles.decksList}>
-        {theme.decks.map((deck) => (
-          <ThemeDeckCard
-            key={deck.id}
-            deck={deck}
-            onOpenDeck={onOpenDeck}
-          />
-        ))}
+        {theme.deck_groups.map((group, i) => {
+          const prev = theme.deck_groups[i - 1];
+          const showSubtheme =
+            Boolean(group.subtheme_name) && group.subtheme_name !== prev?.subtheme_name;
+          return (
+            <React.Fragment key={group.id}>
+              {showSubtheme && <Text style={styles.subthemeLabel}>{group.subtheme_name}</Text>}
+              {group.subdecks.length > 1 ? (
+                <DeckGroupCard group={group} onOpenDeck={onOpenDeck} />
+              ) : (
+                <ThemeDeckCard deck={group.subdecks[0]} onOpenDeck={onOpenDeck} />
+              )}
+            </React.Fragment>
+          );
+        })}
       </View>
     </View>
   );
@@ -1102,7 +1206,16 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalDeckTitle}>{selectedDeck?.name}</Text>
+                {Boolean(selectedDeck?.theme_name) && (
+                  <Text style={styles.modalDeckBreadcrumb} numberOfLines={1}>
+                    {[selectedDeck?.theme_name, selectedDeck?.has_subdecks ? selectedDeck?.deck_name : null]
+                      .filter(Boolean)
+                      .join(' › ')}
+                  </Text>
+                )}
+                <Text style={styles.modalDeckTitle}>
+                  {selectedDeck?.has_subdecks ? selectedDeck?.subdeck_name : selectedDeck?.deck_name || selectedDeck?.name}
+                </Text>
                 <Text style={styles.modalDeckSub}>
                   Tier {selectedDeck?.difficulty_level} • {selectedDeck?.cefr_level} •{' '}
                   {deckCards.length} {t('common.all').toLowerCase()}
@@ -1170,7 +1283,7 @@ export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
                 ]}
                 onPress={() => {
                   if (selectedDeck) {
-                    onStudyDeck(selectedDeck.id, selectedDeck.name);
+                    onStudyDeck(selectedDeck.id, selectedDeck.full_name || selectedDeck.name);
                     setSelectedDeck(null);
                   }
                 }}
@@ -1329,6 +1442,79 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+  },
+  deckCardExpanded: {
+    borderColor: colors.primary[200],
+  },
+  deckSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.neutral[500],
+  },
+  subthemeLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: colors.neutral[500],
+    marginTop: 4,
+  },
+  subdeckCountPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primary[50],
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  subdeckCountPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.primary[700],
+  },
+  subdeckList: {
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.neutral[100],
+    gap: 2,
+  },
+  subdeckRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+  },
+  subdeckRowPressed: {
+    backgroundColor: colors.primary[50],
+  },
+  subdeckIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subdeckName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.neutral[800],
+  },
+  subdeckCount: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.neutral[500],
+    fontVariant: ['tabular-nums'],
+  },
+  subdeckCountDone: {
+    color: colors.success[600],
   },
   deckCardMain: {
     flexDirection: 'row',
@@ -1736,6 +1922,14 @@ const styles = StyleSheet.create({
     padding: 18,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[200],
+  },
+  modalDeckBreadcrumb: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: colors.textBrand,
+    marginBottom: 2,
   },
   modalDeckTitle: {
     fontSize: 17,
