@@ -662,6 +662,7 @@ const LanguageRowItem = React.memo<LanguageRowItemProps>(({
     </TouchableOpacity>
   );
 });
+LanguageRowItem.displayName = 'LanguageRowItem';
 
 const styles = StyleSheet.create({
   overlay: {

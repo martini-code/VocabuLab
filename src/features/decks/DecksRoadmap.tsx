@@ -249,6 +249,7 @@ const MasteryWordCard = React.memo<MasteryWordCardProps>(
     );
   }
 );
+MasteryWordCard.displayName = 'MasteryWordCard';
 
 interface DeckCardDetailItemProps {
   item: DeckCardDetail;
@@ -324,6 +325,7 @@ const DeckCardDetailItem = React.memo<DeckCardDetailItemProps>(
     );
   }
 );
+DeckCardDetailItem.displayName = 'DeckCardDetailItem';
 
 interface DeckProgressBarProps {
   queued: number;
@@ -390,6 +392,7 @@ const ThemeDeckCard = React.memo<ThemeDeckCardProps>(({ deck, onOpenDeck }) => {
     </Pressable>
   );
 });
+ThemeDeckCard.displayName = 'ThemeDeckCard';
 
 interface SubdeckRowProps {
   subdeck: DeckWithProgress;
@@ -419,6 +422,7 @@ const SubdeckRow = React.memo<SubdeckRowProps>(({ subdeck, onOpenDeck }) => {
     </Pressable>
   );
 });
+SubdeckRow.displayName = 'SubdeckRow';
 
 interface DeckGroupCardProps {
   group: DeckGroup;
@@ -476,6 +480,7 @@ const DeckGroupCard = React.memo<DeckGroupCardProps>(({ group, onOpenDeck }) => 
     </View>
   );
 });
+DeckGroupCard.displayName = 'DeckGroupCard';
 
 interface ThemeGroupSectionProps {
   theme: ThemeGroup;
@@ -516,6 +521,7 @@ const ThemeGroupSection = React.memo<ThemeGroupSectionProps>(({ theme, onOpenDec
     </View>
   );
 });
+ThemeGroupSection.displayName = 'ThemeGroupSection';
 
 export const DecksRoadmap: React.FC<DecksRoadmapProps> = ({
   onStudyDeck,
