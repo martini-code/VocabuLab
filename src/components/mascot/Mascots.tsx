@@ -70,7 +70,12 @@ const Arm: React.FC<{ side: 'left' | 'right'; rotation: number }> = ({ side, rot
   );
 };
 
-const Sparkle: React.FC<{ x: number; y: number; r: number; fill: string }> = ({ x, y, r, fill }) => (
+const Sparkle: React.FC<{ x: number; y: number; r: number; fill: string }> = ({
+  x,
+  y,
+  r,
+  fill,
+}) => (
   <Polygon
     points={`${x},${y - r} ${x + r * 0.28},${y - r * 0.28} ${x + r},${y} ${x + r * 0.28},${y + r * 0.28} ${x},${y + r} ${x - r * 0.28},${y + r * 0.28} ${x - r},${y} ${x - r * 0.28},${y - r * 0.28}`}
     fill={fill}
@@ -126,9 +131,21 @@ export const LexMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) 
         <Ellipse cx={621} cy={1178} rx={260} ry={26} fill={withAlpha(colors.neutral[900], 0.1)} />
 
         {/* Legs & shoes */}
-        <Path d={LEG} fill={c.trousers} stroke={c.trousers} strokeWidth={3} strokeLinejoin="round" />
+        <Path
+          d={LEG}
+          fill={c.trousers}
+          stroke={c.trousers}
+          strokeWidth={3}
+          strokeLinejoin="round"
+        />
         <G transform="translate(1243,0) scale(-1,1)">
-          <Path d={LEG} fill={c.trousers} stroke={c.trousers} strokeWidth={3} strokeLinejoin="round" />
+          <Path
+            d={LEG}
+            fill={c.trousers}
+            stroke={c.trousers}
+            strokeWidth={3}
+            strokeLinejoin="round"
+          />
         </G>
         <Path d={SHOE} fill={c.shoes} />
         <G transform="translate(1243,0) scale(-1,1)">
@@ -162,9 +179,27 @@ export const LexMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) 
         {/* Lab coat */}
         {[undefined, 'translate(1243,0) scale(-1,1)'].map((transform, i) => (
           <G key={i} transform={transform}>
-            <Path d={COAT} fill={c.coat} stroke={c.coatSeam} strokeWidth={5} strokeLinejoin="round" />
-            <Path d={COLLAR} fill={c.coat} stroke={c.coatSeam} strokeWidth={5} strokeLinejoin="round" />
-            <Path d={POCKET} fill={c.coat} stroke={c.coatSeam} strokeWidth={4} strokeLinejoin="round" />
+            <Path
+              d={COAT}
+              fill={c.coat}
+              stroke={c.coatSeam}
+              strokeWidth={5}
+              strokeLinejoin="round"
+            />
+            <Path
+              d={COLLAR}
+              fill={c.coat}
+              stroke={c.coatSeam}
+              strokeWidth={5}
+              strokeLinejoin="round"
+            />
+            <Path
+              d={POCKET}
+              fill={c.coat}
+              stroke={c.coatSeam}
+              strokeWidth={4}
+              strokeLinejoin="round"
+            />
           </G>
         ))}
 
@@ -178,10 +213,22 @@ export const LexMascot: React.FC<MascotProps> = ({ mood = 'idle', size = 110 }) 
 
         {/* Eyebrows */}
         <G transform={`translate(0,${leftBrowY})`}>
-          <Path d={EYEBROW} fill={c.eyebrow} stroke={c.eyebrow} strokeWidth={10} strokeLinejoin="round" />
+          <Path
+            d={EYEBROW}
+            fill={c.eyebrow}
+            stroke={c.eyebrow}
+            strokeWidth={10}
+            strokeLinejoin="round"
+          />
         </G>
         <G transform={`translate(1240,${rightBrowY}) scale(-1,1)`}>
-          <Path d={EYEBROW} fill={c.eyebrow} stroke={c.eyebrow} strokeWidth={10} strokeLinejoin="round" />
+          <Path
+            d={EYEBROW}
+            fill={c.eyebrow}
+            stroke={c.eyebrow}
+            strokeWidth={10}
+            strokeLinejoin="round"
+          />
         </G>
 
         {/* Eyes: eyeball, glasses lens + frame, pupil */}

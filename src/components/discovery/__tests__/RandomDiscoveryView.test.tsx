@@ -139,7 +139,13 @@ describe('RandomDiscoveryView', () => {
       <RandomDiscoveryView onExit={jest.fn()} targetLang="es" originLang="en" />
     );
 
-    expect(vaultModule.getRandomUnlearnedWords).toHaveBeenCalledWith(10, 'es', 'en', undefined, 'B1');
+    expect(vaultModule.getRandomUnlearnedWords).toHaveBeenCalledWith(
+      10,
+      'es',
+      'en',
+      undefined,
+      'B1'
+    );
     expect(result.getByText('Random Discovery')).toBeTruthy();
     expect(result.getByText('Palabra_1')).toBeTruthy();
     expect(result.getByText('Word_1')).toBeTruthy();

@@ -9,8 +9,13 @@ import {
 } from '../deckHierarchy';
 import { DeckWithProgress } from '../../types';
 
-
-const row = (deck_id: number, theme: string, deck: string, subdeck: string, subtheme = ''): DeckRow => ({
+const row = (
+  deck_id: number,
+  theme: string,
+  deck: string,
+  subdeck: string,
+  subtheme = ''
+): DeckRow => ({
   deck_id,
   theme,
   subtheme,
@@ -26,7 +31,11 @@ const tr = (theme: string, deck: string, subdeck: string, subtheme = ''): DeckTi
   subdeck,
 });
 
-function toLeaf(r: DeckRow, labels: ReturnType<typeof buildDeckLabels>, cards = 5): DeckWithProgress {
+function toLeaf(
+  r: DeckRow,
+  labels: ReturnType<typeof buildDeckLabels>,
+  cards = 5
+): DeckWithProgress {
   const l = labels.get(r.deck_id)!;
   return {
     id: String(r.deck_id),
@@ -79,13 +88,21 @@ describe('buildDeckLabels', () => {
 
   it('keeps an unsplit deck under its deck name', () => {
     const labels = buildDeckLabels(rows, new Map());
-    expect(labels.get(2)).toMatchObject({ displayName: 'Domestic Animals', fullName: 'Domestic Animals', hasSubdecks: false });
+    expect(labels.get(2)).toMatchObject({
+      displayName: 'Domestic Animals',
+      fullName: 'Domestic Animals',
+      hasSubdecks: false,
+    });
     expect(labels.get(2)?.subtitle).toBeUndefined();
   });
 
   it('shows a lone subdeck with its own name as a subtitle', () => {
     const labels = buildDeckLabels(rows, new Map());
-    expect(labels.get(44)).toMatchObject({ displayName: 'Pets', fullName: 'Pets', subtitle: 'Traits' });
+    expect(labels.get(44)).toMatchObject({
+      displayName: 'Pets',
+      fullName: 'Pets',
+      subtitle: 'Traits',
+    });
   });
 
   it('skips the subtitle when the deck name already says it', () => {
@@ -99,13 +116,20 @@ describe('buildDeckLabels', () => {
       [39, tr('animales', 'escarabajos', 'escarabajos')],
     ]);
     const labels = buildDeckLabels(rows, translations);
-    expect(labels.get(39)).toMatchObject({ deckName: 'Insectos', subdeckName: 'Escarabajos', themeName: 'Animales' });
+    expect(labels.get(39)).toMatchObject({
+      deckName: 'Insectos',
+      subdeckName: 'Escarabajos',
+      themeName: 'Animales',
+    });
     // Untranslated subdeck falls back to its English name, under the translated deck
     expect(labels.get(45)?.fullName).toBe('Insectos › Habitats');
   });
 
   it('labels subthemes when the lexicon defines them', () => {
-    const labels = buildDeckLabels([row(1, 'sports', 'basketball', 'rules', 'ball games')], new Map());
+    const labels = buildDeckLabels(
+      [row(1, 'sports', 'basketball', 'rules', 'ball games')],
+      new Map()
+    );
     expect(labels.get(1)?.subthemeName).toBe('Ball Games');
   });
 });
@@ -131,7 +155,11 @@ describe('groupDecksIntoThemes', () => {
   });
 
   it('orders beginner themes first, then the rest alphabetically', () => {
-    const rows = [row(1, 'sports', 'a', 'a'), row(2, 'military', 'b', 'b'), row(3, 'basics', 'c', 'c')];
+    const rows = [
+      row(1, 'sports', 'a', 'a'),
+      row(2, 'military', 'b', 'b'),
+      row(3, 'basics', 'c', 'c'),
+    ];
     const labels = buildDeckLabels(rows, new Map());
     const themes = groupDecksIntoThemes(rows.map((r) => toLeaf(r, labels)));
     expect(themes.map((t) => t.id)).toEqual(['theme_basics', 'theme_military', 'theme_sports']);
@@ -139,18 +167,30 @@ describe('groupDecksIntoThemes', () => {
 });
 
 describe('lexicon asset (lexicon_v1.0.0.db)', () => {
-  const db = new Database(path.join(__dirname, '../../../assets/lexicon_v1.0.0.db'), { readonly: true });
+  const db = new Database(path.join(__dirname, '../../../assets/lexicon_v1.0.0.db'), {
+    readonly: true,
+  });
   afterAll(() => db.close());
 
   const catalog: DeckRow[] = db
-    .prepare('SELECT deck_id, theme, subtheme, deck, subdeck, difficulty FROM decks ORDER BY deck_id ASC;')
+    .prepare(
+      'SELECT deck_id, theme, subtheme, deck, subdeck, difficulty FROM decks ORDER BY deck_id ASC;'
+    )
     .all();
 
   it('has the theme/deck/subdeck columns the app reads', () => {
     expect(catalog.length).toBeGreaterThan(0);
-    const transCols = db.prepare('PRAGMA table_info(deck_translations);').all().map((c: any) => c.name);
+    const transCols = db
+      .prepare('PRAGMA table_info(deck_translations);')
+      .all()
+      .map((c: any) => c.name);
     expect(transCols).toEqual(
-      expect.arrayContaining(['theme_translation', 'subtheme_translation', 'deck_translation', 'subdeck_translation'])
+      expect.arrayContaining([
+        'theme_translation',
+        'subtheme_translation',
+        'deck_translation',
+        'subdeck_translation',
+      ])
     );
   });
 
@@ -169,7 +209,9 @@ describe('lexicon asset (lexicon_v1.0.0.db)', () => {
     expect(insects.subdecks.length).toBeGreaterThan(1);
     expect(insects.subdecks[0].name).toBe('Insects');
     const sports = themes.find((t) => t.id === 'theme_sports')!;
-    expect(sports.deck_groups.find((g) => g.name === 'Basketball')!.subdecks.length).toBeGreaterThan(1);
+    expect(
+      sports.deck_groups.find((g) => g.name === 'Basketball')!.subdecks.length
+    ).toBeGreaterThan(1);
   });
 
   it('keeps one deck name per group with real Spanish translations', () => {

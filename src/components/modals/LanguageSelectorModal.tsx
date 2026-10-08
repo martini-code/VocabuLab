@@ -40,10 +40,7 @@ import {
   enrollLanguagePair,
   removeEnrolledLanguagePair,
 } from '../../db/vault';
-import {
-  downloadLanguagePack,
-  deleteLanguagePack,
-} from '../../db/downloader';
+import { downloadLanguagePack, deleteLanguagePack } from '../../db/downloader';
 import { DownloadedLanguage, LanguagePairSettings, EnrolledLanguagePair } from '../../types';
 
 import { colors } from '../../theme';
@@ -161,7 +158,8 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
     if (lang.code === pair.origin_lang || lang.code === pair.destination_lang) {
       Alert.alert(
         t('language.cannot_delete', 'In-Use Language'),
-        `Cannot delete ${lang.name} because it is currently selected as your active ${lang.code === pair.origin_lang ? 'Origin' : 'Study'
+        `Cannot delete ${lang.name} because it is currently selected as your active ${
+          lang.code === pair.origin_lang ? 'Origin' : 'Study'
         } language.`
       );
       return;
@@ -173,10 +171,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
       const updated = await getDownloadedLanguages();
       setDownloadedLangs(updated);
     } catch (error) {
-      Alert.alert(
-        t('language.delete_error', 'Delete Failed'),
-        `Could not delete ${lang.name}.`
-      );
+      Alert.alert(t('language.delete_error', 'Delete Failed'), `Could not delete ${lang.name}.`);
     } finally {
       setDeletingCode(null);
     }
@@ -261,63 +256,69 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
     nativeName: 'Español',
   };
 
-  const handleDeleteCallback = useCallback((lang: LanguageOption) => {
-    handleDelete(lang);
-  }, [handleDelete]);
+  const handleDeleteCallback = useCallback(
+    (lang: LanguageOption) => {
+      handleDelete(lang);
+    },
+    [handleDelete]
+  );
 
-  const handleSelectCallback = useCallback((lang: LanguageOption) => {
-    handleSelectLanguage(lang);
-  }, [handleSelectLanguage]);
+  const handleSelectCallback = useCallback(
+    (lang: LanguageOption) => {
+      handleSelectLanguage(lang);
+    },
+    [handleSelectLanguage]
+  );
 
-  const handleDownloadCallback = useCallback((lang: LanguageOption) => {
-    handleDownload(lang);
-  }, [handleDownload]);
+  const handleDownloadCallback = useCallback(
+    (lang: LanguageOption) => {
+      handleDownload(lang);
+    },
+    [handleDownload]
+  );
 
-  const renderLanguageItem = useCallback(({ item }: { item: LanguageOption }) => {
-    const isDownloaded = downloadedCodesSet.has(item.code.toLowerCase());
-    const isOrigin = pair.origin_lang === item.code;
-    const isDest = pair.destination_lang === item.code;
-    const isSelectedInCurrentMode =
-      (mode === 'origin' && isOrigin) ||
-      (mode === 'destination' && isDest);
-    const isDownloading = downloadingCode === item.code;
-    const isDeleting = deletingCode === item.code;
+  const renderLanguageItem = useCallback(
+    ({ item }: { item: LanguageOption }) => {
+      const isDownloaded = downloadedCodesSet.has(item.code.toLowerCase());
+      const isOrigin = pair.origin_lang === item.code;
+      const isDest = pair.destination_lang === item.code;
+      const isSelectedInCurrentMode =
+        (mode === 'origin' && isOrigin) || (mode === 'destination' && isDest);
+      const isDownloading = downloadingCode === item.code;
+      const isDeleting = deletingCode === item.code;
 
-    return (
-      <LanguageRowItem
-        item={item}
-        isDownloaded={isDownloaded}
-        isSelectedInCurrentMode={isSelectedInCurrentMode}
-        isOrigin={isOrigin}
-        isDest={isDest}
-        isDownloading={isDownloading}
-        isDeleting={isDeleting}
-        onSelectLanguage={handleSelectCallback}
-        onDelete={handleDeleteCallback}
-        onDownload={handleDownloadCallback}
-      />
-    );
-  }, [
-    downloadedCodesSet,
-    pair.origin_lang,
-    pair.destination_lang,
-    mode,
-    downloadingCode,
-    deletingCode,
-    handleSelectCallback,
-    handleDeleteCallback,
-    handleDownloadCallback,
-  ]);
+      return (
+        <LanguageRowItem
+          item={item}
+          isDownloaded={isDownloaded}
+          isSelectedInCurrentMode={isSelectedInCurrentMode}
+          isOrigin={isOrigin}
+          isDest={isDest}
+          isDownloading={isDownloading}
+          isDeleting={isDeleting}
+          onSelectLanguage={handleSelectCallback}
+          onDelete={handleDeleteCallback}
+          onDownload={handleDownloadCallback}
+        />
+      );
+    },
+    [
+      downloadedCodesSet,
+      pair.origin_lang,
+      pair.destination_lang,
+      mode,
+      downloadingCode,
+      deletingCode,
+      handleSelectCallback,
+      handleDeleteCallback,
+      handleDownloadCallback,
+    ]
+  );
 
   const languageKeyExtractor = useCallback((item: LanguageOption) => item.code, []);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           {/* Header */}
@@ -327,20 +328,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                 <Globe size={20} color={colors.primary[900]} />
               </View>
               <View>
-                <Text style={styles.title}>
-                  {t('language.title', 'Language Lab')}
-                </Text>
-                <Text style={styles.subtitle}>
-                  123 Languages
-                </Text>
+                <Text style={styles.title}>{t('language.title', 'Language Lab')}</Text>
+                <Text style={styles.subtitle}>123 Languages</Text>
               </View>
             </View>
 
-            <TouchableOpacity
-              testID="modal-close-btn"
-              style={styles.closeBtn}
-              onPress={onClose}
-            >
+            <TouchableOpacity testID="modal-close-btn" style={styles.closeBtn} onPress={onClose}>
               <X size={20} color={colors.primary[900]} />
             </TouchableOpacity>
           </View>
@@ -348,21 +341,14 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           {/* Active Pair Banner */}
           <View style={styles.pairBanner}>
             <TouchableOpacity
-              style={[
-                styles.pairHalf,
-                mode === 'origin' && styles.pairHalfActive,
-              ]}
+              style={[styles.pairHalf, mode === 'origin' && styles.pairHalfActive]}
               onPress={() => setMode('origin')}
               activeOpacity={0.8}
             >
-              <Text style={styles.pairHalfLabel}>
-                {t('language.origin_label', 'Native / App')}
-              </Text>
+              <Text style={styles.pairHalfLabel}>{t('language.origin_label', 'Native / App')}</Text>
               <View style={styles.pairFlagCodeRow}>
                 <Text style={styles.pairFlagEmoji}>{getLanguageFlag(originOption.code)}</Text>
-                <Text style={styles.pairHalfCodeOnly}>
-                  {formatLanguageCode(originOption.code)}
-                </Text>
+                <Text style={styles.pairHalfCodeOnly}>{formatLanguageCode(originOption.code)}</Text>
               </View>
             </TouchableOpacity>
 
@@ -376,10 +362,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.pairHalf,
-                mode === 'destination' && styles.pairHalfActive,
-              ]}
+              style={[styles.pairHalf, mode === 'destination' && styles.pairHalfActive]}
               onPress={() => setMode('destination')}
               activeOpacity={0.8}
             >
@@ -416,16 +399,15 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                     <TouchableOpacity
                       key={ep.id}
                       testID={`enrolled-card-${ep.destination_lang}`}
-                      style={[
-                        styles.enrolledCard,
-                        isActive && styles.enrolledCardActive,
-                      ]}
+                      style={[styles.enrolledCard, isActive && styles.enrolledCardActive]}
                       onPress={() => handleSelectEnrolledPair(ep)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.enrolledTopRow}>
                         <View style={styles.enrolledFlagCodeRow}>
-                          <Text style={styles.enrolledFlagEmoji}>{getLanguageFlag(ep.destination_lang)}</Text>
+                          <Text style={styles.enrolledFlagEmoji}>
+                            {getLanguageFlag(ep.destination_lang)}
+                          </Text>
                           <Text style={styles.enrolledLangName} numberOfLines={1}>
                             {formatLanguageCode(ep.destination_lang)}
                           </Text>
@@ -438,12 +420,12 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                         )}
                       </View>
                       <Text style={styles.enrolledSubtext} numberOfLines={1} ellipsizeMode="tail">
-                        {getLanguageFlag(ep.destination_lang)} {formatLanguageCode(ep.destination_lang)} ➔ {getLanguageFlag(ep.origin_lang)} {formatLanguageCode(ep.origin_lang)}
+                        {getLanguageFlag(ep.destination_lang)}{' '}
+                        {formatLanguageCode(ep.destination_lang)} ➔{' '}
+                        {getLanguageFlag(ep.origin_lang)} {formatLanguageCode(ep.origin_lang)}
                       </Text>
                       <View style={styles.enrolledStatsRow}>
-                        <Text style={styles.enrolledStatBadge}>
-                          {ep.progress.totalCards} cards
-                        </Text>
+                        <Text style={styles.enrolledStatBadge}>{ep.progress.totalCards} cards</Text>
                         <Text
                           style={[
                             styles.enrolledStatBadge,
@@ -473,30 +455,24 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           {/* Filter Tabs: All vs Downloaded */}
           <View style={styles.filterTabBar}>
             <TouchableOpacity
-              style={[
-                styles.filterTab,
-                filterTab === 'all' && styles.filterTabActive,
-              ]}
+              style={[styles.filterTab, filterTab === 'all' && styles.filterTabActive]}
               onPress={() => setFilterTab('all')}
             >
               <Text
-                style={[
-                  styles.filterTabText,
-                  filterTab === 'all' && styles.filterTabTextActive,
-                ]}
+                style={[styles.filterTabText, filterTab === 'all' && styles.filterTabTextActive]}
               >
                 All Languages (123)
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.filterTab,
-                filterTab === 'downloaded' && styles.filterTabActive,
-              ]}
+              style={[styles.filterTab, filterTab === 'downloaded' && styles.filterTabActive]}
               onPress={() => setFilterTab('downloaded')}
             >
-              <HardDrive size={13} color={filterTab === 'downloaded' ? colors.primary[900] : colors.neutral[500]} />
+              <HardDrive
+                size={13}
+                color={filterTab === 'downloaded' ? colors.primary[900] : colors.neutral[500]}
+              />
               <Text
                 style={[
                   styles.filterTabText,
@@ -513,7 +489,10 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             <Search size={18} color={colors.neutral[400]} />
             <TextInput
               style={styles.searchInput}
-              placeholder={t('language.search_placeholder', 'Search by language, native name or code...')}
+              placeholder={t(
+                'language.search_placeholder',
+                'Search by language, native name or code...'
+              )}
               placeholderTextColor={colors.neutral[400]}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -558,110 +537,106 @@ interface LanguageRowItemProps {
   onDownload: (item: LanguageOption) => void;
 }
 
-const LanguageRowItem = React.memo<LanguageRowItemProps>(({
-  item,
-  isDownloaded,
-  isSelectedInCurrentMode,
-  isOrigin,
-  isDest,
-  isDownloading,
-  isDeleting,
-  onSelectLanguage,
-  onDelete,
-  onDownload,
-}) => {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={() => onSelectLanguage(item)}
-      style={[
-        styles.langRow,
-        isSelectedInCurrentMode && styles.langRowSelected,
-      ]}
-    >
-      <View style={styles.langRowLeft}>
-        <Text style={styles.listRowFlag}>{item.flag || getLanguageFlag(item.code)}</Text>
-        <View style={styles.langNames}>
-          <View style={styles.nameRow}>
-            <Text
-              style={[
-                styles.langCodeMain,
-                isSelectedInCurrentMode && styles.langCodeMainSelected,
-              ]}
-              numberOfLines={1}
-            >
-              {formatLanguageCode(item.code)}
-            </Text>
+const LanguageRowItem = React.memo<LanguageRowItemProps>(
+  ({
+    item,
+    isDownloaded,
+    isSelectedInCurrentMode,
+    isOrigin,
+    isDest,
+    isDownloading,
+    isDeleting,
+    onSelectLanguage,
+    onDelete,
+    onDownload,
+  }) => {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => onSelectLanguage(item)}
+        style={[styles.langRow, isSelectedInCurrentMode && styles.langRowSelected]}
+      >
+        <View style={styles.langRowLeft}>
+          <Text style={styles.listRowFlag}>{item.flag || getLanguageFlag(item.code)}</Text>
+          <View style={styles.langNames}>
+            <View style={styles.nameRow}>
+              <Text
+                style={[
+                  styles.langCodeMain,
+                  isSelectedInCurrentMode && styles.langCodeMainSelected,
+                ]}
+                numberOfLines={1}
+              >
+                {formatLanguageCode(item.code)}
+              </Text>
 
-            {isOrigin && (
-              <View style={styles.originTag}>
-                <Text style={styles.originTagText}>App (Origin)</Text>
-              </View>
-            )}
-            {isDest && (
-              <View style={styles.destTag}>
-                <Text style={styles.destTagText}>Study Target</Text>
-              </View>
-            )}
-          </View>
-
-          {item.nativeName ? (
-            <Text
-              style={[
-                styles.langNativeScript,
-                isSelectedInCurrentMode && styles.langNativeScriptSelected,
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {item.nativeName}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-
-      {/* Actions / Status */}
-      <View style={styles.rowActions}>
-        {isDownloading ? (
-          <ActivityIndicator size="small" color={colors.primary[600]} />
-        ) : isDeleting ? (
-          <ActivityIndicator size="small" color={colors.danger[600]} />
-        ) : isDownloaded ? (
-          <View style={styles.downloadedGroup}>
-            <View style={styles.downloadedBadge}>
-              <Check size={12} color={colors.success[600]} />
-              <Text style={styles.downloadedBadgeText}>Saved</Text>
+              {isOrigin && (
+                <View style={styles.originTag}>
+                  <Text style={styles.originTagText}>App (Origin)</Text>
+                </View>
+              )}
+              {isDest && (
+                <View style={styles.destTag}>
+                  <Text style={styles.destTagText}>Study Target</Text>
+                </View>
+              )}
             </View>
 
-            {!isOrigin && !isDest && item.code !== 'en' && (
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => onDelete(item)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            {item.nativeName ? (
+              <Text
+                style={[
+                  styles.langNativeScript,
+                  isSelectedInCurrentMode && styles.langNativeScriptSelected,
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
-                <Trash2 size={15} color={colors.neutral[400]} />
-              </TouchableOpacity>
-            )}
+                {item.nativeName}
+              </Text>
+            ) : null}
           </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.downloadBtn}
-            onPress={() => onDownload(item)}
-          >
-            <Download size={13} color={colors.primary[900]} />
-            <Text style={styles.downloadBtnText}>Get</Text>
-          </TouchableOpacity>
-        )}
+        </View>
 
-        {isSelectedInCurrentMode && (
-          <View style={styles.checkCircle}>
-            <Check size={13} color={colors.neutral[0]} />
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-});
+        {/* Actions / Status */}
+        <View style={styles.rowActions}>
+          {isDownloading ? (
+            <ActivityIndicator size="small" color={colors.primary[600]} />
+          ) : isDeleting ? (
+            <ActivityIndicator size="small" color={colors.danger[600]} />
+          ) : isDownloaded ? (
+            <View style={styles.downloadedGroup}>
+              <View style={styles.downloadedBadge}>
+                <Check size={12} color={colors.success[600]} />
+                <Text style={styles.downloadedBadgeText}>Saved</Text>
+              </View>
+
+              {!isOrigin && !isDest && item.code !== 'en' && (
+                <TouchableOpacity
+                  style={styles.deleteBtn}
+                  onPress={() => onDelete(item)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Trash2 size={15} color={colors.neutral[400]} />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.downloadBtn} onPress={() => onDownload(item)}>
+              <Download size={13} color={colors.primary[900]} />
+              <Text style={styles.downloadBtnText}>Get</Text>
+            </TouchableOpacity>
+          )}
+
+          {isSelectedInCurrentMode && (
+            <View style={styles.checkCircle}>
+              <Check size={13} color={colors.neutral[0]} />
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);
 LanguageRowItem.displayName = 'LanguageRowItem';
 
 const styles = StyleSheet.create({
@@ -1106,4 +1081,3 @@ const styles = StyleSheet.create({
     color: colors.primary[800],
   },
 });
-

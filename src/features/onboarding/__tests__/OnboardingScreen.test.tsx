@@ -4,13 +4,21 @@ import { render, fireEvent, cleanup, act } from '@testing-library/react-native/p
 jest.mock('react-native', () => {
   const React = require('react');
   const createEl = (name: string) =>
-    React.forwardRef(({ children, ...props }: any, ref: any) => React.createElement(name, { ref, ...props }, children));
-  const Pressable = React.forwardRef(({ children, onPress, disabled, style, ...props }: any, ref: any) =>
-    React.createElement(
-      'View',
-      { ref, onPress: disabled ? undefined : onPress, accessibilityState: { disabled }, ...props },
-      typeof children === 'function' ? children({ pressed: false }) : children
-    )
+    React.forwardRef(({ children, ...props }: any, ref: any) =>
+      React.createElement(name, { ref, ...props }, children)
+    );
+  const Pressable = React.forwardRef(
+    ({ children, onPress, disabled, style, ...props }: any, ref: any) =>
+      React.createElement(
+        'View',
+        {
+          ref,
+          onPress: disabled ? undefined : onPress,
+          accessibilityState: { disabled },
+          ...props,
+        },
+        typeof children === 'function' ? children({ pressed: false }) : children
+      )
   );
   return {
     View: createEl('View'),
@@ -110,12 +118,16 @@ describe('OnboardingScreen', () => {
     const screen = await render(<OnboardingScreen initialOrigin="en" onComplete={onComplete} />);
 
     // Step 1: the device language is preselected as the native language
-    expect(screen.getByTestId('onboarding-origin-en').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByTestId('onboarding-origin-en').props.accessibilityState).toEqual({
+      checked: true,
+    });
     await fireEvent.press(screen.getByTestId('onboarding-next'));
 
     // Step 2: native language is not offered; Spanish is preselected for an English speaker
     expect(screen.queryByTestId('onboarding-target-en')).toBeNull();
-    expect(screen.getByTestId('onboarding-target-es').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByTestId('onboarding-target-es').props.accessibilityState).toEqual({
+      checked: true,
+    });
     expect(screen.queryByText('Pick at least one language')).toBeNull();
     await fireEvent.press(screen.getByTestId('onboarding-target-ja'));
     await fireEvent.press(screen.getByTestId('onboarding-next'));
@@ -129,7 +141,8 @@ describe('OnboardingScreen', () => {
 
     // Step 4: grading guide explains all four buttons
     expect(screen.getByText('How to grade yourself')).toBeTruthy();
-    for (const label of ['Again', 'Hard', 'Good', 'Easy']) expect(screen.getByText(label)).toBeTruthy();
+    for (const label of ['Again', 'Hard', 'Good', 'Easy'])
+      expect(screen.getByText(label)).toBeTruthy();
 
     await act(async () => {
       await fireEvent.press(screen.getByTestId('onboarding-next'));
@@ -158,7 +171,9 @@ describe('OnboardingScreen', () => {
     await fireEvent.press(screen.getByTestId('onboarding-origin-es'));
     await fireEvent.press(screen.getByTestId('onboarding-next'));
     expect(screen.queryByTestId('onboarding-target-es')).toBeNull();
-    expect(screen.getByTestId('onboarding-target-en').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByTestId('onboarding-target-en').props.accessibilityState).toEqual({
+      checked: true,
+    });
     expect(screen.queryByText('Pick at least one language')).toBeNull();
   });
 
@@ -166,15 +181,25 @@ describe('OnboardingScreen', () => {
     const screen = await render(
       <OnboardingScreen initialOrigin="pt-BR" initialTarget="fr" onComplete={jest.fn()} />
     );
-    expect(screen.getByTestId('onboarding-origin-pt-BR').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByTestId('onboarding-origin-pt-BR').props.accessibilityState).toEqual({
+      checked: true,
+    });
     await fireEvent.press(screen.getByTestId('onboarding-next'));
-    expect(screen.getByTestId('onboarding-target-fr').props.accessibilityState).toEqual({ checked: true });
-    expect(screen.getByTestId('onboarding-target-en').props.accessibilityState).toEqual({ checked: false });
+    expect(screen.getByTestId('onboarding-target-fr').props.accessibilityState).toEqual({
+      checked: true,
+    });
+    expect(screen.getByTestId('onboarding-target-en').props.accessibilityState).toEqual({
+      checked: false,
+    });
   });
 
   it('starts from English when the device language is not supported', async () => {
-    const screen = await render(<OnboardingScreen initialOrigin="xx-unknown" onComplete={jest.fn()} />);
-    expect(screen.getByTestId('onboarding-origin-en').props.accessibilityState).toEqual({ checked: true });
+    const screen = await render(
+      <OnboardingScreen initialOrigin="xx-unknown" onComplete={jest.fn()} />
+    );
+    expect(screen.getByTestId('onboarding-origin-en').props.accessibilityState).toEqual({
+      checked: true,
+    });
   });
 
   it('lists popular languages first', async () => {
@@ -184,7 +209,11 @@ describe('OnboardingScreen', () => {
       if (!node || typeof node !== 'object') return;
       if (Array.isArray(node)) return node.forEach(walk);
       const id = node.props?.testID;
-      if (typeof id === 'string' && id.startsWith('onboarding-origin-') && id !== 'onboarding-origin-search') {
+      if (
+        typeof id === 'string' &&
+        id.startsWith('onboarding-origin-') &&
+        id !== 'onboarding-origin-search'
+      ) {
         ids.push(id.replace('onboarding-origin-', ''));
       }
       walk(node.children);

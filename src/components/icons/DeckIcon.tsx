@@ -163,7 +163,14 @@ function resolveLucideComponent(name: string): React.ComponentType<any> | null {
  * Renders either a custom drawn Lucide-style icon (if registered) or an official Lucide icon.
  */
 export const DeckIcon: React.FC<DeckIconProps> = React.memo(
-  ({ name = 'book-open', size = 20, color = colors.neutral[500], strokeWidth = 2, style, testID }) => {
+  ({
+    name = 'book-open',
+    size = 20,
+    color = colors.neutral[500],
+    strokeWidth = 2,
+    style,
+    testID,
+  }) => {
     const rawName = name || 'book-open';
     const normalized = normalizeIconName(rawName);
 

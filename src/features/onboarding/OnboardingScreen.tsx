@@ -25,13 +25,23 @@ const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const LEVEL_COPY: Record<CEFRLevel, { title: string; detail: string }> = {
   A1: { title: 'Beginner', detail: 'I know a few words, or none yet.' },
   A2: { title: 'Elementary', detail: 'I can handle simple, everyday phrases.' },
-  B1: { title: 'Intermediate', detail: 'I get by when traveling and can chat about familiar topics.' },
+  B1: {
+    title: 'Intermediate',
+    detail: 'I get by when traveling and can chat about familiar topics.',
+  },
   B2: { title: 'Upper intermediate', detail: 'I follow most conversations, shows and articles.' },
   C1: { title: 'Advanced', detail: 'I express myself fluently, even on complex topics.' },
   C2: { title: 'Proficient', detail: 'I understand virtually everything I hear or read.' },
 };
 
-const GRADES: { key: string; label: string; color: ButtonColor; example: string; when: string; effect: string }[] = [
+const GRADES: {
+  key: string;
+  label: string;
+  color: ButtonColor;
+  example: string;
+  when: string;
+  effect: string;
+}[] = [
   {
     key: 'again',
     label: 'Again',
@@ -111,7 +121,12 @@ interface LanguageListProps {
 
 const ROW_HEIGHT = 56;
 
-const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle, testIDPrefix }) => {
+const LanguageList: React.FC<LanguageListProps> = ({
+  selected,
+  exclude,
+  onToggle,
+  testIDPrefix,
+}) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
@@ -192,7 +207,9 @@ const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle
         style={styles.langList}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
-            {t('onboarding.no_language_match', { defaultValue: 'No language matches that search.' })}
+            {t('onboarding.no_language_match', {
+              defaultValue: 'No language matches that search.',
+            })}
           </Text>
         }
       />
@@ -216,7 +233,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>(0);
   const [origin, setOrigin] = useState(() => defaultOrigin(initialOrigin));
-  const [targets, setTargets] = useState<string[]>(() => defaultTargets(defaultOrigin(initialOrigin), initialTarget));
+  const [targets, setTargets] = useState<string[]>(() =>
+    defaultTargets(defaultOrigin(initialOrigin), initialTarget)
+  );
   const [levels, setLevels] = useState<Record<string, CEFRLevel>>({});
   const [saving, setSaving] = useState(false);
   const [savingMessage, setSavingMessage] = useState('');
@@ -248,7 +267,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       for (const code of [origin, ...targets]) {
         if (!(await isLanguageDownloaded(code))) {
           const name = languageByCode(code)?.name ?? code;
-          setSavingMessage(t('onboarding.preparing_language', { name, defaultValue: 'Preparing {{name}}…' }));
+          setSavingMessage(
+            t('onboarding.preparing_language', { name, defaultValue: 'Preparing {{name}}…' })
+          );
           await downloadLanguagePack(code);
         }
       }
@@ -262,7 +283,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       console.warn('[Onboarding] Setup failed:', e);
       setError(
         t('onboarding.setup_failed', {
-          defaultValue: "We couldn't set up your languages. Check your storage space and try again.",
+          defaultValue:
+            "We couldn't set up your languages. Check your storage space and try again.",
         })
       );
       setSaving(false);
@@ -330,7 +352,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       {/* Step content */}
       <View style={styles.content}>
         {step === 0 && (
-          <LanguageList selected={[origin]} onToggle={chooseOrigin} testIDPrefix="onboarding-origin" />
+          <LanguageList
+            selected={[origin]}
+            onToggle={chooseOrigin}
+            testIDPrefix="onboarding-origin"
+          />
         )}
 
         {step === 1 && (
@@ -365,7 +391,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         )}
 
         {step === 2 && (
-          <ScrollView contentContainerStyle={styles.levelsScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.levelsScroll}
+            showsVerticalScrollIndicator={false}
+          >
             {targets.map((code) => {
               const lang = languageByCode(code);
               const level = levels[code] || 'A1';
@@ -398,17 +427,23 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                           accessibilityLabel={`${levelLabel(l)}, ${LEVEL_COPY[l].title}`}
                           testID={`onboarding-level-${code}-${l}`}
                         >
-                          <Text style={[styles.levelChipText, on && { color: c.onSolid }]}>{toLevel(l)}</Text>
+                          <Text style={[styles.levelChipText, on && { color: c.onSolid }]}>
+                            {toLevel(l)}
+                          </Text>
                         </Pressable>
                       );
                     })}
                   </View>
                   <Text style={styles.levelTitle}>
                     {levelLabel(level)} ·{' '}
-                    {t(`onboarding.level_${level}_title`, { defaultValue: LEVEL_COPY[level].title })}
+                    {t(`onboarding.level_${level}_title`, {
+                      defaultValue: LEVEL_COPY[level].title,
+                    })}
                   </Text>
                   <Text style={styles.levelDetail}>
-                    {t(`onboarding.level_${level}_detail`, { defaultValue: LEVEL_COPY[level].detail })}
+                    {t(`onboarding.level_${level}_detail`, {
+                      defaultValue: LEVEL_COPY[level].detail,
+                    })}
                   </Text>
                 </View>
               );
@@ -417,7 +452,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         )}
 
         {step === 3 && (
-          <ScrollView contentContainerStyle={styles.gradesScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.gradesScroll}
+            showsVerticalScrollIndicator={false}
+          >
             {GRADES.map((g) => (
               <View key={g.key} style={styles.gradeRow}>
                 <View pointerEvents="none" style={styles.gradeButtonWrap}>
@@ -442,7 +480,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             ))}
 
             <View style={styles.tipsCard}>
-              <Text style={styles.tipsTitle}>{t('onboarding.tips_title', { defaultValue: 'Tips' })}</Text>
+              <Text style={styles.tipsTitle}>
+                {t('onboarding.tips_title', { defaultValue: 'Tips' })}
+              </Text>
               <Text style={styles.tip}>
                 {t('onboarding.tip_honest', {
                   defaultValue:
@@ -451,7 +491,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               </Text>
               <Text style={styles.tip}>
                 {t('onboarding.tip_good', {
-                  defaultValue: 'Most of your answers should be Good. Use Easy only when there was zero hesitation.',
+                  defaultValue:
+                    'Most of your answers should be Good. Use Easy only when there was zero hesitation.',
                 })}
               </Text>
               <Text style={styles.tip}>

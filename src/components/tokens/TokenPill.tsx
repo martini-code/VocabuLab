@@ -17,33 +17,33 @@ interface TokenPillProps {
  */
 export const TokenPill: React.FC<TokenPillProps> = React.memo(
   ({ onPress, testID = 'token-pill-btn' }) => {
-  const [wallet, setWallet] = useState<TokenWalletState | null>(null);
+    const [wallet, setWallet] = useState<TokenWalletState | null>(null);
 
-  useEffect(() => {
-    tokenWallet.getWalletStatus().then(setWallet);
-    const unsub = tokenWallet.subscribe(setWallet);
-    return unsub;
-  }, []);
+    useEffect(() => {
+      tokenWallet.getWalletStatus().then(setWallet);
+      const unsub = tokenWallet.subscribe(setWallet);
+      return unsub;
+    }, []);
 
-  const allowance = wallet ? wallet.totalWordsAllowance : 0;
+    const allowance = wallet ? wallet.totalWordsAllowance : 0;
 
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.statPill,
-        styles.tokenPill,
-        {
-          transform: [{ translateY: pressed ? 1 : 0 }],
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <Coins size={16} color={colors.primary[600]} />
-      <Text style={styles.tokenPillText}>{allowance}</Text>
-    </Pressable>
-  );
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.statPill,
+          styles.tokenPill,
+          {
+            transform: [{ translateY: pressed ? 1 : 0 }],
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+      >
+        <Coins size={16} color={colors.primary[600]} />
+        <Text style={styles.tokenPillText}>{allowance}</Text>
+      </Pressable>
+    );
   }
 );
 TokenPill.displayName = 'TokenPill';

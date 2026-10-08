@@ -107,7 +107,10 @@ export function buildDeckLabels(
 
   const themeNames = new Map<string, string>();
   for (const [k, group] of byTheme) {
-    themeNames.set(k, mostCommon(group.map((r) => (tr(r)?.theme || '').trim())) || capitalizeTitle(group[0].theme));
+    themeNames.set(
+      k,
+      mostCommon(group.map((r) => (tr(r)?.theme || '').trim())) || capitalizeTitle(group[0].theme)
+    );
   }
 
   const subthemeNames = new Map<string, string>();
@@ -118,7 +121,8 @@ export function buildDeckLabels(
     }
     subthemeNames.set(
       k,
-      mostCommon(group.map((r) => (tr(r)?.subtheme || '').trim())) || capitalizeTitle(group[0].subtheme || '')
+      mostCommon(group.map((r) => (tr(r)?.subtheme || '').trim())) ||
+        capitalizeTitle(group[0].subtheme || '')
     );
   }
 
@@ -129,7 +133,9 @@ export function buildDeckLabels(
     const fromMain = main ? (tr(main)?.deck || '').trim() : '';
     deckNames.set(
       k,
-      fromMain || mostCommon(group.map((r) => (tr(r)?.deck || '').trim())) || capitalizeTitle(group[0].deck)
+      fromMain ||
+        mostCommon(group.map((r) => (tr(r)?.deck || '').trim())) ||
+        capitalizeTitle(group[0].deck)
     );
   }
 
@@ -139,12 +145,15 @@ export function buildDeckLabels(
     const group = byDeck.get(dk)!;
     const hasSubdecks = group.length > 1;
     const deckName = capitalizeTitle(deckNames.get(dk)!);
-    const subdeckName = capitalizeTitle((tr(r)?.subdeck || '').trim()) || capitalizeTitle(r.subdeck || r.deck);
+    const subdeckName =
+      capitalizeTitle((tr(r)?.subdeck || '').trim()) || capitalizeTitle(r.subdeck || r.deck);
     const themeKey = norm(r.theme);
     const subthemeKey = norm(r.subtheme);
     // "Pets" › "Traits" earns a subtitle; "Family Members" › "Members" does not.
     const subtitle =
-      !hasSubdecks && !isMainSubdeck(r) && !deckName.toLowerCase().includes(subdeckName.toLowerCase())
+      !hasSubdecks &&
+      !isMainSubdeck(r) &&
+      !deckName.toLowerCase().includes(subdeckName.toLowerCase())
         ? subdeckName
         : undefined;
 
@@ -246,7 +255,16 @@ export function resolveDeckIcon(theme?: string, ...names: (string | null | undef
 // ─── Theme grouping ─────────────────────────────────────────────────────────
 
 /** Preferred theme order for beginners; themes not listed follow alphabetically. */
-export const THEME_ORDER = ['basics', 'greetings', 'family', 'numbers', 'colors', 'animals', 'food', 'home'];
+export const THEME_ORDER = [
+  'basics',
+  'greetings',
+  'family',
+  'numbers',
+  'colors',
+  'animals',
+  'food',
+  'home',
+];
 
 /**
  * Groups leaf subdecks (already in display order) into Theme › Deck › Subdeck.
@@ -298,7 +316,9 @@ export function groupDecksIntoThemes(leaves: DeckWithProgress[]): ThemeGroup[] {
   }
 
   for (const group of groups.values()) {
-    group.subdecks.sort((a, b) => Number(Boolean(b.is_main_subdeck)) - Number(Boolean(a.is_main_subdeck)));
+    group.subdecks.sort(
+      (a, b) => Number(Boolean(b.is_main_subdeck)) - Number(Boolean(a.is_main_subdeck))
+    );
   }
 
   for (const theme of themes.values()) {
@@ -312,7 +332,8 @@ export function groupDecksIntoThemes(leaves: DeckWithProgress[]): ThemeGroup[] {
       .map((g, i) => ({ g, i }))
       .sort(
         (a, b) =>
-          subthemeOrder.get(a.g.subtheme_name || '')! - subthemeOrder.get(b.g.subtheme_name || '')! || a.i - b.i
+          subthemeOrder.get(a.g.subtheme_name || '')! -
+            subthemeOrder.get(b.g.subtheme_name || '')! || a.i - b.i
       )
       .map(({ g }) => g);
   }

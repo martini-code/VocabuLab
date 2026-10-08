@@ -48,11 +48,22 @@ export const DeckCardNode = React.memo<DeckCardNodeProps>(({ deck, onPress, inde
           <View
             style={[
               styles.iconBox,
-              isMastered && { backgroundColor: colors.success[100], borderColor: colors.success[200] },
-              isQueued && !isMastered && { backgroundColor: colors.primary[100], borderColor: colors.primary[200] },
+              isMastered && {
+                backgroundColor: colors.success[100],
+                borderColor: colors.success[200],
+              },
+              isQueued &&
+                !isMastered && {
+                  backgroundColor: colors.primary[100],
+                  borderColor: colors.primary[200],
+                },
             ]}
           >
-            <DeckIcon name={deck.icon_name} size={18} color={isMastered ? colors.success[800] : colors.primary[800]} />
+            <DeckIcon
+              name={deck.icon_name}
+              size={18}
+              color={isMastered ? colors.success[800] : colors.primary[800]}
+            />
           </View>
 
           <View style={styles.badgeRow}>
