@@ -199,7 +199,11 @@ export default function App() {
       <SafeAreaProvider>
         <SafeAreaView style={styles.safeArea}>
           <StatusBar barStyle="dark-content" backgroundColor={colors.primary[50]} />
-          <OnboardingScreen initialOrigin={languagePair.origin_lang} onComplete={handleOnboardingComplete} />
+          <OnboardingScreen
+            initialOrigin={languagePair.origin_lang}
+            initialTarget={languagePair.destination_lang}
+            onComplete={handleOnboardingComplete}
+          />
         </SafeAreaView>
       </SafeAreaProvider>
     );

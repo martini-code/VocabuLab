@@ -71,6 +71,37 @@ const STEP_COUNT = 4;
 
 const languageByCode = (code: string) => SUPPORTED_LANGUAGES.find((l) => l.code === code);
 
+/** Most-studied languages, listed first so the common picks need no scrolling or search. */
+export const POPULAR_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt-BR', 'ja', 'ko', 'zh-CN'];
+
+const POPULAR_RANK = new Map(POPULAR_LANGUAGES.map((code, i) => [code, i]));
+
+/** Popular languages first (in POPULAR_LANGUAGES order), then the rest as listed. */
+const ORDERED_LANGUAGES = [...SUPPORTED_LANGUAGES].sort(
+  (a, b) => (POPULAR_RANK.get(a.code) ?? Infinity) - (POPULAR_RANK.get(b.code) ?? Infinity)
+);
+
+/** A supported language code for the given code or name, or English when it isn't supported. */
+export function defaultOrigin(codeOrName: string | undefined): string {
+  const code = resolveLanguageCode(codeOrName || 'en');
+  return languageByCode(code) ? code : 'en';
+}
+
+/** What a speaker of `origin` most likely wants to learn: English, or Spanish for English speakers. */
+export function defaultTargetFor(origin: string): string {
+  return origin === 'en' ? 'es' : 'en';
+}
+
+/**
+ * Starting selection for "What do you want to learn?": the pair the app already
+ * set up when it is valid for this origin, else the default for the origin.
+ */
+export function defaultTargets(origin: string, suggested?: string): string[] {
+  const code = suggested ? resolveLanguageCode(suggested) : '';
+  if (code && code !== origin && languageByCode(code)) return [code];
+  return [defaultTargetFor(origin)];
+}
+
 interface LanguageListProps {
   selected: string[];
   exclude?: string;
@@ -86,7 +117,7 @@ const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle
 
   const data = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return SUPPORTED_LANGUAGES.filter(
+    return ORDERED_LANGUAGES.filter(
       (l) =>
         l.code !== exclude &&
         (!q ||
@@ -172,14 +203,20 @@ const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle
 export interface OnboardingScreenProps {
   /** Pre-selected native language (usually the device language). */
   initialOrigin: string;
+  /** Pre-selected language to learn, e.g. the pair the app set up on first launch. */
+  initialTarget?: string;
   onComplete: (pair: LanguagePairSettings) => void;
 }
 
-export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigin, onComplete }) => {
+export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
+  initialOrigin,
+  initialTarget,
+  onComplete,
+}) => {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>(0);
-  const [origin, setOrigin] = useState(() => resolveLanguageCode(initialOrigin) || 'en');
-  const [targets, setTargets] = useState<string[]>([]);
+  const [origin, setOrigin] = useState(() => defaultOrigin(initialOrigin));
+  const [targets, setTargets] = useState<string[]>(() => defaultTargets(defaultOrigin(initialOrigin), initialTarget));
   const [levels, setLevels] = useState<Record<string, CEFRLevel>>({});
   const [saving, setSaving] = useState(false);
   const [savingMessage, setSavingMessage] = useState('');
@@ -195,7 +232,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
 
   const chooseOrigin = useCallback((lang: LanguageOption) => {
     setOrigin(lang.code);
-    setTargets((prev) => prev.filter((c) => c !== lang.code));
+    // Never leave the next step empty: refill with the default for the new native language.
+    setTargets((prev) => {
+      const kept = prev.filter((c) => c !== lang.code);
+      return kept.length > 0 ? kept : [defaultTargetFor(lang.code)];
+    });
   }, []);
 
   const canContinue = step !== 1 || targets.length > 0;
