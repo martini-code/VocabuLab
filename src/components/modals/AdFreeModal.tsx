@@ -8,7 +8,16 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Shield, Check, Sparkles, X, Award, Zap, RefreshCw } from 'lucide-react-native';
+import {
+  Award,
+  EyeOff,
+  FlaskConical,
+  Infinity as InfinityIcon,
+  RefreshCw,
+  Sparkles,
+  X,
+  Zap,
+} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import {
   iapService,
@@ -26,6 +35,23 @@ interface AdFreeModalProps {
   onStatusChanged?: (isAdFree: boolean) => void;
 }
 
+interface BenefitRowProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const BenefitRow: React.FC<BenefitRowProps> = ({ icon, title, description }) => (
+  <View style={styles.benefitRow}>
+    <View style={styles.benefitIcon}>{icon}</View>
+    <View style={styles.benefitTextCol}>
+      <Text style={styles.benefitTitle}>{title}</Text>
+      <Text style={styles.benefitDesc}>{description}</Text>
+    </View>
+  </View>
+);
+
+/** Lab Pass purchase sheet: unlimited words without ads, plus lab perks. */
 export const AdFreeModal: React.FC<AdFreeModalProps> = ({
   visible,
   onClose,
@@ -96,6 +122,9 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
     if (onStatusChanged) onStatusChanged(nextState);
   };
 
+  const monthlyPrice =
+    products.find((p) => p.id === IAP_SKUS.AD_FREE_MONTHLY)?.price || t('ad_free.price_monthly');
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -104,9 +133,9 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconCircle}>
-                <Shield size={22} color={colors.primary[700]} />
+                <FlaskConical size={22} color={colors.primary[700]} />
               </View>
-              <View>
+              <View style={styles.headerTextCol}>
                 <Text style={styles.title}>{t('ad_free.modal_title')}</Text>
                 <Text style={styles.subtitle}>{t('ad_free.modal_subtitle')}</Text>
               </View>
@@ -118,83 +147,66 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
           </View>
 
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
-            {/* Active Status Badge if already Ad-Free */}
-            {isAdFree ? (
+            {isAdFree && (
               <View style={styles.activeBanner}>
                 <Award size={28} color={colors.success[700]} />
                 <Text style={styles.activeTitle}>{t('ad_free.purchased_badge')}</Text>
-                <Text style={styles.activeSub}>{t('ad_free.benefit_1_sub')}</Text>
+                <Text style={styles.activeSub}>{t('ad_free.active_sub')}</Text>
               </View>
-            ) : (
-              <>
-                {/* Benefits List */}
-                <View style={styles.benefitsCard}>
-                  <View style={styles.benefitRow}>
-                    <View style={styles.checkCircle}>
-                      <Check size={14} color={colors.success[700]} />
-                    </View>
-                    <View style={styles.benefitTextCol}>
-                      <Text style={styles.benefitTitle}>{t('ad_free.benefit_1')}</Text>
-                      <Text style={styles.benefitDesc}>{t('ad_free.benefit_1_sub')}</Text>
-                    </View>
-                  </View>
+            )}
 
-                  <View style={styles.benefitRow}>
-                    <View style={styles.checkCircle}>
-                      <Check size={14} color={colors.success[700]} />
-                    </View>
-                    <View style={styles.benefitTextCol}>
-                      <Text style={styles.benefitTitle}>{t('ad_free.benefit_2')}</Text>
-                      <Text style={styles.benefitDesc}>{t('ad_free.benefit_2_sub')}</Text>
-                    </View>
-                  </View>
+            {/* Core benefit: learn without the token allowance or reward ads */}
+            <View style={styles.coreCard}>
+              <Text style={styles.sectionLabel}>{t('ad_free.core_title')}</Text>
+              <BenefitRow
+                icon={<InfinityIcon size={18} color={colors.primary[700]} />}
+                title={t('ad_free.benefit_unlimited')}
+                description={t('ad_free.benefit_unlimited_sub')}
+              />
+              <BenefitRow
+                icon={<EyeOff size={16} color={colors.primary[700]} />}
+                title={t('ad_free.benefit_no_ads')}
+                description={t('ad_free.benefit_no_ads_sub')}
+              />
+            </View>
 
-                  <View style={styles.benefitRow}>
-                    <View style={styles.checkCircle}>
-                      <Check size={14} color={colors.success[700]} />
-                    </View>
-                    <View style={styles.benefitTextCol}>
-                      <Text style={styles.benefitTitle}>{t('ad_free.benefit_3')}</Text>
-                      <Text style={styles.benefitDesc}>{t('ad_free.benefit_3_sub')}</Text>
-                    </View>
+            {/* Extras for Lex's lab */}
+            <View style={styles.perksCard}>
+              <Text style={styles.sectionLabel}>{t('ad_free.perks_title')}</Text>
+              <BenefitRow
+                icon={<Sparkles size={16} color={colors.warning[700]} />}
+                title={t('ad_free.perk_sparks')}
+                description={t('ad_free.perk_sparks_sub')}
+              />
+            </View>
+
+            {!isAdFree && (
+              <TouchableOpacity
+                style={styles.planCard}
+                activeOpacity={0.85}
+                onPress={() => handlePurchase(IAP_SKUS.AD_FREE_MONTHLY)}
+                disabled={loadingSku !== null}
+              >
+                <View style={styles.planHeader}>
+                  <View style={styles.planBadge}>
+                    <Text style={styles.planBadgeText}>{t('ad_free.plan_badge')}</Text>
                   </View>
+                  <Text style={styles.planPrice}>{monthlyPrice}</Text>
                 </View>
+                <Text style={styles.planTitle}>{t('ad_free.plan_monthly')}</Text>
+                <Text style={styles.planSub}>{t('ad_free.plan_monthly_sub')}</Text>
 
-                {/* Purchase Options */}
-                <View style={styles.plansSection}>
-                  {/* Monthly Patron Pass */}
-                  <TouchableOpacity
-                    style={[styles.planCard, styles.planCardFeatured]}
-                    activeOpacity={0.85}
-                    onPress={() => handlePurchase(IAP_SKUS.AD_FREE_MONTHLY)}
-                    disabled={loadingSku !== null}
-                  >
-                    <View style={styles.planHeader}>
-                      <View style={styles.planBadge}>
-                        <Sparkles size={12} color={colors.neutral[0]} />
-                        <Text style={styles.planBadgeText}>MONTHLY SUBSCRIPTION</Text>
-                      </View>
-                      <Text style={styles.planPrice}>
-                        {products.find((p) => p.id === IAP_SKUS.AD_FREE_MONTHLY)?.price ||
-                          t('ad_free.price_monthly')}
-                      </Text>
-                    </View>
-                    <Text style={styles.planTitle}>{t('ad_free.plan_monthly')}</Text>
-                    <Text style={styles.planSub}>{t('ad_free.plan_monthly_sub')}</Text>
-
-                    <View style={styles.planBtn}>
-                      {loadingSku === IAP_SKUS.AD_FREE_MONTHLY ? (
-                        <ActivityIndicator size="small" color={colors.neutral[0]} />
-                      ) : (
-                        <>
-                          <Zap size={15} color={colors.neutral[0]} />
-                          <Text style={styles.planBtnText}>SUBSCRIBE MONTHLY</Text>
-                        </>
-                      )}
-                    </View>
-                  </TouchableOpacity>
+                <View style={styles.planBtn}>
+                  {loadingSku === IAP_SKUS.AD_FREE_MONTHLY ? (
+                    <ActivityIndicator size="small" color={colors.neutral[0]} />
+                  ) : (
+                    <>
+                      <Zap size={15} color={colors.neutral[0]} />
+                      <Text style={styles.planBtnText}>{t('ad_free.subscribe_cta')}</Text>
+                    </>
+                  )}
                 </View>
-              </>
+              </TouchableOpacity>
             )}
 
             {/* Status / Feedback Banner */}
@@ -228,7 +240,7 @@ export const AdFreeModal: React.FC<AdFreeModalProps> = ({
               activeOpacity={0.7}
             >
               <Text style={styles.simulationBtnText}>
-                TEST TOGGLE: {isAdFree ? 'DISABLE AD-FREE' : 'ENABLE AD-FREE (FREE SIMULATION)'}
+                TEST TOGGLE: {isAdFree ? 'DISABLE LAB PASS' : 'ENABLE LAB PASS (FREE SIMULATION)'}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -267,6 +279,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+  },
+  headerTextCol: {
     flex: 1,
   },
   iconCircle: {
@@ -309,7 +324,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 2,
     borderColor: colors.success[200],
-    padding: 24,
+    padding: 20,
     alignItems: 'center',
     gap: 8,
   },
@@ -325,7 +340,21 @@ const styles = StyleSheet.create({
     color: colors.success[800],
     textAlign: 'center',
   },
-  benefitsCard: {
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: colors.neutral[500],
+    letterSpacing: 1,
+  },
+  coreCard: {
+    backgroundColor: colors.primary[50],
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: colors.primary[200],
+    padding: 16,
+    gap: 14,
+  },
+  perksCard: {
     backgroundColor: colors.neutral[0],
     borderRadius: 18,
     borderWidth: 1.5,
@@ -338,14 +367,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
   },
-  checkCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.success[100],
+  benefitIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.neutral[0],
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
   },
   benefitTextCol: {
     flex: 1,
@@ -361,19 +391,11 @@ const styles = StyleSheet.create({
     color: colors.neutral[500],
     marginTop: 2,
   },
-  plansSection: {
-    gap: 12,
-  },
   planCard: {
-    backgroundColor: colors.neutral[0],
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: colors.neutral[200],
     padding: 16,
     borderBottomWidth: 3,
-    borderBottomColor: colors.neutral[300],
-  },
-  planCardFeatured: {
     borderColor: colors.primary[500],
     borderBottomColor: colors.primary[600],
     backgroundColor: colors.primary[50],
@@ -385,13 +407,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   planBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: colors.primary[600],
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    gap: 4,
   },
   planBadgeText: {
     color: colors.neutral[0],
@@ -399,27 +418,10 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.5,
   },
-  monthlyTag: {
-    backgroundColor: colors.neutral[200],
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  monthlyTagText: {
-    color: colors.neutral[600],
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
   planPrice: {
     fontSize: 20,
     fontWeight: '900',
     color: colors.primary[800],
-  },
-  planPriceSecondary: {
-    fontSize: 17,
-    fontWeight: '900',
-    color: colors.neutral[800],
   },
   planTitle: {
     fontSize: 16,
@@ -447,21 +449,6 @@ const styles = StyleSheet.create({
   planBtnText: {
     color: colors.neutral[0],
     fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  planBtnSecondary: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary[100],
-    paddingVertical: 11,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.primary[200],
-  },
-  planBtnTextSecondary: {
-    color: colors.primary[900],
-    fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
   },

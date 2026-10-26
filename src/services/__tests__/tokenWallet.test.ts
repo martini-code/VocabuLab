@@ -95,6 +95,21 @@ describe('TokenWalletService (tokenWallet.ts)', () => {
       expect(status.totalWordsAllowance).toBe(expectedRemaining);
     });
 
+    it('lets Lab Pass holders learn past the allowance without spending it', async () => {
+      tokenWallet.setMockDate('2026-09-17');
+      await tokenWallet.initTokenWallet();
+      await tokenWallet.setWalletStateForTesting(0, 0, 0);
+      tokenWallet.setUnlimited(true);
+
+      expect(await tokenWallet.canLearnWords(50)).toBe(true);
+      expect(await tokenWallet.consumeWordAllowance(50)).toBe(true);
+      const status = await tokenWallet.getWalletStatus();
+      expect(status.totalWordsAllowance).toBe(0);
+
+      tokenWallet.setUnlimited(false);
+      expect(await tokenWallet.canLearnWords(1)).toBe(false);
+    });
+
     it('rejects consumption when requested count exceeds total allowance', async () => {
       tokenWallet.setMockDate('2026-09-17');
       await tokenWallet.initTokenWallet();

@@ -15,6 +15,8 @@ import { findFreeSpot } from './grid';
 const STORAGE_KEY = 'lab_state_v1';
 
 export const SPARKS_PER_CARD = 5;
+/** Lab Pass holders earn this many times the normal Sparks. */
+export const PASS_SPARKS_MULTIPLIER = 2;
 /** How long Lex celebrates after a finished session. */
 export const EUREKA_MS = 60_000;
 
@@ -98,9 +100,14 @@ export const storedItems = (state: LabState): LabItemId[] =>
   state.owned.filter((id) => !state.layout[id]);
 
 /** Sparks for a finished session; also starts Lex's Eureka celebration. */
-export function applySessionReward(state: LabState, reviewed: number, now: number): LabState {
+export function applySessionReward(
+  state: LabState,
+  reviewed: number,
+  now: number,
+  multiplier = 1
+): LabState {
   if (reviewed <= 0) return state;
-  const earned = reviewed * SPARKS_PER_CARD;
+  const earned = reviewed * SPARKS_PER_CARD * multiplier;
   return {
     ...state,
     sparks: state.sparks + earned,
