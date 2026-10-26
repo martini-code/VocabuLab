@@ -133,13 +133,7 @@
     "purchase_success": "Eureka! You're now an Ad-Free Patron of the Lab.",
     "no_purchases": "No previous purchases found.",
     "status_free": "FREE TIER",
-    "status_active": "AD-FREE",
-    "interstitial_title": "OUR RESEARCH SPONSORS",
-    "interstitial_subtitle": "Expand Your Field of Knowledge",
-    "interstitial_desc": "This free training session is made possible by our Lab Sponsors. Keep your study streak alive and master 123 global languages offline!",
-    "interstitial_skip_countdown": "Skip in {{count}}s",
-    "interstitial_skip_ready": "RESUME EXPERIMENT",
-    "interstitial_upgrade_cta": "Never want to watch full-screen cards again?"
+    "status_active": "AD-FREE"
   },
   "explore": {
     "tab_decks": "Decks",

@@ -133,13 +133,7 @@
     "purchase_success": "Eurêka ! Vous êtes désormais un Mécène Sans Publicité du Labo.",
     "no_purchases": "Aucun achat antérieur trouvé.",
     "status_free": "NIVEAU LIBRE",
-    "status_active": "SANS PUB",
-    "interstitial_title": "NOS SPONSORS DE RECHERCHE",
-    "interstitial_subtitle": "Élargissez votre champ de savoir",
-    "interstitial_desc": "Cette session gratuite est rendue possible grâce aux sponsors du labo. Gardez votre série d'étude et maîtrisez 123 langues hors-ligne !",
-    "interstitial_skip_countdown": "Passer dans {{count}}s",
-    "interstitial_skip_ready": "REPRENDRE L'EXPÉRIENCE",
-    "interstitial_upgrade_cta": "Vous ne voulez plus voir d'annonces plein écran ?"
+    "status_active": "SANS PUB"
   },
   "explore": {
     "tab_decks": "Paquets",
