@@ -133,8 +133,7 @@ jest.mock('../../../services/adMobService', () => ({
 jest.mock('../../mascot/Mascots', () => {
   const React = require('react');
   return {
-    LexMascot: ({ mood }: any) =>
-      React.createElement('View', { testID: `mascot-${mood}` }),
+    LexMascot: ({ mood }: any) => React.createElement('View', { testID: `mascot-${mood}` }),
   };
 });
 

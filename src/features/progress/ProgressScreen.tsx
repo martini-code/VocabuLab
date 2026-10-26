@@ -243,10 +243,10 @@ export const ProgressScreen: React.FC = () => {
               {selectedDay.count >= 15
                 ? 'Breakthrough day! The lab notebook recorded massive progress.'
                 : selectedDay.count >= 8
-                ? 'Heroic study session with multiple cards reviewed and reinforced.'
-                : selectedDay.count >= 1
-                ? 'Solid experiment logged in the local lab notebook.'
-                : 'No experiments recorded on this calendar day.'}
+                  ? 'Heroic study session with multiple cards reviewed and reinforced.'
+                  : selectedDay.count >= 1
+                    ? 'Solid experiment logged in the local lab notebook.'
+                    : 'No experiments recorded on this calendar day.'}
             </Text>
           </View>
         )}

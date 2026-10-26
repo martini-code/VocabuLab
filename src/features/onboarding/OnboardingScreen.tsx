@@ -25,13 +25,23 @@ const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const LEVEL_COPY: Record<CEFRLevel, { title: string; detail: string }> = {
   A1: { title: 'Beginner', detail: 'I know a few words, or none yet.' },
   A2: { title: 'Elementary', detail: 'I can handle simple, everyday phrases.' },
-  B1: { title: 'Intermediate', detail: 'I get by when traveling and can chat about familiar topics.' },
+  B1: {
+    title: 'Intermediate',
+    detail: 'I get by when traveling and can chat about familiar topics.',
+  },
   B2: { title: 'Upper intermediate', detail: 'I follow most conversations, shows and articles.' },
   C1: { title: 'Advanced', detail: 'I express myself fluently, even on complex topics.' },
   C2: { title: 'Proficient', detail: 'I understand virtually everything I hear or read.' },
 };
 
-const GRADES: { key: string; label: string; color: ButtonColor; example: string; when: string; effect: string }[] = [
+const GRADES: {
+  key: string;
+  label: string;
+  color: ButtonColor;
+  example: string;
+  when: string;
+  effect: string;
+}[] = [
   {
     key: 'again',
     label: 'Again',
@@ -71,6 +81,37 @@ const STEP_COUNT = 4;
 
 const languageByCode = (code: string) => SUPPORTED_LANGUAGES.find((l) => l.code === code);
 
+/** Most-studied languages, listed first so the common picks need no scrolling or search. */
+export const POPULAR_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt-BR', 'ja', 'ko', 'zh-CN'];
+
+const POPULAR_RANK = new Map(POPULAR_LANGUAGES.map((code, i) => [code, i]));
+
+/** Popular languages first (in POPULAR_LANGUAGES order), then the rest as listed. */
+const ORDERED_LANGUAGES = [...SUPPORTED_LANGUAGES].sort(
+  (a, b) => (POPULAR_RANK.get(a.code) ?? Infinity) - (POPULAR_RANK.get(b.code) ?? Infinity)
+);
+
+/** A supported language code for the given code or name, or English when it isn't supported. */
+export function defaultOrigin(codeOrName: string | undefined): string {
+  const code = resolveLanguageCode(codeOrName || 'en');
+  return languageByCode(code) ? code : 'en';
+}
+
+/** What a speaker of `origin` most likely wants to learn: English, or Spanish for English speakers. */
+export function defaultTargetFor(origin: string): string {
+  return origin === 'en' ? 'es' : 'en';
+}
+
+/**
+ * Starting selection for "What do you want to learn?": the pair the app already
+ * set up when it is valid for this origin, else the default for the origin.
+ */
+export function defaultTargets(origin: string, suggested?: string): string[] {
+  const code = suggested ? resolveLanguageCode(suggested) : '';
+  if (code && code !== origin && languageByCode(code)) return [code];
+  return [defaultTargetFor(origin)];
+}
+
 interface LanguageListProps {
   selected: string[];
   exclude?: string;
@@ -80,13 +121,18 @@ interface LanguageListProps {
 
 const ROW_HEIGHT = 56;
 
-const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle, testIDPrefix }) => {
+const LanguageList: React.FC<LanguageListProps> = ({
+  selected,
+  exclude,
+  onToggle,
+  testIDPrefix,
+}) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
   const data = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return SUPPORTED_LANGUAGES.filter(
+    return ORDERED_LANGUAGES.filter(
       (l) =>
         l.code !== exclude &&
         (!q ||
@@ -161,7 +207,9 @@ const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle
         style={styles.langList}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
-            {t('onboarding.no_language_match', { defaultValue: 'No language matches that search.' })}
+            {t('onboarding.no_language_match', {
+              defaultValue: 'No language matches that search.',
+            })}
           </Text>
         }
       />
@@ -172,14 +220,22 @@ const LanguageList: React.FC<LanguageListProps> = ({ selected, exclude, onToggle
 export interface OnboardingScreenProps {
   /** Pre-selected native language (usually the device language). */
   initialOrigin: string;
+  /** Pre-selected language to learn, e.g. the pair the app set up on first launch. */
+  initialTarget?: string;
   onComplete: (pair: LanguagePairSettings) => void;
 }
 
-export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigin, onComplete }) => {
+export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
+  initialOrigin,
+  initialTarget,
+  onComplete,
+}) => {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>(0);
-  const [origin, setOrigin] = useState(() => resolveLanguageCode(initialOrigin) || 'en');
-  const [targets, setTargets] = useState<string[]>([]);
+  const [origin, setOrigin] = useState(() => defaultOrigin(initialOrigin));
+  const [targets, setTargets] = useState<string[]>(() =>
+    defaultTargets(defaultOrigin(initialOrigin), initialTarget)
+  );
   const [levels, setLevels] = useState<Record<string, CEFRLevel>>({});
   const [saving, setSaving] = useState(false);
   const [savingMessage, setSavingMessage] = useState('');
@@ -195,7 +251,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
 
   const chooseOrigin = useCallback((lang: LanguageOption) => {
     setOrigin(lang.code);
-    setTargets((prev) => prev.filter((c) => c !== lang.code));
+    // Never leave the next step empty: refill with the default for the new native language.
+    setTargets((prev) => {
+      const kept = prev.filter((c) => c !== lang.code);
+      return kept.length > 0 ? kept : [defaultTargetFor(lang.code)];
+    });
   }, []);
 
   const canContinue = step !== 1 || targets.length > 0;
@@ -207,7 +267,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
       for (const code of [origin, ...targets]) {
         if (!(await isLanguageDownloaded(code))) {
           const name = languageByCode(code)?.name ?? code;
-          setSavingMessage(t('onboarding.preparing_language', { name, defaultValue: 'Preparing {{name}}…' }));
+          setSavingMessage(
+            t('onboarding.preparing_language', { name, defaultValue: 'Preparing {{name}}…' })
+          );
           await downloadLanguagePack(code);
         }
       }
@@ -221,7 +283,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
       console.warn('[Onboarding] Setup failed:', e);
       setError(
         t('onboarding.setup_failed', {
-          defaultValue: "We couldn't set up your languages. Check your storage space and try again.",
+          defaultValue:
+            "We couldn't set up your languages. Check your storage space and try again.",
         })
       );
       setSaving(false);
@@ -289,7 +352,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
       {/* Step content */}
       <View style={styles.content}>
         {step === 0 && (
-          <LanguageList selected={[origin]} onToggle={chooseOrigin} testIDPrefix="onboarding-origin" />
+          <LanguageList
+            selected={[origin]}
+            onToggle={chooseOrigin}
+            testIDPrefix="onboarding-origin"
+          />
         )}
 
         {step === 1 && (
@@ -324,7 +391,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
         )}
 
         {step === 2 && (
-          <ScrollView contentContainerStyle={styles.levelsScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.levelsScroll}
+            showsVerticalScrollIndicator={false}
+          >
             {targets.map((code) => {
               const lang = languageByCode(code);
               const level = levels[code] || 'A1';
@@ -357,17 +427,23 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
                           accessibilityLabel={`${levelLabel(l)}, ${LEVEL_COPY[l].title}`}
                           testID={`onboarding-level-${code}-${l}`}
                         >
-                          <Text style={[styles.levelChipText, on && { color: c.onSolid }]}>{toLevel(l)}</Text>
+                          <Text style={[styles.levelChipText, on && { color: c.onSolid }]}>
+                            {toLevel(l)}
+                          </Text>
                         </Pressable>
                       );
                     })}
                   </View>
                   <Text style={styles.levelTitle}>
                     {levelLabel(level)} ·{' '}
-                    {t(`onboarding.level_${level}_title`, { defaultValue: LEVEL_COPY[level].title })}
+                    {t(`onboarding.level_${level}_title`, {
+                      defaultValue: LEVEL_COPY[level].title,
+                    })}
                   </Text>
                   <Text style={styles.levelDetail}>
-                    {t(`onboarding.level_${level}_detail`, { defaultValue: LEVEL_COPY[level].detail })}
+                    {t(`onboarding.level_${level}_detail`, {
+                      defaultValue: LEVEL_COPY[level].detail,
+                    })}
                   </Text>
                 </View>
               );
@@ -376,7 +452,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
         )}
 
         {step === 3 && (
-          <ScrollView contentContainerStyle={styles.gradesScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.gradesScroll}
+            showsVerticalScrollIndicator={false}
+          >
             {GRADES.map((g) => (
               <View key={g.key} style={styles.gradeRow}>
                 <View pointerEvents="none" style={styles.gradeButtonWrap}>
@@ -401,7 +480,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
             ))}
 
             <View style={styles.tipsCard}>
-              <Text style={styles.tipsTitle}>{t('onboarding.tips_title', { defaultValue: 'Tips' })}</Text>
+              <Text style={styles.tipsTitle}>
+                {t('onboarding.tips_title', { defaultValue: 'Tips' })}
+              </Text>
               <Text style={styles.tip}>
                 {t('onboarding.tip_honest', {
                   defaultValue:
@@ -410,7 +491,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ initialOrigi
               </Text>
               <Text style={styles.tip}>
                 {t('onboarding.tip_good', {
-                  defaultValue: 'Most of your answers should be Good. Use Easy only when there was zero hesitation.',
+                  defaultValue:
+                    'Most of your answers should be Good. Use Easy only when there was zero hesitation.',
                 })}
               </Text>
               <Text style={styles.tip}>

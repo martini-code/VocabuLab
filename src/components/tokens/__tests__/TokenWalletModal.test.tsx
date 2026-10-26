@@ -133,8 +133,7 @@ jest.mock('../../../services/adMobService', () => ({
 jest.mock('../../mascot/Mascots', () => {
   const React = require('react');
   return {
-    LexMascot: ({ mood }: any) =>
-      React.createElement('View', { testID: `mascot-${mood}` }),
+    LexMascot: ({ mood }: any) => React.createElement('View', { testID: `mascot-${mood}` }),
   };
 });
 
@@ -156,9 +155,7 @@ afterEach(async () => {
 
 describe('TokenWalletModal', () => {
   it('renders null when visible is false', async () => {
-    const { queryByText } = await render(
-      <TokenWalletModal {...defaultProps} visible={false} />
-    );
+    const { queryByText } = await render(<TokenWalletModal {...defaultProps} visible={false} />);
     // With visible=false, Modal returns null → wallet useEffect never fires → component returns null
     expect(queryByText('LAB TOKENS')).toBeNull();
   });
@@ -198,8 +195,13 @@ describe('TokenWalletModal', () => {
   it('shows ads remaining text when canWatchAd is true', async () => {
     const { findByText } = await render(<TokenWalletModal {...defaultProps} />);
     await findByText('LAB TOKENS');
-    const remaining = Math.max(0, BASE_WALLET_STATE.maxDailyAds - BASE_WALLET_STATE.adsWatchedToday);
-    const adText = await findByText(`${remaining} of ${BASE_WALLET_STATE.maxDailyAds} rewarded ads left today`);
+    const remaining = Math.max(
+      0,
+      BASE_WALLET_STATE.maxDailyAds - BASE_WALLET_STATE.adsWatchedToday
+    );
+    const adText = await findByText(
+      `${remaining} of ${BASE_WALLET_STATE.maxDailyAds} rewarded ads left today`
+    );
     expect(adText).toBeTruthy();
   });
 
@@ -231,11 +233,7 @@ describe('TokenWalletModal', () => {
     const onClose = jest.fn();
     const onOpenPlusModal = jest.fn();
     const { findByText } = await render(
-      <TokenWalletModal
-        {...defaultProps}
-        onClose={onClose}
-        onOpenPlusModal={onOpenPlusModal}
-      />
+      <TokenWalletModal {...defaultProps} onClose={onClose} onOpenPlusModal={onOpenPlusModal} />
     );
 
     const btn = await findByText('UNLOCK UNLIMITED WITH PLUS');

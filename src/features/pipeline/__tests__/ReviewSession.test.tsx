@@ -63,8 +63,7 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('../../../components/mascot/Mascots', () => {
   const React = require('react');
   return {
-    LexMascot: (props: any) =>
-      React.createElement('View', { testID: 'lab-mascot', ...props }),
+    LexMascot: (props: any) => React.createElement('View', { testID: 'lab-mascot', ...props }),
   };
 });
 
@@ -229,18 +228,14 @@ describe('ReviewSession Multi-Language Learning Tests', () => {
   });
 
   it('loads all languages combined when "All Languages" scope is selected', async () => {
-    const { findByTestId } = await render(
-      <ReviewSession targetLang="es" originLang="en" />
-    );
+    const { findByTestId } = await render(<ReviewSession targetLang="es" originLang="en" />);
 
     await findByTestId('review-scope-selector');
     expect(vaultModule.getDueCards).toHaveBeenCalledWith(undefined, 'all', 'en');
   });
 
   it('reloads queue for specific language when clicking that language scope pill', async () => {
-    const { findByTestId } = await render(
-      <ReviewSession targetLang="es" originLang="en" />
-    );
+    const { findByTestId } = await render(<ReviewSession targetLang="es" originLang="en" />);
 
     await findByTestId('review-scope-selector');
 

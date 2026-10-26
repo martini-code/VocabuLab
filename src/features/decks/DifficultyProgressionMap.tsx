@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { ArrowDown } from 'lucide-react-native';
 import { DeckWithProgress } from '../../types';
 import { DeckCardNode } from './DeckCardNode';
@@ -76,8 +71,7 @@ interface TrailNodeItemProps {
 
 const TrailNodeItem = React.memo<TrailNodeItemProps>(
   ({ deck, index, align, nextAlign, isLast, onSelectDeck }) => {
-    const isDeckCompleted =
-      deck.card_count > 0 && deck.mastered_count >= deck.card_count;
+    const isDeckCompleted = deck.card_count > 0 && deck.mastered_count >= deck.card_count;
 
     return (
       <View style={styles.nodeWrapper}>
@@ -89,24 +83,17 @@ const TrailNodeItem = React.memo<TrailNodeItemProps>(
             align === 'right' && styles.nodeAlignRight,
           ]}
         >
-          <DeckCardNode
-            deck={deck}
-            index={index}
-            onPress={() => onSelectDeck(deck)}
-          />
+          <DeckCardNode deck={deck} index={index} onPress={() => onSelectDeck(deck)} />
         </View>
 
         {!isLast && (
-          <PathConnector
-            fromAlign={align}
-            toAlign={nextAlign}
-            isCompleted={isDeckCompleted}
-          />
+          <PathConnector fromAlign={align} toAlign={nextAlign} isCompleted={isDeckCompleted} />
         )}
       </View>
     );
   }
 );
+TrailNodeItem.displayName = 'TrailNodeItem';
 
 export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> = ({
   decks,
@@ -137,9 +124,7 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
       const align = alignmentPattern[index % alignmentPattern.length];
       const nextIndex = index + 1;
       const nextAlign =
-        nextIndex < decks.length
-          ? alignmentPattern[nextIndex % alignmentPattern.length]
-          : 'center';
+        nextIndex < decks.length ? alignmentPattern[nextIndex % alignmentPattern.length] : 'center';
 
       return (
         <TrailNodeItem
@@ -172,7 +157,10 @@ export const DifficultyProgressionMap: React.FC<DifficultyProgressionMapProps> =
       onScrollToIndexFailed={({ averageItemLength, index }) => {
         // Rows not measured yet: jump close, then settle on the exact row.
         listRef.current?.scrollToOffset({ offset: averageItemLength * index, animated: false });
-        setTimeout(() => listRef.current?.scrollToIndex({ index, animated: false, viewPosition: 0 }), 50);
+        setTimeout(
+          () => listRef.current?.scrollToIndex({ index, animated: false, viewPosition: 0 }),
+          50
+        );
       }}
       keyExtractor={keyExtractor}
       renderItem={renderItem}

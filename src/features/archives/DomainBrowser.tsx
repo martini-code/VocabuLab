@@ -9,7 +9,19 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
-import { Microscope, Home, Volume2, Check, Plus, FlaskConical, TreePine, Target, Coins, Key, Beaker } from 'lucide-react-native';
+import {
+  Microscope,
+  Home,
+  Volume2,
+  Check,
+  Plus,
+  FlaskConical,
+  TreePine,
+  Target,
+  Coins,
+  Key,
+  Beaker,
+} from 'lucide-react-native';
 import { Domain, Lexeme, CEFRLevel } from '../../types';
 import { getDomainsHierarchy, getLexemesByDomain, addCardToQueue } from '../../db/vault';
 import { speakWord } from '../../utils/tts';
@@ -68,30 +80,24 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
     setSelectedDomain(domain);
   };
 
-  const handleQueueWord = useCallback(async (lexemeId: number) => {
-    const canLearn = await tokenWallet.canLearnWords(1);
-    if (!canLearn) {
-      onInsufficientTokens?.(1);
-      return;
-    }
-    await tokenWallet.consumeWordAllowance(1);
-    // Pair with English counterpart (mock/demo pair for immediate deck addition)
-    await addCardToQueue(lexemeId, 1);
-    setQueuedIds((prev) => new Set(prev).add(lexemeId));
-  }, [onInsufficientTokens]);
+  const handleQueueWord = useCallback(
+    async (lexemeId: number) => {
+      const canLearn = await tokenWallet.canLearnWords(1);
+      if (!canLearn) {
+        onInsufficientTokens?.(1);
+        return;
+      }
+      await tokenWallet.consumeWordAllowance(1);
+      // Pair with English counterpart (mock/demo pair for immediate deck addition)
+      await addCardToQueue(lexemeId, 1);
+      setQueuedIds((prev) => new Set(prev).add(lexemeId));
+    },
+    [onInsufficientTokens]
+  );
 
   const handleSpeak = useCallback((term: string, language: string) => {
     speakWord(term, language);
   }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary[500]} />
-        <Text style={styles.loadingText}>Loading lab map...</Text>
-      </View>
-    );
-  }
 
   const renderLexemeItem = useCallback(
     ({ item }: { item: Lexeme }) => {
@@ -109,6 +115,15 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
   );
 
   const lexemeKeyExtractor = useCallback((item: Lexeme) => item.id.toString(), []);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary[500]} />
+        <Text style={styles.loadingText}>Loading lab map...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -144,19 +159,11 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
               key={d.id}
               activeOpacity={0.8}
               onPress={() => handleSelectDomain(d)}
-              style={[
-                styles.domainTab,
-                isSelected && styles.domainTabSelected,
-              ]}
+              style={[styles.domainTab, isSelected && styles.domainTabSelected]}
             >
-              <View style={{ marginBottom: 4 }}>
-                {renderTabIcon()}
-              </View>
+              <View style={{ marginBottom: 4 }}>{renderTabIcon()}</View>
               <Text
-                style={[
-                  styles.domainName,
-                  isSelected && styles.domainNameSelected,
-                ]}
+                style={[styles.domainName, isSelected && styles.domainNameSelected]}
                 numberOfLines={1}
               >
                 {d.name}
@@ -168,7 +175,11 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
 
       {/* CEFR Level Badge Filter Bar */}
       <View style={styles.cefrFilterRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cefrScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.cefrScroll}
+        >
           {CEFR_LEVELS.map((level) => {
             const isSelected = selectedCefr === level;
             return (
@@ -178,7 +189,13 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
                 style={[styles.cefrChip, isSelected && styles.cefrChipSelected]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {level === 'ALL' && <FlaskConical size={12} color={isSelected ? colors.primary[900] : colors.neutral[500]} style={{ marginRight: 4 }} />}
+                  {level === 'ALL' && (
+                    <FlaskConical
+                      size={12}
+                      color={isSelected ? colors.primary[900] : colors.neutral[500]}
+                      style={{ marginRight: 4 }}
+                    />
+                  )}
                   <Text style={[styles.cefrChipText, isSelected && styles.cefrChipTextSelected]}>
                     {level === 'ALL' ? 'ALL' : levelLabel(level)}
                   </Text>
@@ -203,7 +220,9 @@ export const DomainBrowser: React.FC<DomainBrowserProps> = ({
           <View style={styles.emptyBox}>
             <Beaker size={40} color={colors.primary[600]} style={{ marginBottom: 10 }} />
             <Text style={styles.emptyTitle}>No cards recorded yet</Text>
-            <Text style={styles.emptySubtitle}>Try selecting a different CEFR shield rank above.</Text>
+            <Text style={styles.emptySubtitle}>
+              Try selecting a different CEFR shield rank above.
+            </Text>
           </View>
         }
         renderItem={renderLexemeItem}
@@ -230,73 +249,67 @@ interface DomainLexemeCardProps {
   onSpeak: (term: string, language: string) => void;
 }
 
-const DomainLexemeCard = React.memo<DomainLexemeCardProps>(({
-  item,
-  isQueued,
-  onQueueWord,
-  onSpeak,
-}) => {
-  return (
-    <LabCard style={styles.lexemeCard}>
-      <View style={styles.cardTopRow}>
-        <View style={styles.wordInfo}>
-          <Text style={styles.wordTerm}>{item.term}</Text>
-          <Text style={styles.wordPos}>
-            {formatLanguageCode(item.language)} • {item.pos || 'noun'}
-          </Text>
+const DomainLexemeCard = React.memo<DomainLexemeCardProps>(
+  ({ item, isQueued, onQueueWord, onSpeak }) => {
+    return (
+      <LabCard style={styles.lexemeCard}>
+        <View style={styles.cardTopRow}>
+          <View style={styles.wordInfo}>
+            <Text style={styles.wordTerm}>{item.term}</Text>
+            <Text style={styles.wordPos}>
+              {formatLanguageCode(item.language)} • {item.pos || 'noun'}
+            </Text>
+          </View>
+          <LevelBadge level={item.cefr_level} size="sm" />
         </View>
-        <LevelBadge level={item.cefr_level} size="sm" />
-      </View>
 
-      <View style={styles.cardActionsRow}>
-        {/* Pronounce Horn */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.audioButton,
-            {
-              transform: [{ translateY: pressed ? 1 : 0 }],
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-          onPress={() => onSpeak(item.term, item.language)}
-        >
-          <Volume2 size={16} color={colors.primary[900]} style={{ marginRight: 4 }} />
-          <Text style={styles.audioText}>Listen</Text>
-        </Pressable>
+        <View style={styles.cardActionsRow}>
+          {/* Pronounce Horn */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.audioButton,
+              {
+                transform: [{ translateY: pressed ? 1 : 0 }],
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+            onPress={() => onSpeak(item.term, item.language)}
+          >
+            <Volume2 size={16} color={colors.primary[900]} style={{ marginRight: 4 }} />
+            <Text style={styles.audioText}>Listen</Text>
+          </Pressable>
 
-        {/* Learn Button */}
-        <Pressable
-          disabled={isQueued}
-          style={({ pressed }) => [
-            styles.queueButton,
-            isQueued && styles.queueButtonDone,
-            {
-              transform: [{ translateY: pressed ? 2 : 0 }],
-              opacity: isQueued ? 0.6 : pressed ? 0.88 : 1,
-            },
-          ]}
-          onPress={() => onQueueWord(item.id)}
-        >
-          {isQueued ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Check size={14} color={colors.success[800]} style={{ marginRight: 4 }} />
-              <Text style={[styles.queueButtonText, styles.queueButtonTextDone]}>
-                Learned
-              </Text>
-            </View>
-          ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Plus size={14} color={colors.neutral[0]} style={{ marginRight: 4 }} />
-              <Text style={styles.queueButtonText}>
-                Learn Word
-              </Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
-    </LabCard>
-  );
-});
+          {/* Learn Button */}
+          <Pressable
+            disabled={isQueued}
+            style={({ pressed }) => [
+              styles.queueButton,
+              isQueued && styles.queueButtonDone,
+              {
+                transform: [{ translateY: pressed ? 2 : 0 }],
+                opacity: isQueued ? 0.6 : pressed ? 0.88 : 1,
+              },
+            ]}
+            onPress={() => onQueueWord(item.id)}
+          >
+            {isQueued ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Check size={14} color={colors.success[800]} style={{ marginRight: 4 }} />
+                <Text style={[styles.queueButtonText, styles.queueButtonTextDone]}>Learned</Text>
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Plus size={14} color={colors.neutral[0]} style={{ marginRight: 4 }} />
+                <Text style={styles.queueButtonText}>Learn Word</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+      </LabCard>
+    );
+  }
+);
+DomainLexemeCard.displayName = 'DomainLexemeCard';
 
 const styles = StyleSheet.create({
   container: {

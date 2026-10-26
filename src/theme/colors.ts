@@ -97,12 +97,54 @@ export interface LevelColorSet {
 }
 
 export const levelColors: Record<1 | 2 | 3 | 4 | 5 | 6, LevelColorSet> = {
-  1: { solid: '#34D399', solidBorder: '#059669', onSolid: '#064E3B', soft: '#ECFDF5', softBorder: '#A7F3D0', onSoft: '#047857' },
-  2: { solid: '#A3E635', solidBorder: '#65A30D', onSolid: '#365314', soft: '#F7FEE7', softBorder: '#D9F99D', onSoft: '#4D7C0F' },
-  3: { solid: '#FACC15', solidBorder: '#CA8A04', onSolid: '#713F12', soft: '#FEFCE8', softBorder: '#FEF08A', onSoft: '#854D0E' },
-  4: { solid: '#FB923C', solidBorder: '#EA580C', onSolid: '#431407', soft: '#FFF7ED', softBorder: '#FED7AA', onSoft: '#C2410C' },
-  5: { solid: '#DC2626', solidBorder: '#991B1B', onSolid: palette.neutral[0], soft: palette.danger[50], softBorder: palette.danger[200], onSoft: palette.danger[700] },
-  6: { solid: palette.neutral[800], solidBorder: palette.neutral[900], onSolid: palette.danger[300], soft: palette.neutral[100], softBorder: palette.neutral[300], onSoft: palette.neutral[800] },
+  1: {
+    solid: '#34D399',
+    solidBorder: '#059669',
+    onSolid: '#064E3B',
+    soft: '#ECFDF5',
+    softBorder: '#A7F3D0',
+    onSoft: '#047857',
+  },
+  2: {
+    solid: '#A3E635',
+    solidBorder: '#65A30D',
+    onSolid: '#365314',
+    soft: '#F7FEE7',
+    softBorder: '#D9F99D',
+    onSoft: '#4D7C0F',
+  },
+  3: {
+    solid: '#FACC15',
+    solidBorder: '#CA8A04',
+    onSolid: '#713F12',
+    soft: '#FEFCE8',
+    softBorder: '#FEF08A',
+    onSoft: '#854D0E',
+  },
+  4: {
+    solid: '#FB923C',
+    solidBorder: '#EA580C',
+    onSolid: '#431407',
+    soft: '#FFF7ED',
+    softBorder: '#FED7AA',
+    onSoft: '#C2410C',
+  },
+  5: {
+    solid: '#DC2626',
+    solidBorder: '#991B1B',
+    onSolid: palette.neutral[0],
+    soft: palette.danger[50],
+    softBorder: palette.danger[200],
+    onSoft: palette.danger[700],
+  },
+  6: {
+    solid: palette.neutral[800],
+    solidBorder: palette.neutral[900],
+    onSolid: palette.danger[300],
+    soft: palette.neutral[100],
+    softBorder: palette.neutral[300],
+    onSoft: palette.neutral[800],
+  },
 };
 
 /** The same sets keyed by the CEFR code stored in the database. */

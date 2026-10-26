@@ -56,8 +56,8 @@ jest.mock('react-native', () => {
         ...(data || [])
           .slice(0, 10)
           .map((item: any, i: number) =>
-          React.createElement('View', { key: i }, renderItem({ item, index: i }))
-        )
+            React.createElement('View', { key: i }, renderItem({ item, index: i }))
+          )
       ),
     TextInput: ({ value, onChangeText, placeholder, testID, ...rest }: any) =>
       React.createElement('TextInput', {

@@ -133,13 +133,7 @@
     "purchase_success": "¡Eureka! Ahora eres un Mecenas Sin Anuncios del Laboratorio.",
     "no_purchases": "No se encontraron compras anteriores.",
     "status_free": "NIVEL GRATIS",
-    "status_active": "SIN ANUNCIOS",
-    "interstitial_title": "NUESTROS PATROCINADORES DE INVESTIGACIÓN",
-    "interstitial_subtitle": "Expande Tu Campo de Conocimiento",
-    "interstitial_desc": "Esta sesión de entrenamiento gratuita es posible gracias a nuestros patrocinadores del laboratorio. ¡Mantén tu racha de estudio y domina 123 idiomas sin conexión!",
-    "interstitial_skip_countdown": "Saltar en {{count}}s",
-    "interstitial_skip_ready": "CONTINUAR EXPERIMENTO",
-    "interstitial_upgrade_cta": "¿No deseas ver más tarjetas a pantalla completa?"
+    "status_active": "SIN ANUNCIOS"
   },
   "explore": {
     "tab_decks": "Mazos",
