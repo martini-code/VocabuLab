@@ -25,6 +25,8 @@ import { DecksRoadmap } from './src/features/decks/DecksRoadmap';
 import { ProgressScreen } from './src/features/progress/ProgressScreen';
 import { LexMascot } from './src/components/mascot/Mascots';
 import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen';
+import { LabScreen } from './src/features/lab/LabScreen';
+import { applySessionReward, loadLabState, saveLabState } from './src/features/lab/labStore';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
@@ -43,6 +45,7 @@ import { srsManager } from './src/srs';
 import { configureAudioSession } from './src/utils/tts';
 import {
   FlaskConical,
+  Armchair,
   Library,
   Activity,
   Coins,
@@ -58,7 +61,7 @@ import {
 
 import { colors } from './src/theme';
 
-type TabType = 'pipeline' | 'archives' | 'chronicles' | 'treasury';
+type TabType = 'pipeline' | 'archives' | 'lab' | 'chronicles' | 'treasury';
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -97,6 +100,7 @@ export default function App() {
   const [deckTitleLanguage, setDeckTitleLanguage] = useState<DeckTitleLanguageMode>('origin');
   const [isReviewInProgress, setIsReviewInProgress] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [labRefreshKey, setLabRefreshKey] = useState(0);
 
   useEffect(() => {
     bootstrapApp();
@@ -177,6 +181,18 @@ export default function App() {
     refreshStats(pair.destination_lang);
   };
 
+  // Every reviewed card earns Sparks for Lex's lab, and Lex celebrates the finished session.
+  const rewardReviewSession = async (reviewedCount: number) => {
+    if (reviewedCount <= 0) return;
+    try {
+      const lab = await loadLabState();
+      await saveLabState(applySessionReward(lab, reviewedCount, Date.now()));
+      setLabRefreshKey((k) => k + 1);
+    } catch {
+      // The lab is cosmetic; never block the review flow on it.
+    }
+  };
+
   const handleInsufficientTokens = (requiredWords: number) => {
     setInsufficientRequiredWords(requiredWords);
     setInsufficientModalOpen(true);
@@ -217,7 +233,7 @@ export default function App() {
         <StatusBar barStyle="dark-content" backgroundColor={colors.primary[50]} />
 
         {/* Top Lab Stats Header (Vector Icons - Strictly No Emojis) */}
-        {!isReviewInProgress && (
+        {!isReviewInProgress && activeTab !== 'lab' && (
           <View style={styles.topStatsBar}>
             {/* Streak Flame */}
             <View style={styles.statPill}>
@@ -258,9 +274,10 @@ export default function App() {
         <View style={styles.contentArea}>
           {activeTab === 'pipeline' && (
             <ReviewSession
-              onSessionComplete={() => {
+              onSessionComplete={(reviewedCount) => {
                 setIsReviewInProgress(false);
                 refreshStats();
+                rewardReviewSession(reviewedCount);
               }}
               onExploreArchives={() => {
                 setIsReviewInProgress(false);
@@ -292,6 +309,21 @@ export default function App() {
               originLang={languagePair.origin_lang}
               deckTitleLanguage={deckTitleLanguage}
               onInsufficientTokens={handleInsufficientTokens}
+            />
+          )}
+          {activeTab === 'lab' && (
+            <LabScreen
+              dueCards={stats.dueCards}
+              streakDays={stats.streakDays}
+              learnedCards={stats.totalCards}
+              masteredCards={stats.masteredCards}
+              refreshKey={labRefreshKey}
+              onStartReview={() => {
+                setDeckFilter(null);
+                refreshStats();
+                setIsReviewInProgress(false);
+                setActiveTab('pipeline');
+              }}
             />
           )}
           {activeTab === 'chronicles' && <ProgressScreen />}
@@ -538,6 +570,22 @@ export default function App() {
               <Library
                 size={25}
                 color={activeTab === 'archives' ? colors.primary[700] : colors.neutral[500]}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                refreshStats();
+                setActiveTab('lab');
+              }}
+              style={[styles.navItem, activeTab === 'lab' && styles.navItemActive]}
+              accessibilityLabel={t('nav.my_lab', { defaultValue: 'My lab' })}
+              testID="nav-lab"
+            >
+              <Armchair
+                size={25}
+                color={activeTab === 'lab' ? colors.primary[700] : colors.neutral[500]}
               />
             </TouchableOpacity>
 

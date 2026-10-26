@@ -9,12 +9,14 @@ const createSvgComponent = (tag: string) =>
 export const Svg = createSvgComponent('svg');
 export const Path = createSvgComponent('path');
 export const Circle = createSvgComponent('circle');
+export const Ellipse = createSvgComponent('ellipse');
 export const Rect = createSvgComponent('rect');
 export const Line = createSvgComponent('line');
 export const Polyline = createSvgComponent('polyline');
 export const Polygon = createSvgComponent('polygon');
 export const G = createSvgComponent('g');
-export const Text = createSvgComponent('text');
+// Host name 'Text' so the test renderer accepts raw strings inside <SvgText>.
+export const Text = createSvgComponent('Text');
 export const TSpan = createSvgComponent('tspan');
 export const Defs = createSvgComponent('defs');
 export const LinearGradient = createSvgComponent('linearGradient');

@@ -31,7 +31,8 @@ import { getLanguageFlag, formatLanguageCode } from '../../locales/languages';
 import { colors } from '../../theme';
 
 interface ReviewSessionProps {
-  onSessionComplete?: () => void;
+  /** Called when the learner closes the session summary, with how many cards they reviewed. */
+  onSessionComplete?: (reviewedCount: number) => void;
   onExploreArchives?: () => void;
   deckFilter?: { id: string; name: string } | null;
   onClearDeckFilter?: () => void;
@@ -203,7 +204,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
         onDone={() => {
           setSessionHistory([]);
           setReviewActiveState(false);
-          if (onSessionComplete) onSessionComplete();
+          if (onSessionComplete) onSessionComplete(sessionHistory.length);
           loadCards();
         }}
         onExploreArchives={() => {
