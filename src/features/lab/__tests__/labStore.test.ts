@@ -2,6 +2,7 @@ import {
   applySessionReward,
   buyItem,
   defaultLabState,
+  PASS_SPARKS_MULTIPLIER,
   sanitizeLabState,
   SPARKS_PER_CARD,
   storedItems,
@@ -22,6 +23,13 @@ describe('labStore', () => {
     expect(state.sparks).toBe(12 * SPARKS_PER_CARD);
     expect(state.eurekaUntil).toBeGreaterThan(Date.UTC(2026, 0, 2, 12));
     expect(state.lastStudyDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('multiplies Sparks for Lab Pass holders', () => {
+    const now = Date.UTC(2026, 0, 2, 12);
+    const state = applySessionReward(defaultLabState(), 12, now, PASS_SPARKS_MULTIPLIER);
+    expect(state.sparks).toBe(12 * SPARKS_PER_CARD * PASS_SPARKS_MULTIPLIER);
+    expect(state.lastSessionSparks).toBe(state.sparks);
   });
 
   it('buys shop items with Sparks and refuses when short', () => {

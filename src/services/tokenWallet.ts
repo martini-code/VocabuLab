@@ -78,6 +78,15 @@ export class TokenWalletService {
   private listeners: Set<WalletListener> = new Set();
   private initialized = false;
   private mockDateProvider: (() => string) | null = null;
+  private unlimited = false;
+
+  /**
+   * Lab Pass holders learn without a word allowance: nothing is checked or
+   * deducted while this is on, so they never need a rewarded ad for tokens.
+   */
+  setUnlimited(enabled: boolean): void {
+    this.unlimited = enabled;
+  }
 
   /**
    * For testing purposes: mock the current date format (YYYY-MM-DD).
@@ -103,6 +112,7 @@ export class TokenWalletService {
   async _resetForTesting(): Promise<void> {
     this.initialized = false;
     this.mockDateProvider = null;
+    this.unlimited = false;
     this.listeners.clear();
     await Promise.all([
       Storage.deleteItemAsync(KEYS.TOKENS),
@@ -219,7 +229,7 @@ export class TokenWalletService {
   }
 
   async canLearnWords(count: number): Promise<boolean> {
-    if (count <= 0) return true;
+    if (count <= 0 || this.unlimited) return true;
     const status = await this.getWalletStatus();
     return status.totalWordsAllowance >= count;
   }
@@ -231,7 +241,7 @@ export class TokenWalletService {
    * 3. Breaks tokens into word credits (+10 words each) as needed.
    */
   async consumeWordAllowance(count: number): Promise<boolean> {
-    if (count <= 0) return true;
+    if (count <= 0 || this.unlimited) return true;
 
     const status = await this.getWalletStatus();
     if (status.totalWordsAllowance < count) {

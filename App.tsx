@@ -26,7 +26,12 @@ import { ProgressScreen } from './src/features/progress/ProgressScreen';
 import { LexMascot } from './src/components/mascot/Mascots';
 import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen';
 import { LabScreen } from './src/features/lab/LabScreen';
-import { applySessionReward, loadLabState, saveLabState } from './src/features/lab/labStore';
+import {
+  applySessionReward,
+  loadLabState,
+  PASS_SPARKS_MULTIPLIER,
+  saveLabState,
+} from './src/features/lab/labStore';
 import './src/locales';
 import { useTranslation } from 'react-i18next';
 import { getDeviceLanguage, changeAppLanguage } from './src/locales';
@@ -129,6 +134,11 @@ export default function App() {
     };
   }, []);
 
+  // The Lab Pass lifts the word allowance, so no rewarded ads are needed.
+  useEffect(() => {
+    tokenWallet.setUnlimited(isAdFree);
+  }, [isAdFree]);
+
   const bootstrapApp = async () => {
     try {
       // Preload AdMob rewarded ads in background immediately
@@ -186,7 +196,8 @@ export default function App() {
     if (reviewedCount <= 0) return;
     try {
       const lab = await loadLabState();
-      await saveLabState(applySessionReward(lab, reviewedCount, Date.now()));
+      const multiplier = isAdFree ? PASS_SPARKS_MULTIPLIER : 1;
+      await saveLabState(applySessionReward(lab, reviewedCount, Date.now(), multiplier));
       setLabRefreshKey((k) => k + 1);
     } catch {
       // The lab is cosmetic; never block the review flow on it.
@@ -393,7 +404,7 @@ export default function App() {
                   <ShieldCheck size={22} color={colors.success[700]} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.treasuryAdFreeTitle}>{t('ad_free.purchased_badge')}</Text>
-                    <Text style={styles.treasuryAdFreeSub}>{t('ad_free.benefit_1_sub')}</Text>
+                    <Text style={styles.treasuryAdFreeSub}>{t('ad_free.active_sub')}</Text>
                   </View>
                 </View>
               ) : (
@@ -404,7 +415,7 @@ export default function App() {
                 >
                   <Sparkles size={18} color={colors.neutral[0]} />
                   <Text style={styles.treasuryUpgradeText}>
-                    {t('ad_free.modal_title')} • {t('ad_free.go_ad_free')}
+                    {t('ad_free.modal_title')} • {t('ad_free.get_pass')}
                   </Text>
                 </TouchableOpacity>
               )}
