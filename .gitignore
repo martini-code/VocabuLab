@@ -76,3 +76,9 @@ share/python-wheels/
 .mypy_cache/
 .ruff_cache/
 
+# local word database overrides (only the default database is committed)
+assets/lexicon_*.db
+assets/lexicon_*.db-*
+!assets/lexicon_v1.0.0.db
+/lexicon_*.db
+!/lexicon_v1.0.0.db

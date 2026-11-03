@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { importDatabaseFromAssetAsync } from 'expo-sqlite';
+import { getLexiconAsset } from './lexiconAsset';
 import { USER_SCHEMA_SQL } from './schema';
 import {
   DeckLabels,
@@ -213,8 +214,9 @@ export function cefrToDifficulty(cefr: string): number {
 export async function getStaticDb(): Promise<SQLite.SQLiteDatabase> {
   if (!staticDbInstance) {
     try {
+      const lexicon = getLexiconAsset();
       await importDatabaseFromAssetAsync(STATIC_DB_NAME, {
-        assetId: require('../../assets/lexicon_v1.0.0.db'),
+        assetId: lexicon.assetId,
         forceOverwrite: true,
       });
     } catch (err) {

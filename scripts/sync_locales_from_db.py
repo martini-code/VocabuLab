@@ -27,7 +27,10 @@ from pathlib import Path
 # Paths
 ROOT_DIR = Path(__file__).resolve().parent.parent
 LOCALES_DIR = ROOT_DIR / "src" / "locales"
-DEFAULT_DB_PATH = ROOT_DIR / "assets" / "lexicon_v1.0.0.db"
+# Prefer a local database override if present; otherwise use the default one.
+DEFAULT_DB_PATH = ROOT_DIR / "assets" / "lexicon_local.db"
+if not DEFAULT_DB_PATH.exists():
+    DEFAULT_DB_PATH = ROOT_DIR / "assets" / "lexicon_v1.0.0.db"
 if not DEFAULT_DB_PATH.exists():
     DEFAULT_DB_PATH = ROOT_DIR / "lexicon_v1.0.0.db"
 
